@@ -1,0 +1,335 @@
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
+namespace py = pybind11;
+using namespace pybind11::literals;
+#include <unordered_map>
+#include <climits>
+
+#include "io_memory.hxx"
+#include "io_strings.hxx"
+#include "api_pstore.hxx"
+#include "api_grid.hxx"
+#include "def_pstore.hxx"
+
+/******************************************************************************/
+template<u8 nd> inject_fn_t construct_inject_fn
+(pstore_holder& self, const grid_t<nd>& grid) {
+
+	return [&] (u8 tag, const parts_input_t& input) -> size_t {
+		auto pts{input.unchecked<2>()};
+		if (pts.shape(1) != nd+3) {
+			throw std::invalid_argument(fmt::format("pts.shape[1]!={}+3", nd));
+		}
+		
+		size_t n_overflow{0};
+		
+		for (int64_t j{0}, npp{pts.shape(0)}; j<npp; ++j) {
+			f32 pt[nd+3]; bool valid{true};
+			for (auto i{0}; i<nd+3; ++i) {
+				pt[i] = pts(j, i);
+				valid = valid or isfinite(pt[i]);
+			}
+			
+			if (u32 k{grid.find_node(pt)}; valid and k != 0) {
+				auto pool{self[k-1]};
+				if (u32 j{pool.index[0]}; j < pool.index[1]) {
+					for (u32 i{0}; i<nd+3; ++i) {
+						pool.parts[j][i+1].vec    = pt[i];
+					} pool.parts[j][0  ].tag[0] = tag;
+					++pool.index[0];
+				} else n_overflow++;
+			} //else skip
+		}
+		return n_overflow;
+	};
+}
+
+template<u8 nd> extract_fn_t construct_extract_fn
+(const pstore_holder& self, const grid_t<nd>& grid) {
+	
+	return [&] (void) -> std::tuple<parts_output_t, std::vector<size_t>> {
+		
+		// run #1 count particles
+		std::vector<size_t> counter(self.opts.ntypes+2, 0);
+		
+		for (u32 k{0}; k<grid.size; ++k) {
+			auto pool{self[k]};
+			
+			for (u32 j{0}; j<pool.index[0]; ++j) {
+				u8 tag{pool.parts[j][0].tag[0]};
+				counter[2+tag] += 1;
+			}
+		}
+		for (u32 i{0}; i<self.opts.ntypes; ++i) {
+			counter[2+i] += counter[i];
+		}
+		
+		std::vector<py::size_t> shape(2);
+		shape[0] = counter[self.opts.ntypes+1];
+		shape[1] = nd+3;
+		// run #2 copy  particles
+		parts_output_t output(std::move(shape));
+		auto pts{output.mutable_unchecked<2>()};
+		
+		for (u32 k{0}; k<grid.size; ++k) {
+			auto pool{self[k]};
+			
+			for (u32 j{0}; j<pool.index[0]; ++j) {
+				u8  tag{pool.parts[j][0].tag[0]};
+				
+				for (u8 i{0}; i<nd+3; ++i) {
+					pts(counter[tag+1], i) = pool.parts[j][i+1].vec;
+				}
+				counter[tag+1] += 1;
+			}
+		}
+		counter.resize(self.opts.ntypes+1);
+		
+		return {std::move(output), std::move(counter)};
+	};
+}
+
+template<u8 nd> reset_fn_t construct_reset_fn
+(pstore_holder& self, const grid_t<nd>& grid) {
+	
+	return [&] (void) {
+		for (auto k{0u}; k<grid.size; ++k) {
+			auto pool{self[k]};
+			for (auto i{0u}; i<self.cfg->idxsh; ++i) {
+				pool.index[i] = pool.npmax*(i>0);
+			}
+		}
+	};
+}
+
+/******************************************************************************/
+
+#define NPPMAX_LIMIT (1<<24)
+
+pstore_cfg::pstore_cfg
+( const grid_holder       *gridp
+, std::vector<py::dict>    ptinfo_i
+, u32                 npmax_i
+, u8                  nargs_i
+, py::dict
+) {
+
+	for (auto entry : ptinfo_i) {
+		auto key = py::cast<std::string>(entry["KEY"]);
+		auto cff = py::cast<f32>(entry["CHARGE/MASS"]);
+		cffts .push_back(cff);
+		ptinfo.push_back(key);
+	}
+	
+	u32 nd{0}, md{0}, sz{1};
+
+	
+	nd = gridp->cfg->shape.size();
+	sz = gridp->cfg->nodes.size();
+	md = 1; for (auto i{0u}; i<nd; ++i) md*=3;
+
+	nargs = nargs_i != 0? nargs_i : 1+nd+3;
+	npmax = npmax_i;
+	ntype = ptinfo.size();
+	
+	if (npmax >= NPPMAX_LIMIT) throw \
+	std::invalid_argument(fmt::format("npmax: {} >= {}", npmax, NPPMAX_LIMIT));
+	
+	
+	if (nargs <= nd+3) throw \
+	std::invalid_argument(fmt::format("nargs: {} <= {}", nargs, nd+3));
+	
+	idxsh  = 1+md;
+	npools = sz;
+	
+	pparts_sz = sz*npmax*nargs;
+	pindex_sz = sz*idxsh;
+	pflags_sz = sz*(1+2*npmax);
+}
+
+struct pstore_ctor {
+	pstore_holder  &holder;
+
+	void init () {
+		pstore_t &pstore{holder};
+		
+		holder.m.pparts_h
+		.req(&pstore.cffts,  holder.cfg->ntype)
+		.req(&pstore.ppdata, holder.cfg->pparts_sz)
+		.alloc();
+		
+		holder.m.pindex_h
+		.req(&pstore.pindex, holder.cfg->pindex_sz)
+		.alloc();
+
+		holder.m.pflags_h
+		.req(&pstore.pflags, holder.cfg->pflags_sz)
+		.alloc();
+		
+		pstore.nargs = holder.cfg->nargs;
+		pstore.npmax = holder.cfg->npmax;
+		pstore.opts.ntypes  = holder.cfg->ntype;
+		pstore.opts.idshift = holder.cfg->idxsh;
+		pstore.opts.ongpu   = 0;
+	
+	}
+
+	template <u8 nd, u8 md=1 + (nd==1? 3 : nd==2? 9 : 27)>
+	void operator () (const grid_t<nd> &grid) {
+		logger::debug
+		("construct pstore ({}, &grid = {})", (void*)(&holder), (void*)(&grid));
+		pstore_t &pstore{holder};
+		
+		init();
+		
+		for (auto i{0u}; i<holder.cfg->ntype; ++i) {
+			pstore.cffts[i] = holder.cfg->cffts[i];
+		}
+
+		holder.inject_fn  = construct_inject_fn  (holder, grid);
+		holder.extract_fn = construct_extract_fn (holder, grid);
+		holder.reset_fn   = construct_reset_fn   (holder, grid);
+		
+		holder.count_fn = [&] (void) -> size_t {
+			size_t n{0};
+			for (u32 k{0}; k < grid.size; ++k) {
+				n += pstore[k].index[0];
+			}
+			return n;
+		};
+		
+		holder.reset_fn();
+		
+		//~ holder.reset_fn = [&] (void) -> void {
+			//~ //corrupted size vs. prev_size
+			//~ for (u32 k{0u}; k < grid.size; ++k) {
+				//~ auto pool{pstore[k]};
+				//~ for (auto i{0u}; i<holder.cfg->idxsh; ++i) {
+					//~ pool.index[i] = pool.npmax*(i>0);
+				//~ }
+			//~ }
+		//~ };
+	}
+};
+
+pstore_holder:: pstore_holder (const grid_holder& grid, std::vector<py::dict> ptinfo_i, u32 npmax_i, u8 nargs_i, py::kwargs kwargs)
+: gridp{&grid}
+, cfg{std::make_unique<pstore_cfg>(&grid, ptinfo_i, npmax_i, nargs_i, py::dict{**kwargs})}
+{
+	std::visit(pstore_ctor{*this}, grid);
+	{
+		auto sz{f64(
+			m.pparts_h.get_size() +
+			m.pindex_h.get_size() +
+			m.pflags_h.get_size()
+		)};
+		u8 i{0}; 
+		const char* lab[] = {"","Ki","Mi","Gi","Ti"};
+		while (sz >= 512.0) {
+			sz /= 1024.0; ++i;
+		}
+		logger::debug("create pstore ({}, {:.3f} {}B)", (void*)(this), sz, lab[i]);
+	}
+}
+
+pstore_holder::~pstore_holder (void) {
+	logger::debug("delete pstore ({})", (void*)(this));
+}
+/******************************************************************************/
+const char *PSTORE_INIT {
+R"pbdoc(Creates particles storage.
+
+Parameters
+----------
+
+cfg : storage configuration, see an examle:
+	{
+	 # maximum number of samples per node 
+	 "npmax" : 100000,
+	 # (optional) vector size per sample:
+	 # [*] 1+nd+3 for explicit integrator,
+	 # [*] 1+2*(nd+3) for implicit integrator
+	 "nargs" : 6,
+	 # components' info
+	 "ptinfo": [
+	 {"KEY":"e", "CHARGE/MASS":-5.333333e+17},
+	 {"KEY":"i", "CHARGE/MASS":+2.201710e+12},
+	],
+	}
+)pbdoc"
+};
+
+const char *INJECT_FN {
+R"pbdoc(Injects particles into the storage from the external arrays
+
+Parameters
+----------
+input : dictionary with particles to inject
+  each key  should correspond to self.ptlist
+  each item should be array-like with shape == [:, nd+3]
+)pbdoc"
+};
+
+const char *EXTRACT_FN {
+R"pbdoc(Saves particles into externl array.
+
+Returns
+-------
+pair (output, index):
+  output: numpy.ndarray[numpy.f3232]
+    pVDF samples, shape == [:, nd+3]
+  index: List[int]]
+    range where specific component is located,
+    for example, if ptlist=["e", "Xe+", "Ar+"]
+    then samples for "Xe+" are in output[index[1]:index[2]]
+)pbdoc"
+};
+
+/******************************************************************************/
+void def_pstores (py::module &m) {
+
+	py::class_<pstore_holder> cls (m, "pstore",
+	"class to store particles"); cls
+	
+	.def(py::init<const grid_holder&, std::vector<py::dict>, u32, u8
+	, py::kwargs> ()
+	, "grid"_a, "ptinfo"_a, "npmax"_a, "nargs"_a=0,
+	PSTORE_INIT)
+
+	.def_property_readonly("ptlist", [] (const pstore_holder& self) {
+		return self.cfg->ptinfo;
+	}, "returns list of components")
+	
+	.def("inject", [] (pstore_holder &self
+	, const std::unordered_map<std::string, parts_input_t> &input) {
+		size_t n_overflow{0};
+		for (const auto& [key, data] : input) {
+
+			auto pos{std::find(self.cfg->ptinfo.begin(), self.cfg->ptinfo.end(), key)};
+			if (pos == self.cfg->ptinfo.end()) {
+				throw std::invalid_argument(fmt::format("invalid key \"{}\"", key));
+			}
+			
+			n_overflow += self.inject_fn(u8(pos-self.cfg->ptinfo.begin()), data);
+		} if (n_overflow) {
+			throw std::overflow_error(fmt::format(
+			"pstore.inject: can not inject {} samples: overflow!", n_overflow));
+		}
+	}, "input"_a,
+	INJECT_FN)
+	
+	.def("extract", [] (const pstore_holder &self) {
+		return self.extract_fn();
+	}, EXTRACT_FN)
+	
+	.def("__len__", [] (const pstore_holder& self) {
+		return self.count_fn();
+	}, "returns the number of samples stored in")
+	
+	.def("reset", [] (pstore_holder& self) {
+		return self.reset_fn();
+	}, "makes pstore empty")
+
+	/* end class */;
+}
