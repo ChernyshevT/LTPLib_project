@@ -39,7 +39,7 @@ struct vcache_ctor {
 		);
 		
 		self.cache.shape.resize(nd+1);
-		self.cache.order     = py::cast<u8>(cfg.attr("get")("order",1));
+		self.cache.order     = py::cast<u8>(cfg.attr("get")("order",0));
 		self.cache.vsize     = py::cast<u8>(cfg.attr("get")("vsize",1));
 		self.cache.shape[nd] = self.cache.vsize;
 		
@@ -109,7 +109,7 @@ void def_vcache(py::module &m) {
 	py::class_<vcache_holder> cls (m, "vcache"); cls
 	
 	.def(py::init<const grid_holder&, std::string, u8, u8, py::kwargs>
-	(), "grid"_a, "dtype"_a, "vsize"_a=1, "order"_a=1,
+	(), "grid"_a, "dtype"_a, "vsize"_a=1, "order"_a=0,
 	"")
 
 	.def("__len__",
@@ -136,6 +136,11 @@ void def_vcache(py::module &m) {
 		);
 	}, "iterate over nodes, same as iter(self.nodes)", py::keep_alive<0, 1>())
 
+	.def_property_readonly("order",
+	[] (const vcache_holder& self) {
+		return self.cache.order;
+	})
+	
 	.def_property_readonly("shape",
 	[] (const vcache_holder& self) {
 		return self.cache.shape;
@@ -149,7 +154,7 @@ void def_vcache(py::module &m) {
 	.def_property_readonly("cfg",
 	[] (const vcache_holder& self) {
 		return py::dict("shape"_a=self.cache.shape, "dtype"_a=self.cache.dtype);
-	}, "helper to construct corresponding array, numpy.array(**self.cfg)")
+	}, "helper function to construct corresponding array: numpy.array(**self.cfg)")
 	
 	;// end class
 }

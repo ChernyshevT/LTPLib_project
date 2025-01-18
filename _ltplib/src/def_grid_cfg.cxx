@@ -16,12 +16,15 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 	if (py::len(cfg["axes"]) != nd) throw std::invalid_argument("axes");
 	size_t lctr_size{1};
 	for (auto axis : cfg["axes"]) {
+		if (py::len(axis) <= 2) throw std::invalid_argument("axes");
+		
 		std::vector<u32> axpts;
-		std::vector<f32>    edpts;
+		std::vector<f32> edpts;
 		for (auto pt : axis) {
 			axpts.push_back(py::cast<u32>(pt));
 			edpts.push_back(py::cast<f32   >(pt) * step[shape.size()]);
 		}
+		
 		lctr_size *= axpts.size()+1;
 		shape.push_back(axpts.size()-1);
 		units.push_back(axpts[axpts.size()-1]);
@@ -67,9 +70,12 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 		
 		size_t k{0}, sh{1};
 		for (int i{nd-1}; i >= 0; --i) {
+			if (map[i] >= shape[i]) throw std::invalid_argument("node is out of domain");
+			
 			k  += (map[i]+1)*sh;
 			sh *= shape[i]+2;
 		}
+		if (lctr[k] != 0) throw std::invalid_argument("node is duplicated");
 		lctr[k] = nodes.size()+1;
 		
 		u64 mshift{0};

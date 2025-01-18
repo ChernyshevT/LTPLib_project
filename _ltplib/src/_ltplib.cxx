@@ -60,7 +60,7 @@ const dylib & dylibs_t::operator [] (std::string key) {
 		if (0 != strcmp(API_V, api_v)) throw py::import_error \
 		(fmt::format("Incompatable APIs: {} != {} ({})", API_V, api_v, key));
 		
-		logger::info("load \"_{}\" backend: {}, {}, build: {}"
+		logger::debug("load \"_{}\" backend: {}, {}, build: {}"
 		, key, descr, api_v, build);
 	}
 

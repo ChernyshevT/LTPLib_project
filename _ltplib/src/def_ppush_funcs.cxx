@@ -111,7 +111,8 @@ void def_ppush_funcs (py::module &m) {
 			++ptr;
 		}
 		if (emfield_h.cache.vsize < n) throw std::invalid_argument(fmt::format\
-		("emfield.vsize isn't big enough to represent all the components"));
+		("emfield.vsize={} < {} it isn't big enough to represent all the components",
+		emfield_h.cache.vsize, n));
 		
 		return std::visit([&] <u8 nd>
 		(const grid_t<nd>& grid) -> std::function<RET_ERRC(f32)> {
@@ -125,7 +126,7 @@ void def_ppush_funcs (py::module &m) {
 				emfield.order == 1? "LINE" :
 				emfield.order == 2? "QUAD" :
 				emfield.order == 3? "CUBE" :
-				throw std::invalid_argument("emfield.order")
+				throw std::invalid_argument(fmt::format("emfield.order={}", emfield.order))
 			);
 			
 			logger::debug\

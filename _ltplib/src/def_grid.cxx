@@ -122,12 +122,12 @@ void def_grids (py::module &m) {
 		 [0, 16, 32],
 		 # y-axis, 3 sections
 		 [0, 20, 40, 60], 
-		]
+		],
 		
 		# Now the position of each sub-domain is described relative to the "axes":
 		"nodes": [
-			{"map": (0, 0)}, # (0 <= x < 16), (0  <= y < 20)
-			{"map": (0, 1)}, # (0 <= x < 16), (20 <= y < 40)
+			(0, 0), # (0 <= x < 16), (0  <= y < 20)
+			(0, 1), # (0 <= x < 16), (20 <= y < 40)
 			...
 		]
 		# The links between the nodes will be builded automatically.
