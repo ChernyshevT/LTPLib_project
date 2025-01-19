@@ -1,6 +1,4 @@
-# LTPSim_project (<ins>L</ins>ow <ins>T</ins>emperature <ins>P</ins>lasma <ins>S</ins>imulation)
-
-## \_ltplib: <ins>L</ins>ow <ins>T</ins>emperature <ins>P</ins>lasma <ins>Lib</ins>rary
+# \_ltplib: <ins>L</ins>ow <ins>T</ins>emperature <ins>P</ins>lasma <ins>Lib</ins>rary
 The middle-layer framework that provides simple python-interface to construct PiC+MCC simulations (Particles in Cells + Monte-Carlo Collisions).
 The library offers a range of functions and primitives to facilitate a wide class of low-temperature plasma problems.
 By creating a more abstract and user-friendly interface, \_ltplib aims to enable researchers and engineers to formulate and solve simple & complex PiC+MCC problems in a flexible manner with aid of python.
@@ -37,7 +35,7 @@ help(ltp)
 The following sections provide a brief overview for \_ltplib components.
 
 ## Main classes
-### `_ltplib.grid`
+### `_ltplib.grid` (problem's geometry)
 Gird is a primary class for every simulation. It describes geometry of the problem, boundary conditions, and spatial-decomposition for parallel computation. The code uses sightly modified approach of tile-decomposition described before in [^decyk2014], [^decyk2015]. The class constructor accepts following arguments:
 1. *nd* -- number of spatial dimensions;
 1. *step* -- list containing spatial steps along the each axis;
@@ -85,7 +83,7 @@ grid = ltp.grid(**grid_cfg)
 [^decyk2014]: https://doi.org/10.1016/j.cpc.2013.10.013
 [^decyk2015]: https://doi.org/10.1109/MCSE.2014.131
 
-### `_ltplib.pstore`
+### `_ltplib.pstore` (particle storage)
 This class is used to store pVDF samples (macro-particles). The class constructor accepts following arguments:
 1. *grid* -- existing grid;
 1. *ptinfo* -- description of active components to store;
@@ -108,7 +106,7 @@ pstore = ltp.pstore(grid, **pstore_cfg)
 
 To load samples into the class `pstore.inject` method should be called. Method accepts dictionary, where keys correspond to `"ptinfo"`, and values are numpy arrays to load. The shape of input array should match `[npp, grid.nd+3]`, where `npp` is the number of samples to add. The components of sample's vector are $\{x\,\dots\,v_x\,v_y\,v_z\}$.
 
-### `_ltplib.vcache`
+### `_ltplib.vcache` (value cache)
 This class is used as a universal node-local cache for grid-based values. For example, it can be used to store electromagnetic field, pVDF moments, background densities, collision frequencies.
 Class constructor accepts following arguments:
 1. *grid* --- existing grid.
@@ -116,7 +114,7 @@ Class constructor accepts following arguments:
 1. *vsize* --- number of components per grid unit (optional, default `1`).
 1. *order* --- form-factor's order (optional, default `0`).
 
-### `_ltplib.csection_set`
+### `_ltplib.csection_set` (cross-section set)
 This class stores cross-section database for Monte-Carlo simulation.
 Input cross-sections can be defined by the function or by the points.
 In both cases they will be recalculated into cumulative rates and cached into the lookup-table on log-scaled energy-grid $\varepsilon = \varepsilon_{\rm th} + 2^{j/2-4}-0.0625,~j\in\mathbb{N}$, where $\varepsilon_{\rm th}$ is reaction's threshold. This allows to store large amount of cross-sections in a very compact way. Constructor parameters for the class are:
@@ -195,7 +193,7 @@ If it is necessary, first line to start scanning can be specified by parameter *
 It is also possible to read data directly from [LXCat](https://lxcat.net)-file using *search*-parameter.
 In this case scan will start from the desired string and points will be readed from the nearest data-block nestled between `"-----"`-lines.
 
-Log-log interpolation is used to map points into lookup-tale
+Log-log interpolation is used to map points into lookup-table
 $\sigma(\varepsilon) = \exp(a \log\varepsilon)\cdot b$.
 If extrapolation parameter (*exterp*) is bigger than zero
 and condition $\partial\sigma/\partial\varepsilon$ is fulfilled for high-energies, then extrapolation will be build.
@@ -208,7 +206,7 @@ In general, scattering is described by differential cross-section
 $\sigma(\varepsilon,\ \alpha)$, where
 $\sigma(\varepsilon)
 =2\pi\int_0^\pi \sin\alpha\ \sigma(\varepsilon,\ \alpha)\ {\rm d}\alpha$,
-$\alpha$ -- azimuthal scattering angle.
+$\alpha$ -- azimuthal scattering angle (relative to the incident direction).
 Framework \_ltplib includes first-order approximation for $\sigma(\varepsilon,\ \alpha)$ uning momentum-transfer cross-section:
 $$
 	\sigma_{\rm m} = 2\pi\int_{0}^{\pi}
@@ -271,7 +269,7 @@ If it is not given, $\varepsilon_{\rm th}$ will be used instead.
 
 [^opal1972]: https://doi.org/10.1016/s0092-640x(72)80004-4
 
-#### Examples
+#### Entries examples
 1. Elastic collision, anisotropic scattering defined by $\sigma_{\rm m}$:
 ```python
 {"TYPE":"ELASTIC",
@@ -304,4 +302,128 @@ If it is not given, $\varepsilon_{\rm th}$ will be used instead.
 ```
 
 ## Function bindings
+
+### `_ltplib.bind_ppush_fn` (motion equation solver)
+This function binds its' arguments to motion equation solver from the backend.
+The function accepts the following arguments:
+- *pstore* --- pVDF samples;
+- *descr* --- string containing components of electromagnetic field
+and type of the solver separated by semicolon symbol (for example `"Ex Ey Bz : METHOD"`);
+- *emfield* --- value cache for electromagnetic field (`dtype="f32"`).
+
+Resulting functional object has following signature
+`(dt : float) -> _ltplib.RET_ERRC`,
+where `dt` is time step. Two solvers are available.
+
+#### Explicit scheme
+This is 2nd-order integrator utilizes Leap-Frog algorithm with Boris splitting scheme [^birdsall1991].
+This scheme is is widely known and it is *de-facto standard* in context of plasma simulation. 
+In this scheme samples' coordinates and velocities are shifted by $\delta t/2$:
+$$
+	\left\{\begin{array}{lll}
+	{\bf v}(t+\delta t/2)
+	& = &
+	{\bf v}(t-\delta t/2)
+	+ \delta t\ {\bf a}(t)
+	\\
+	{\bf r}(t+\delta t)
+	& = &
+	{\bf r}(t)
+	+ \delta t\ {\bf v}(t+\delta t/2).
+	\end{array}\right.
+$$
+The scheme is encoded by `"LEAPF"`-keyword.
+
+[^birdsall1991]: https://doi.org/10.1201/9781315275048
+
+#### Semi-implicit scheme
+This 2nd-order scheme was introduced by Borodachev and Kolomiets [^borodachev2011].
+Samples' coordinates and velocities are synchronous in this scheme:
+$$
+	\left\{\begin{array}{lll}
+	{\bf v}(t+\delta t)
+	& = &
+	{\bf v}(t)
+	+ \delta t/2\ \left[{\bf a}(t) + {\bf a}(t+\delta t)\right]
+	\\
+	{\bf r}(t+\delta t)
+	& = &
+	{\bf r}(t)
+	+ \delta t/2\ \left[{\bf v}(t)+{\bf v}(t+\delta t)\right].
+	\end{array}\right.
+$$
+The scheme is solvable for ${\bf v}(t+\delta t)$-term [^tajima2018-book].
+As a result, only ${\bf E}$ & ${\bf B}$ fields at time moment $t+\delta t$ are unknown.
+The system can be solved as iterative predictor-corrector process.
+- Initial rough approximation (predictor step) assumes ${\bf a}(t+\delta t) = {\bf a}(t)$.
+- Following corrector step adjusts approximation using updated field values.
+
+Usually, $\lesssim 3$ additional iterations are enough to minimize  an error of closure.
+Our implementation caches $t$-moment field contribution for the each sample, so one should set double *nargs*-parameter for *pstore*.
+> [!NOTE] This scheme is not supported for cylindrical geometry, yet.
+
+[^borodachev2011]: https://doi.org/10.1134/S2070048211030045
+
+[^tajima2018-book]: https://doi.org/10.1201/9780429501470
+
+## `_ltplib.bind_order_fn`
+After the run of `ppush_fn` the coherence of *pstore* is violated because of samples leaving the nodes.
+This function is used to create the binding to restore the coherence.
+The function accepts only one argument:
+- *pstore* --- pVDF samples.
+
+Resulting functional object has following signature
+`() -> _ltplib.RET_ERRC`.
+
+## `_ltplib.bind_ppost_fn` (obtain pVDF moments)
+This binding is used to calculate raw pVDF moments:
+- concentration
+$n = \int_{\bf v}f({\bf r},\ {\bf v})\ {\rm d}{\bf v}$;
+- flux vector
+${\bf v} = \int_{\bf v}{\bf v}\ f({\bf r},\ {\bf v})\ {\rm d}{\bf v}$;
+- pressure/stress tensor
+${\bf p} = \int_{\bf v}{\bf v}\otimes{\bf v}\ f({\bf r},\ {\bf v})\ {\rm d}{\bf v}$.
+
+The function accepts the following arguments:
+- *pstore* --- pVDF samples;
+- *ptfluid* --- value cache for the result (`dtype="f32"`);
+- *mode* --- string describing moments to calculate:
+	- `"C"` --- concentration;
+	- `"CF"` --- concentration, flux;
+	- `"CFP"` --- concentration, flux, pressure (${\bf p}_{ij,\ i = j}$);
+	- `"CFPS"` --- concentration, flux, pressure, stress (${\bf p}_{ij,\ i \ne j}$).
+
+Resulting functional object has following signature
+`() -> _ltplib.RET_ERRC`.
+
+## `_ltplib.bind_remap_fn`
+This binding is used to transfer data between value cache and numpy array.
+The function accepts the following arguments:
+- *vcache* --- value cache (local data);
+- *direction* --- string;
+- *iodata* --- numpy array (global data).
+```python
+_ltplib.bind_remap_fn(vcache, "<", iodata) # to copy from iodata to vcache
+_ltplib.bind_remap_fn(vcache, ">", iodata) # to copy from vcache to iodata 
+```
+Functional object's signature is `() -> ()`.
+
+## `_ltplib.bind_mcsim_fn` (collision simulation)
+This binding is used to perform Monte-Carlo simulation.
+The arguments are:
+- *pstore* --- pVDF samples;
+- *cfreq* --- value cache to count successful collision events (`dtype="u32"`, `order=0`);
+- *cset* --- cross-sections set;
+- *bgrnd* --- value cache containing background densities (`dtype="f32"`, `order=0`).
+
+Functional object's signature is
+`(dt: float, seed: int) -> _ltplib.RET_ERRC`,
+where `dt` is time step and `seed` is random number.
+
+### Search algorithm
+
+(To be done...)
+
+# Code examples for \ltplib
+
 (To be done...)

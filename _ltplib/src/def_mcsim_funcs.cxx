@@ -84,6 +84,6 @@ void def_mcsim_funcs (py::module &m) {
 				return retv;
 			};
 		}, *pstore.gridp);
-	}, "pstore"_a, "events"_a ,"cset"_a, "background"_a, PMCSIM_FN);
+	}, "pstore"_a, "cfreq"_a ,"cset"_a, "bgrnd"_a, PMCSIM_FN);
 	
 }
