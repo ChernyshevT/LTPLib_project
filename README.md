@@ -204,14 +204,23 @@ Default value is 0.25, *exterp* = 0 turns off extrapolation.
 #### Approximation for anisotropic scattering
 In general, scattering is described by differential cross-section
 $\sigma(\varepsilon,\ \alpha)$, where
-$\sigma(\varepsilon)=2\pi\int_0^\pi \sin\alpha\ \sigma(\varepsilon,\ \alpha)\ {\rm d}\alpha$,
+$\sigma(\varepsilon)
+=2\pi\int_0^\pi \sin\alpha\ \sigma(\varepsilon,\ \alpha)\ {\rm d}\alpha$,
 $\alpha$ -- azimuthal scattering angle (relative to the incident direction).
-Framework \_ltplib includes first-order approximation for $\sigma(\varepsilon,\ \alpha)$ uning momentum-transfer cross-section:\
-$$\sigma_{\rm m} = 2\pi\int_{0}^{\pi}\left[1-\cos\alpha\sqrt{1-\frac{\varepsilon_{\rm th}}{\varepsilon}}\right]\sigma(\varepsilon,\,\alpha)\ {\rm d}\alpha.$$
-
-Internally, fitting-parameter $\xi(\varepsilon)$ [^janssen2016] ,[^flynn2024] is used:\
-$$\frac{\sigma_{\rm m}}{\sigma} = 1+\sqrt{1-\frac{\varepsilon_{\rm th}}{\varepsilon}} \cdot \left[1 - \frac{1-\xi}{\xi^2} \left( \frac{1+\xi}{2} \log\left(\frac{1+\xi}{1-\xi}\right) - \xi\right)\right].$$
-
+Framework \_ltplib includes first-order approximation for $\sigma(\varepsilon,\ \alpha)$ uning momentum-transfer cross-section:
+```math
+	\sigma_{\rm m} = 2\pi\int_{0}^{\pi}
+	\left[1-\cos\alpha\sqrt{1-\frac{\varepsilon_{\rm th}}{\varepsilon}}\right]
+	\sigma(\varepsilon,\,\alpha)\ {\rm d}\alpha.
+```
+Internally, fitting-parameter $\xi(\varepsilon)$ [^janssen2016] ,[^flynn2024] is used:
+```math
+	\frac{\sigma_{\rm m}}{\sigma}
+	= 1+\sqrt{1-\frac{\varepsilon_{\rm th}}{\varepsilon}} \cdot
+	\left[
+		1 - \frac{1-\xi}{\xi^2} \left( \frac{1+\xi}{2} \log\left(\frac{1+\xi}{1-\xi}\right) - \xi\right)
+	\right].
+```
 By default, scattering considered to be isotropic, i.e.
 $\xi\equiv 0$ and $\sigma_{\rm m}=\sigma$.
 For $\xi \rightarrow +1$ small-angle collisions dominate (forward-scattering),
@@ -231,11 +240,21 @@ There are three ways to define anisotropic scattering:
 In case of ionization, it is assumed that there is not impulse transfer between incident electron and heavy particle ($m/M$-term is ignored).
 The energy/impulse-balance is determined only by incident and secondary particle(s).
 This division is arbitrary, we consider particle secondary if it has smaller resulting energy, i.e. $\varepsilon_2<\varepsilon_1$.
-From energy conservation\
-$$\varepsilon' = \varepsilon-\varepsilon_{\rm th} = \varepsilon_1 + \varepsilon_2.$$
-
-And from impulse conservation\
-$$\begin{array}{lll} \cos \alpha_1 & = & \sqrt{\varepsilon_1/\varepsilon'} \\ \cos \alpha_2 & = & \sqrt{\varepsilon_2/\varepsilon'} \\ \beta_1+\pi   & = & \beta_2 ~ \textrm{(polar scattering angles)} \end{array} $$
+From energy conservation
+```math
+	\varepsilon_1 + \varepsilon_2 = \varepsilon-\varepsilon_{\rm th}.
+```
+And from impulse conservation
+```math
+\begin{align}
+	&\cos \alpha_1  =  \sqrt{\varepsilon_1\over\varepsilon-\varepsilon_{\rm th}}
+	\\
+	&\cos \alpha_2  =  \sqrt{\varepsilon_2\over\varepsilon-\varepsilon_{\rm th}}
+	\\
+	&\beta_1+\pi    =  \beta_2,
+\end{align}
+```
+where $\beta$s are polar scattering angles.
 As a result, ionization collisions are always considered anisotropic.
 
 The energy-spectrum for secondary electrons uses Opal-Peterson-Beaty approximation (OPB-approximation, [^opal1971], [^opal1972]).
@@ -301,19 +320,17 @@ where `dt` is time step. Two solvers are available.
 This is 2nd-order integrator utilizes Leap-Frog algorithm with Boris splitting scheme [^birdsall1991].
 This scheme is is widely known and it is *de-facto standard* in context of plasma simulation. 
 In this scheme samples' coordinates and velocities are shifted by $\delta t/2$:
-$$
-	\left\{\begin{array}{lll}
-	{\bf v}(t+\delta t/2)
-	& = &
-	{\bf v}(t-\delta t/2)
-	+ \delta t\ {\bf a}(t)
+```math
+	\left\{\begin{align}
+	& {\bf v}(t+{\delta t/2})
+	& =
+	& {\bf v}(t-{\delta t/2}) + \delta t\ {\bf a}(t)
 	\\
-	{\bf r}(t+\delta t)
-	& = &
-	{\bf r}(t)
-	+ \delta t\ {\bf v}(t+\delta t/2).
-	\end{array}\right.
-$$
+	& {\bf r}(t+\delta t)
+	& =
+	& {\bf r}(t) + \delta t\ {\bf v}(t+{\delta t/2}).
+	\end{align}\right.
+```
 The scheme is encoded by `"LEAPF"`-keyword.
 
 [^birdsall1991]: https://doi.org/10.1201/9781315275048
@@ -321,19 +338,19 @@ The scheme is encoded by `"LEAPF"`-keyword.
 #### Semi-implicit scheme
 This 2nd-order scheme was introduced by Borodachev and Kolomiets [^borodachev2011].
 Samples' coordinates and velocities are synchronous in this scheme:
-$$
-	\left\{\begin{array}{lll}
-	{\bf v}(t+\delta t)
-	& = &
-	{\bf v}(t)
-	+ \delta t/2\ \left[{\bf a}(t) + {\bf a}(t+\delta t)\right]
+```math
+	\left\{\begin{align}
+	& {\bf v}(t+\delta t)
+	& =
+	& {\bf v}(t)
+	+ {\delta t/2}\ \left[{\bf a}(t) + {\bf a}(t+\delta t)\right]
 	\\
-	{\bf r}(t+\delta t)
-	& = &
-	{\bf r}(t)
-	+ \delta t/2\ \left[{\bf v}(t)+{\bf v}(t+\delta t)\right].
-	\end{array}\right.
-$$
+	& {\bf r}(t+\delta t)
+	& =
+	& {\bf r}(t)
+	+ {\delta t/2}\ \left[{\bf v}(t)+{\bf v}(t+\delta t)\right].
+	\end{align}\right.
+```
 The scheme is solvable for ${\bf v}(t+\delta t)$-term [^tajima2018-book].
 As a result, only ${\bf E}$ & ${\bf B}$ fields at time moment $t+\delta t$ are unknown.
 The system can be solved as iterative predictor-corrector process.
@@ -378,7 +395,7 @@ The function accepts the following arguments:
 Resulting functional object has following signature
 `() -> _ltplib.RET_ERRC`.
 
-### `_ltplib.bind_remap_fn`
+## `_ltplib.bind_remap_fn`
 This binding is used to transfer data between value cache and numpy array.
 The function accepts the following arguments:
 - *vcache* --- value cache (local data);
