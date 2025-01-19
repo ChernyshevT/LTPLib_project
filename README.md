@@ -12,6 +12,12 @@ Features:
 - fast and flexible Monte-Carle module allowing to simulate arbitrary mixture of active and background components, taking into account anisotropic scattering.
 The current version of \_ltplib does not provide build-in field solvers, external one should be used.
 
+The code is based on former Θ-Hall [^chernyshev2019], [^chernyshev2022], but it was heavily modified and rewritten from scratch.
+
+[^chernyshev2019]: https://doi.org/10.1088/1361-6463/ab35cb
+
+[^chernyshev2022]: https://doi.org/10.1088/1361-6595/ac4179
+
 ## Build instructions
 The framework uses [pybind11](https://github.com/pybind/pybind11) to create transparent interface between python and c++ codes. Dependencies will be downloaded automatically by CMake FetchContent. To build the code just run the following statement
 ```sh
@@ -32,7 +38,7 @@ The following sections provide a brief overview for \_ltplib components.
 
 ## Main classes
 ### `_ltplib.grid`
-Gird is a primary class for every simulation. It describes geometry of the problem, boundary conditions, and spatial-decomposition for parallel computation. The code uses sightly modified approach of tile-decomposition described before in [\[Decyk, 2014\]](https://doi.org/10.1016/j.cpc.2013.10.013), [\[Decyk, 2015\]](https://doi.org/10.1109/MCSE.2014.131). The class constructor accepts following arguments:
+Gird is a primary class for every simulation. It describes geometry of the problem, boundary conditions, and spatial-decomposition for parallel computation. The code uses sightly modified approach of tile-decomposition described before in [^decyk2014], [^decyk2015]. The class constructor accepts following arguments:
 1. *nd* -- number of spatial dimensions;
 1. *step* -- list containing spatial steps along the each axis;
 1. *axes* -- list describing spatial decomposition along the each axis;
@@ -75,6 +81,9 @@ grid_cfg = [
 
 grid = ltp.grid(**grid_cfg)
 ```
+
+[^decyk2014]: https://doi.org/10.1016/j.cpc.2013.10.013
+[^decyk2015]: https://doi.org/10.1109/MCSE.2014.131
 
 ### `_ltplib.pstore`
 This class is used to store pVDF samples (macro-particles). The class constructor accepts following arguments:
@@ -122,7 +131,10 @@ There are optional keywords arguments:
 - *rescale* -- global scale factor for cross-section value.
 - *exterp* -- global extrapolation factor (see below).
 
-**Configuration sequence** is a list of dict-entries. There are three types of entries. Firstly, the active component should be selected (`"TYPE":"PARTICLE"`). For example
+#### Configuration sequence
+All processes are described in a list of dict-entries.
+There are three types of entries. Firstly, the active component should be selected (`"TYPE":"PARTICLE"`).
+For example
 ```python
 {"TYPE":"PARTICLE", "KEY":"e",
  "ENCFFT": 2.842815e-16, # coefficient to transform speed^2 -> energy
@@ -147,12 +159,149 @@ Processes' description follow next. For these entries `"TYPE"` could be
 - `"IONIZATION"`
 - `"ATTACHMENT"`
 
+For inelastic processes energy threshold $\varepsilon_{\rm th}$ should be defined by field `"THRESHOLD"`.
+
 Then the first set of processes is finished, the next background (or active particle) can be selected.
 > [!TIP]
 > It is allowed for same `"TYPE":"PARTICLE"` to repeat for each background.
 > Extra entries will be ignored.
-> It was made this way because it is pretty useful to store the conf.seq. as a preset for each type of gas.
+> It was made this way because it is pretty useful to store the conf.seq. as a preset for the each type of the gas.
 
+There are two forms of how process cross-section can be passed:
+directly `"CSEC": cs_data` or as a tuple with additional parameters
+`"CSEC" : (cs_data, {"scale" : 1e4, "exterp": 1})`.
+The *scale* parameter works together with *rescale*, and *exterp* overwrites the global value.
+Cross-section can be defined analytically as a python-function of two arguments
+$\sigma(\varepsilon,\,\varepsilon_{\rm th})$, for example:
+```python
+ "CSEC" : lambda en, th: 1e-15*(en-th)/((en-th)**2+1),
+```
+Or else, cross-section can be defined by list of points:
+```python
+ "CSEC" : [
+  (1.20e+01,1.00e-21),(2.00e+01,1.00e-20),(4.00e+01,1.70e-20),
+  (6.00e+01,1.80e-20),(8.00e+01,1.70e-20),(1.00e+02,1.40e-20),
+  (2.00e+02,1.00e-20),(6.00e+02,5.00e-21),(1.10e+03,2.00e-21),
+ ],
+```
+It is possible to read points from the text file:
+```python
+ "CSEC": "CH4_momentum_CommunityDB.txt",
+```
+> [!TIP]
+> Lines started with ``'#'``, ``'!'``, ``'%'``, ``'//'`` are ignored.
+
+If it is necessary, first line to start scanning can be specified by parameter *lineno*.
+It is also possible to read data directly from [LXCat](https://https://fr.lxcat.net/)-file using *search*-parameter.
+In this case scan will start from the desired string and points will be readed from the nearest data-block nestled between `"-----"`-lines.
+
+Log-log interpolation is used to map points into lookup-tale
+$\sigma(\varepsilon) = \exp(a \log\varepsilon)\cdot b$.
+If extrapolation parameter (*exterp*) is bigger than zero
+and condition $\partial\sigma/\partial\varepsilon$ is fulfilled for high-energies, then extrapolation will be build.
+Parameter *exterp* controls the range of energies to build extrapolation
+(*exterp* = $\log_{10}\max(\varepsilon)-\log_{10}\varepsilon$).
+Default value is 0.25, *exterp* = 0 turns off extrapolation.
+
+#### Approximation for anisotropic scattering
+In general, scattering is described by differential cross-section
+$\sigma(\varepsilon,\ \alpha)$, where
+$\sigma(\varepsilon)
+=2\pi\int_0^\pi \sin\alpha\ \sigma(\varepsilon,\ \alpha)\ {\rm d}\alpha$,
+$\alpha$ -- azimuthal scattering angle.
+Framework \_ltplib includes first-order approximation for $\sigma(\varepsilon,\ \alpha)$ uning momentum-transfer cross-section:
+$$
+	\sigma_{\rm m} = 2\pi\int_{0}^{\pi}
+	\left[1-\cos\alpha\sqrt{1-\frac{\varepsilon_{\rm th}}{\varepsilon}}\right]
+	\sigma(\varepsilon,\,\alpha)\ {\rm d}\alpha.
+$$
+Internally, fitting-parameter $\xi(\varepsilon)$ [^janssen2016] ,[^flynn2024] is used:
+$$
+	\frac{\sigma_{\rm m}}{\sigma}
+	= 1+\sqrt{1-\frac{\varepsilon_{\rm th}}{\varepsilon}} \cdot
+	\left[
+		1 - \frac{1-\xi}{\xi^2} \left( \frac{1+\xi}{2} \log\left(\frac{1+\xi}{1-\xi}\right) - \xi\right)
+	\right].
+$$
+By default, scattering considered to be isotropic, i.e.
+$\xi\equiv 0$ and $\sigma_{\rm m}=\sigma$.
+For $\xi \rightarrow +1$ small-angle collisions dominate (forward-scattering),
+$\xi \rightarrow -1$ correspond to large-angle collisions (back-scattering).
+> [!NOTE] $\sigma_{\rm m}/\sigma \leq 2$.
+
+There are three ways to define anisotropic scattering:
+- pass total (`"CSEC"`) + momentum-transfer cross-section (field `"MTCS"`, the syntax is identical to `"CSEC"`);
+- pass total (`"CSEC"`) cross-section + fitting parameter $\xi(\varepsilon - \varepsilon_{\rm th})$ as a python-function (field `"DCSFN"`);
+- or pass `"MTCS"` + `"DCSFN"`.
+
+[^janssen2016]: https://doi.org/10.1088/0963-0252/25/5/055026
+
+[^flynn2024]: https://doi.org/10.1088/1361-6463/ad3477
+
+#### Ionization
+In case of ionization, it is assumed that there is not impulse transfer between incident electron and heavy particle ($m/M$-term is ignored).
+The energy/impulse-balance is determined only by incident and secondary particle(s).
+This division is arbitrary, we consider particle secondary if it has smaller resulting energy, i.e. $\varepsilon_2<\varepsilon_1$.
+From energy conservation
+$$
+\varepsilon' = \varepsilon-\varepsilon_{\rm th} = \varepsilon_1 + \varepsilon_2.
+$$
+And from impulse conservation
+$$
+\begin{array}{lll}
+	\cos \alpha_1 & = & \sqrt{\varepsilon_1/\varepsilon'}
+	\\
+	\cos \alpha_2 & = & \sqrt{\varepsilon_2/\varepsilon'}
+	\\
+	\beta_1+\pi   & = & \beta_2 ~ \textrm{(polar scattering angles)}
+\end{array}
+$$
+As a result, ionization collisions are always considered anisotropic.
+
+The energy-spectrum for secondary electrons uses Opal-Peterson-Beaty approximation (OPB-approximation, [^opal1971], [^opal1972]).
+The spectrum is defined by a single parameter
+$\varepsilon_{\rm OPB}\sim\varepsilon_{\rm th}$ (field `"OPBPARAM"`).
+If it is not given, $\varepsilon_{\rm th}$ will be used instead.
+
+> [!NOTE] 
+> The current implementation is unfinished and doesn't allow to spawn multiple electrons or ions.
+> This functionality will be added in further versions.
+
+[^opal1971]: https://doi.org/10.1063/1.1676707
+
+[^opal1972]: https://doi.org/10.1016/s0092-640x(72)80004-4
+
+#### Examples
+1. Elastic collision, anisotropic scattering defined by $\sigma_{\rm m}$:
+```python
+{"TYPE":"ELASTIC",
+ "CSEC":("H2O/ELASTIC-ICS.song2021.txt"
+ , {"scale":1e-16}),
+ "MTCS":("H2O/ELASTIC-MTCS.song2021.txt"
+ , {"scale":1e-16}),
+},
+```
+2. Electron excitation, anisotropic scattering defined by $\xi(\varepsilon - \varepsilon_{\rm th})$:
+```python
+{"TYPE":"EXCITATION", "THRESHOLD":8.0,
+ "CSEC":  lambda en, th=8.0: 1e-17*(en-th)/((en-th)**(7/4)+1),
+ "DCSFN": lambda en, es=4.5: (4*en/es)/(1+4*en/es), # screened Coulomb
+},
+```
+3. Excitation of rotation-level (reading from LXCat, disable extrapolation)
+```python
+{"TYPE":"ROTATIONAL", "THRESHOLD":4.0e-2,
+ "CSEC":("H2O.txt"
+ , {"search":"H2O -> H2O(ROT)", "exterp":0}),
+},
+```
+4. Ionization
+```python
+{"TYPE":"IONIZATION", "THRESHOLD":12.61, "OPBPARAM":13.0,
+ "CSEC":(f"{fpath}/CH4_N2_O2_H2O.txt"
+ , {"search":"PARAM.:  E = 12.61 eV, complete set")),
+},
+```
+
+## Function bindings
 (To be done...)
-
-
