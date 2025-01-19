@@ -204,23 +204,14 @@ Default value is 0.25, *exterp* = 0 turns off extrapolation.
 #### Approximation for anisotropic scattering
 In general, scattering is described by differential cross-section
 $\sigma(\varepsilon,\ \alpha)$, where
-$\sigma(\varepsilon)
-=2\pi\int_0^\pi \sin\alpha\ \sigma(\varepsilon,\ \alpha)\ {\rm d}\alpha$,
+$\sigma(\varepsilon)=2\pi\int_0^\pi \sin\alpha\ \sigma(\varepsilon,\ \alpha)\ {\rm d}\alpha$,
 $\alpha$ -- azimuthal scattering angle (relative to the incident direction).
-Framework \_ltplib includes first-order approximation for $\sigma(\varepsilon,\ \alpha)$ uning momentum-transfer cross-section:
-$$
-	\sigma_{\rm m} = 2\pi\int_{0}^{\pi}
-	\left[1-\cos\alpha\sqrt{1-\frac{\varepsilon_{\rm th}}{\varepsilon}}\right]
-	\sigma(\varepsilon,\,\alpha)\ {\rm d}\alpha.
-$$
-Internally, fitting-parameter $\xi(\varepsilon)$ [^janssen2016] ,[^flynn2024] is used:
-$$
-	\frac{\sigma_{\rm m}}{\sigma}
-	= 1+\sqrt{1-\frac{\varepsilon_{\rm th}}{\varepsilon}} \cdot
-	\left[
-		1 - \frac{1-\xi}{\xi^2} \left( \frac{1+\xi}{2} \log\left(\frac{1+\xi}{1-\xi}\right) - \xi\right)
-	\right].
-$$
+Framework \_ltplib includes first-order approximation for $\sigma(\varepsilon,\ \alpha)$ uning momentum-transfer cross-section:\
+$$\sigma_{\rm m} = 2\pi\int_{0}^{\pi}\left[1-\cos\alpha\sqrt{1-\frac{\varepsilon_{\rm th}}{\varepsilon}}\right]\sigma(\varepsilon,\,\alpha)\ {\rm d}\alpha.$$
+
+Internally, fitting-parameter $\xi(\varepsilon)$ [^janssen2016] ,[^flynn2024] is used:\
+$$\frac{\sigma_{\rm m}}{\sigma} = 1+\sqrt{1-\frac{\varepsilon_{\rm th}}{\varepsilon}} \cdot \left[1 - \frac{1-\xi}{\xi^2} \left( \frac{1+\xi}{2} \log\left(\frac{1+\xi}{1-\xi}\right) - \xi\right)\right].$$
+
 By default, scattering considered to be isotropic, i.e.
 $\xi\equiv 0$ and $\sigma_{\rm m}=\sigma$.
 For $\xi \rightarrow +1$ small-angle collisions dominate (forward-scattering),
@@ -240,20 +231,11 @@ There are three ways to define anisotropic scattering:
 In case of ionization, it is assumed that there is not impulse transfer between incident electron and heavy particle ($m/M$-term is ignored).
 The energy/impulse-balance is determined only by incident and secondary particle(s).
 This division is arbitrary, we consider particle secondary if it has smaller resulting energy, i.e. $\varepsilon_2<\varepsilon_1$.
-From energy conservation
-$$
-\varepsilon' = \varepsilon-\varepsilon_{\rm th} = \varepsilon_1 + \varepsilon_2.
-$$
-And from impulse conservation
-$$
-\begin{array}{lll}
-	\cos \alpha_1 & = & \sqrt{\varepsilon_1/\varepsilon'}
-	\\
-	\cos \alpha_2 & = & \sqrt{\varepsilon_2/\varepsilon'}
-	\\
-	\beta_1+\pi   & = & \beta_2 ~ \textrm{(polar scattering angles)}
-\end{array}
-$$
+From energy conservation\
+$$\varepsilon' = \varepsilon-\varepsilon_{\rm th} = \varepsilon_1 + \varepsilon_2.$$
+
+And from impulse conservation\
+$$\begin{array}{lll} \cos \alpha_1 & = & \sqrt{\varepsilon_1/\varepsilon'} \\ \cos \alpha_2 & = & \sqrt{\varepsilon_2/\varepsilon'} \\ \beta_1+\pi   & = & \beta_2 ~ \textrm{(polar scattering angles)} \end{array} $$
 As a result, ionization collisions are always considered anisotropic.
 
 The energy-spectrum for secondary electrons uses Opal-Peterson-Beaty approximation (OPB-approximation, [^opal1971], [^opal1972]).
