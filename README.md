@@ -192,7 +192,7 @@ It is possible to read points from the text file:
 > Lines started with ``'#'``, ``'!'``, ``'%'``, ``'//'`` are ignored.
 
 If it is necessary, first line to start scanning can be specified by parameter *lineno*.
-It is also possible to read data directly from [LXCat](https://https://fr.lxcat.net/)-file using *search*-parameter.
+It is also possible to read data directly from [LXCat](https://lxcat.net)-file using *search*-parameter.
 In this case scan will start from the desired string and points will be readed from the nearest data-block nestled between `"-----"`-lines.
 
 Log-log interpolation is used to map points into lookup-tale
