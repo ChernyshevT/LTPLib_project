@@ -366,7 +366,7 @@ Our implementation caches $t$-moment field contribution for the each sample, so 
 
 [^tajima2018-book]: https://doi.org/10.1201/9780429501470
 
-## `_ltplib.bind_order_fn`
+### `_ltplib.bind_order_fn`
 After the run of `ppush_fn` the coherence of *pstore* is violated because of samples leaving the nodes.
 This function is used to create the binding to restore the coherence.
 The function accepts only one argument:
@@ -375,7 +375,7 @@ The function accepts only one argument:
 Resulting functional object has following signature
 `() -> _ltplib.RET_ERRC`.
 
-## `_ltplib.bind_ppost_fn` (obtain pVDF moments)
+### `_ltplib.bind_ppost_fn` (obtain pVDF moments)
 This binding is used to calculate raw pVDF moments:
 - concentration
 $n = \int_{\bf v}f({\bf r},\ {\bf v})\ {\rm d}{\bf v}$;
@@ -396,7 +396,7 @@ The function accepts the following arguments:
 Resulting functional object has following signature
 `() -> _ltplib.RET_ERRC`.
 
-## `_ltplib.bind_remap_fn`
+### `_ltplib.bind_remap_fn`
 This binding is used to transfer data between value cache and numpy array.
 The function accepts the following arguments:
 - *vcache* --- value cache (local data);
@@ -408,7 +408,7 @@ _ltplib.bind_remap_fn(vcache, ">", iodata) # to copy from vcache to iodata
 ```
 Functional object's signature is `() -> ()`.
 
-## `_ltplib.bind_mcsim_fn` (collision simulation)
+### `_ltplib.bind_mcsim_fn` (collision simulation)
 This binding is used to perform Monte-Carlo simulation.
 The arguments are:
 - *pstore* --- pVDF samples;
@@ -420,7 +420,7 @@ Functional object's signature is
 `(dt: float, seed: int) -> _ltplib.RET_ERRC`,
 where `dt` is time step and `seed` is random number.
 
-### Search algorithm
+#### Search algorithm
 
 (To be done...)
 
