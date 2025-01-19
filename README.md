@@ -10,7 +10,8 @@ Features:
 - high-order form-factors (up to 3);
 - explicit or semi-implicit particle movers;
 - fast and flexible Monte-Carle module allowing to simulate arbitrary mixture of active and background components, taking into account anisotropic scattering.
-The current version of \_ltplib does not provide build-in field solvers, external one should be used.
+
+> [!NOTE] The current version of \_ltplib does not provide build-in field solvers, external one should be used.
 
 The code is based on former Θ-Hall [^chernyshev2019], [^chernyshev2022], but it was heavily modified and rewritten from scratch.
 
@@ -30,7 +31,6 @@ As a result, two libraries will be generated:
 Native python-way installation via pip is not supported yet, so just copy both binaries in your project's directory. Is is highly recommended to have [numpy](https://github.com/numpy/numpy) installed. It is not necessary to run \_ltplib, but [numpy.ndarray](https://numpy.org/doc/stable/reference/arrays.ndarray.html) is used as a main interface between userspace python-code and \_ltplib.
 Build-in documentation is available as follows:
 ```python
-import numpy   as np
 import _ltplib as ltp
 help(ltp)
 ```
