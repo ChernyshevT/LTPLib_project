@@ -8,8 +8,8 @@ Features:
 - high-order form-factors (up to 3);
 - explicit or semi-implicit particle movers;
 - fast and flexible Monte-Carle module allowing to simulate arbitrary mixture of active and background components, taking into account anisotropic scattering.
-
-> [!NOTE] The current version of \_ltplib does not provide build-in field solvers, external one should be used.
+> [!NOTE]
+> The current version of \_ltplib does not provide build-in field solvers, external one should be used.
 
 The code is based on former Θ-Hall [^chernyshev2019], [^chernyshev2022], but it was heavily modified and rewritten from scratch.
 
@@ -230,7 +230,8 @@ By default, scattering considered to be isotropic, i.e.
 $\xi\equiv 0$ and $\sigma_{\rm m}=\sigma$.
 For $\xi \rightarrow +1$ small-angle collisions dominate (forward-scattering),
 $\xi \rightarrow -1$ correspond to large-angle collisions (back-scattering).
-> [!NOTE] $\sigma_{\rm m}/\sigma \leq 2$.
+> [!NOTE] 
+> $\sigma_{\rm m}/\sigma \leq 2$.
 
 There are three ways to define anisotropic scattering:
 - pass total (`"CSEC"`) + momentum-transfer cross-section (field `"MTCS"`, the syntax is identical to `"CSEC"`);
@@ -266,7 +267,6 @@ The energy-spectrum for secondary electrons uses Opal-Peterson-Beaty approximati
 The spectrum is defined by a single parameter
 $\varepsilon_{\rm OPB}\sim\varepsilon_{\rm th}$ (field `"OPBPARAM"`).
 If it is not given, $\varepsilon_{\rm th}$ will be used instead.
-
 > [!NOTE] 
 > The current implementation is unfinished and doesn't allow to spawn multiple electrons or ions.
 > This functionality will be added in further versions.
@@ -367,7 +367,8 @@ The system can be solved as iterative predictor-corrector process.
 
 Usually, $\lesssim 3$ additional iterations are enough to minimize  an error of closure.
 Our implementation caches $t$-moment field contribution for the each sample, so one should set double *nargs*-parameter for *pstore*.
-> [!NOTE] This scheme is not supported for cylindrical geometry, yet.
+> [!NOTE]
+> This scheme is not supported for cylindrical geometry, yet.
 
 [^borodachev2011]: Borodachev, L. V., & Kolomiets, D. O. (2011). _Calculation of particle dynamics in the nonradiative model of plasma._ In Mathematical Models and Computer Simulations (Vol. 3, Issue 3, pp. 357–364). Pleiades Publishing Ltd.
 [DOI:10.1134/s2070048211030045](https://doi.org/10.1134/S2070048211030045)
