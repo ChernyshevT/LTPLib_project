@@ -247,21 +247,23 @@ There are three ways to define anisotropic scattering:
 In case of ionization, it is assumed that there is not impulse transfer between incident electron and heavy particle ($m/M$-term is ignored).
 The energy/impulse-balance is determined only by incident and secondary particle(s).
 This division is arbitrary, we consider particle secondary if it has smaller resulting energy, i.e. $\varepsilon_2<\varepsilon_1$.
-From energy conservation
-```math
-	\varepsilon_1 + \varepsilon_2 = \varepsilon-\varepsilon_{\rm th}.
-```
-And from impulse conservation
+From energy and impulse conservation
 ```math
 \begin{align}
-	&\cos \alpha_1  =  \sqrt{\varepsilon_1\over\varepsilon-\varepsilon_{\rm th}}
+	& \varepsilon_1 + \varepsilon_2
+	& = \varepsilon-\varepsilon_{\rm th}
 	\\
-	&\cos \alpha_2  =  \sqrt{\varepsilon_2\over\varepsilon-\varepsilon_{\rm th}}
+	& \cos \alpha_1
+	& = \sqrt{\varepsilon_1\over\varepsilon-\varepsilon_{\rm th}}
 	\\
-	&\beta_1+\pi    =  \beta_2,
+	& \cos \alpha_2
+	& = \sqrt{\varepsilon_2\over\varepsilon-\varepsilon_{\rm th}}
+	\\
+	& \beta_1+\pi
+	& = \beta_2,
 \end{align}
 ```
-where $\beta$s are polar scattering angles.
+where $\beta_{1,\ 2}$ are polar scattering angles.
 As a result, ionization collisions are always considered anisotropic.
 
 The energy-spectrum for secondary electrons uses Opal-Peterson-Beaty approximation (OPB-approximation, [^opal1971], [^opal1972]).
@@ -409,7 +411,6 @@ Resulting functional object has following signature
 
 [^saint-raymond2009]: Saint-Raymond, L. (2009). _Hydrodynamic Limits of the Boltzmann Equation._ In Lecture Notes in Mathematics. Springer Berlin Heidelberg.
 [DOI:10.1007/978-3-540-92847-8](https://doi.org/10.1007/978-3-540-92847-8)
-
 
 ### `_ltplib.bind_remap_fn`
 This binding is used to transfer data between value cache and numpy array.

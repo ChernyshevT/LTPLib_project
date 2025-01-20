@@ -59,10 +59,12 @@ RET_ERRC run_mcsim
 			next: switch (cl.type) {
 				
 				case cltype::ERROR_ENLIMIT:
+					#pragma omp atomic
 					flags |= ERR_FLAG::ENERGYMAX;
 				goto skip;
 				
 				case cltype::ERROR_PROBMAX:
+					#pragma omp atomic
 					flags |= ERR_FLAG::PROBMAX;
 				goto skip;
 				
@@ -105,6 +107,8 @@ RET_ERRC run_mcsim
 				default: goto end;
 				
 			}
+			skip: continue;
+			
 			end: if (cl.chnl) {
 				u32 *cf{cfseg};
 				for (auto i{1u}, sh{cflatt.vsize}; i<=nd; ++i) {
@@ -125,8 +129,6 @@ RET_ERRC run_mcsim
 		}
 		// write actual particle number
 		pool.index[0] = j1-nh;
-		
-		skip: continue;
 	}
 	// end omp parallel for
 
