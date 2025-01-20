@@ -13,9 +13,11 @@ Features:
 
 The code is based on former Θ-Hall [^chernyshev2019], [^chernyshev2022], but it was heavily modified and rewritten from scratch.
 
-[^chernyshev2019]: https://doi.org/10.1088/1361-6463/ab35cb
+[^chernyshev2019]: Chernyshev, T., Son, E., & Gorshkov, O. (2019). _2D3V kinetic simulation of Hall effect thruster, including azimuthal waves and diamagnetic effect_. In Journal of Physics D: Applied Physics (Vol. 52, Issue 44, p. 444002). IOP Publishing. 
+[DOI:10.1088/1361-6463/ab35cb](https://doi.org/10.1088/1361-6463/ab35cb)
 
-[^chernyshev2022]: https://doi.org/10.1088/1361-6595/ac4179
+[^chernyshev2022]: Chernyshev, T., & Krivoruchko, D. (2022). _On a force balance and role of cathode plasma in Hall effect thrusters._ In Plasma Sources Science and Technology (Vol. 31, Issue 1, p. 015001). IOP Publishing.
+[DOI:10.1088/1361-6595/ac4179](https://doi.org/10.1088/1361-6595/ac4179)
 
 ## Build instructions
 The framework uses [pybind11](https://github.com/pybind/pybind11) to create transparent interface between python and c++ codes. Dependencies will be downloaded automatically by CMake FetchContent. To build the code just run the following statement
@@ -80,8 +82,11 @@ grid_cfg = [
 grid = ltp.grid(**grid_cfg)
 ```
 
-[^decyk2014]: https://doi.org/10.1016/j.cpc.2013.10.013
-[^decyk2015]: https://doi.org/10.1109/MCSE.2014.131
+[^decyk2014]: Decyk, V. K., & Singh, T. V. (2014). _Particle-in-Cell algorithms for emerging computer architectures._ In Computer Physics Communications (Vol. 185, Issue 3, pp. 708–719). Elsevier BV. 
+[DOI:10.1016/j.cpc.2013.10.013](https://doi.org/10.1016/j.cpc.2013.10.013)
+
+[^decyk2015]: Decyk, V. K. (2015). _Skeleton Particle-in-Cell Codes on Emerging Computer Architectures._ In Computing in Science & Engineering (Vol. 17, Issue 2, pp. 47–52). Institute of Electrical and Electronics Engineers (IEEE).
+[DOI:10.1109/mcse.2014.131](https://doi.org/10.1109/MCSE.2014.131)
 
 ### `_ltplib.pstore` (particle storage)
 This class is used to store pVDF samples (macro-particles). The class constructor accepts following arguments:
@@ -232,9 +237,11 @@ There are three ways to define anisotropic scattering:
 - pass total (`"CSEC"`) cross-section + fitting parameter $\xi(\varepsilon - \varepsilon_{\rm th})$ as a python-function (field `"DCSFN"`);
 - or pass `"MTCS"` + `"DCSFN"`.
 
-[^janssen2016]: https://doi.org/10.1088/0963-0252/25/5/055026
+[^janssen2016]: Janssen, J. F. J., Pitchford, L. C., Hagelaar, G. J. M., & van Dijk, J. (2016). _Evaluation of angular scattering models for electron-neutral collisions in Monte Carlo simulations._ In Plasma Sources Science and Technology (Vol. 25, Issue 5, p. 055026). IOP Publishing. 
+[DOI:10.1088/0963-0252/25/5/055026](https://doi.org/10.1088/0963-0252/25/5/055026)
 
-[^flynn2024]: https://doi.org/10.1088/1361-6463/ad3477
+[^flynn2024]: Flynn, M., Vialetto, L., Fierro, A., Neuber, A., & Stephens, J. (2024). _Benchmark calculations for anisotropic scattering in kinetic models for low temperature plasma._ In Journal of Physics D: Applied Physics (Vol. 57, Issue 25, p. 255204). IOP Publishing.
+[DOI:10.1088/1361-6463/ad3477](https://doi.org/10.1088/1361-6463/ad3477)
 
 #### Ionization
 In case of ionization, it is assumed that there is not impulse transfer between incident electron and heavy particle ($m/M$-term is ignored).
@@ -266,9 +273,11 @@ If it is not given, $\varepsilon_{\rm th}$ will be used instead.
 > The current implementation is unfinished and doesn't allow to spawn multiple electrons or ions.
 > This functionality will be added in further versions.
 
-[^opal1971]: https://doi.org/10.1063/1.1676707
+[^opal1971]: Opal, C. B., Peterson, W. K., & Beaty, E. C. (1971). _Measurements of Secondary-Electron Spectra Produced by Electron Impact Ionization of a Number of Simple Gases._ In The Journal of Chemical Physics (Vol. 55, Issue 8, pp. 4100–4106). AIP Publishing.
+[DOI:10.1063/1.1676707](https://doi.org/10.1063/1.1676707)
 
-[^opal1972]: https://doi.org/10.1016/s0092-640x(72)80004-4
+[^opal1972]: Opal, C. B., Beaty, E. C., & Peterson, W. K. (1972). _Tables of secondary-electron-production cross sections._ In Atomic Data and Nuclear Data Tables (Vol. 4, pp. 209–253). Elsevier BV. 
+[DOI:10.1016/s0092-640x(72)80004-4](https://doi.org/10.1016/s0092-640x(72)80004-4)
 
 #### Entries examples
 1. Elastic collision, anisotropic scattering defined by $\sigma_{\rm m}$:
@@ -317,7 +326,7 @@ Resulting functional object has following signature
 where `dt` is time step. Two solvers are available.
 
 #### Explicit scheme
-This is 2nd-order integrator utilizes Leap-Frog algorithm with Boris splitting scheme [^birdsall1991].
+This is 2nd-order integrator utilizes Leap-Frog algorithm with Boris splitting scheme [^birdsall2018].
 This scheme is is widely known and it is *de-facto standard* in context of plasma simulation. 
 In this scheme samples' coordinates and velocities are shifted by $\delta t/2$:
 ```math
@@ -333,7 +342,8 @@ In this scheme samples' coordinates and velocities are shifted by $\delta t/2$:
 ```
 The scheme is encoded by `"LEAPF"`-keyword.
 
-[^birdsall1991]: https://doi.org/10.1201/9781315275048
+[^birdsall2018]: Birdsall, C. K., & Langdon, A. B. (2018). _Plasma Physics via Computer Simulation._ CRC Press.
+[DOI:10.1201/9781315275048](https://doi.org/10.1201/9781315275048)
 
 #### Semi-implicit scheme
 This 2nd-order scheme was introduced by Borodachev and Kolomiets [^borodachev2011].
@@ -361,9 +371,11 @@ Usually, $\lesssim 3$ additional iterations are enough to minimize  an error of 
 Our implementation caches $t$-moment field contribution for the each sample, so one should set double *nargs*-parameter for *pstore*.
 > [!NOTE] This scheme is not supported for cylindrical geometry, yet.
 
-[^borodachev2011]: https://doi.org/10.1134/S2070048211030045
+[^borodachev2011]: Borodachev, L. V., & Kolomiets, D. O. (2011). _Calculation of particle dynamics in the nonradiative model of plasma._ In Mathematical Models and Computer Simulations (Vol. 3, Issue 3, pp. 357–364). Pleiades Publishing Ltd.
+[DOI:10.1134/s2070048211030045](https://doi.org/10.1134/S2070048211030045)
 
-[^tajima2018-book]: https://doi.org/10.1201/9780429501470
+[^tajima2018-book]: Tajima, T. (2018). _Computational Plasma Physics._ CRC Press. 
+[DOI:10.1201/9780429501470](https://doi.org/10.1201/9780429501470)
 
 ### `_ltplib.bind_order_fn`
 After the run of `ppush_fn` the coherence of *pstore* is violated because of samples leaving the nodes.
@@ -375,7 +387,7 @@ Resulting functional object has following signature
 `() -> _ltplib.RET_ERRC`.
 
 ### `_ltplib.bind_ppost_fn` (obtain pVDF moments)
-This binding is used to calculate raw pVDF moments:
+This binding is used to calculate raw pVDF moments [^saint-raymond2009]:
 - concentration
 $n = \int_{\bf v}f({\bf r},\ {\bf v})\ {\rm d}{\bf v}$;
 - flux vector
@@ -394,6 +406,10 @@ The function accepts the following arguments:
 
 Resulting functional object has following signature
 `() -> _ltplib.RET_ERRC`.
+
+[^saint-raymond2009]: Saint-Raymond, L. (2009). _Hydrodynamic Limits of the Boltzmann Equation._ In Lecture Notes in Mathematics. Springer Berlin Heidelberg.
+[DOI:10.1007/978-3-540-92847-8](https://doi.org/10.1007/978-3-540-92847-8)
+
 
 ### `_ltplib.bind_remap_fn`
 This binding is used to transfer data between value cache and numpy array.
