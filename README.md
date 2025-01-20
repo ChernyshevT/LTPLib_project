@@ -250,20 +250,16 @@ This division is arbitrary, we consider particle secondary if it has smaller res
 From energy and impulse conservation
 ```math
 \begin{align}
-	& \varepsilon_1 + \varepsilon_2
-	& = \varepsilon-\varepsilon_{\rm th}
+	& \varepsilon_1 + \varepsilon_2 & = & \varepsilon-\varepsilon_{\rm th}
 	\\
-	& \cos \alpha_1
-	& = \sqrt{\varepsilon_1\over\varepsilon-\varepsilon_{\rm th}}
+	& \cos \alpha_1 & = & \sqrt{\varepsilon_1\over\varepsilon-\varepsilon_{\rm th}}
 	\\
-	& \cos \alpha_2
-	& = \sqrt{\varepsilon_2\over\varepsilon-\varepsilon_{\rm th}}
+	& \cos \alpha_2 & = & \sqrt{\varepsilon_2\over\varepsilon-\varepsilon_{\rm th}}
 	\\
-	& \beta_1+\pi
-	& = \beta_2,
+	& \beta_1+\pi & = & \beta_2,
 \end{align}
 ```
-where $\beta_{1,\ 2}$ are polar scattering angles.
+where $\beta_{1}$ & $\beta_{2}$ are polar scattering angles.
 As a result, ionization collisions are always considered anisotropic.
 
 The energy-spectrum for secondary electrons uses Opal-Peterson-Beaty approximation (OPB-approximation, [^opal1971], [^opal1972]).
