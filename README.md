@@ -329,13 +329,13 @@ This scheme is is widely known and it is *de-facto standard* in context of plasm
 In this scheme samples' coordinates and velocities are shifted by $\delta t/2$:
 ```math
 	\left\{\begin{align}
-	& {\bf v}(t+{\delta t/2})
+	& \vec{ v}(t+{\delta t/2})
 	& =
-	& {\bf v}(t-{\delta t/2}) + \delta t\ {\bf a}(t)
+	& \vec{ v}(t-{\delta t/2}) + \delta t\ \vec{ a}(t)
 	\\
-	& {\bf r}(t+\delta t)
+	& \vec{ r}(t+\delta t)
 	& =
-	& {\bf r}(t) + \delta t\ {\bf v}(t+{\delta t/2}).
+	& \vec{ r}(t) + \delta t\ \vec{ v}(t+{\delta t/2}).
 	\end{align}\right.
 ```
 The scheme is encoded by `"LEAPF"`-keyword.
@@ -348,21 +348,21 @@ This 2nd-order scheme was introduced by Borodachev and Kolomiets [^borodachev201
 Samples' coordinates and velocities are synchronous in this scheme:
 ```math
 	\left\{\begin{align}
-	& {\bf v}(t+\delta t)
+	& \vec{ v}(t+\delta t)
 	& =
-	& {\bf v}(t)
-	+ {\delta t/2}\ \left[{\bf a}(t) + {\bf a}(t+\delta t)\right]
+	& \vec{ v}(t)
+	+ {\delta t/2}\ \left[\vec{ a}(t) + \vec{ a}(t+\delta t)\right]
 	\\
-	& {\bf r}(t+\delta t)
+	& \vec{ r}(t+\delta t)
 	& =
-	& {\bf r}(t)
-	+ {\delta t/2}\ \left[{\bf v}(t)+{\bf v}(t+\delta t)\right].
+	& \vec{ r}(t)
+	+ {\delta t/2}\ \left[\vec{ v}(t)+\vec{ v}(t+\delta t)\right].
 	\end{align}\right.
 ```
-The scheme is solvable for ${\bf v}(t+\delta t)$-term [^tajima2018-book].
-As a result, only ${\bf E}$ & ${\bf B}$ fields at time moment $t+\delta t$ are unknown.
+The scheme is solvable for $\vec{ v}(t+\delta t)$-term [^tajima2018-book].
+As a result, only $\vec{ E}$ & $\vec{ B}$ fields at time moment $t+\delta t$ are unknown.
 The system can be solved as iterative predictor-corrector process.
-- Initial rough approximation (predictor step) assumes ${\bf a}(t+\delta t) = {\bf a}(t)$.
+- Initial rough approximation (predictor step) assumes $\vec{ a}(t+\delta t) = \vec{ a}(t)$.
 - Following corrector step adjusts approximation using updated field values.
 
 Usually, $\lesssim 3$ additional iterations are enough to minimize  an error of closure.
@@ -388,11 +388,11 @@ Resulting functional object has following signature
 ### `_ltplib.bind_ppost_fn` (obtain pVDF moments)
 This binding is used to calculate raw pVDF moments [^saint-raymond2009]:
 - concentration
-$n = \int_{\bf v}f({\bf r},\ {\bf v})\ {\rm d}{\bf v}$;
+$n = \int_\vec{ v}f(\vec{ r},\ \vec{ v})\ {\rm d}\vec{ v}$;
 - flux vector
-${\bf v} = \int_{\bf v}{\bf v}\ f({\bf r},\ {\bf v})\ {\rm d}{\bf v}$;
+$\vec{ v} = \int_\vec{ v}\vec{ v}\ f(\vec{ r},\ \vec{ v})\ {\rm d}\vec{ v}$;
 - pressure/stress tensor
-${\bf p} = \int_{\bf v}{\bf v}\otimes{\bf v}\ f({\bf r},\ {\bf v})\ {\rm d}{\bf v}$.
+$\vec{ p} = \int_\vec{ v}\vec{ v}\otimes\vec{ v}\ f(\vec{ r},\ \vec{ v})\ {\rm d}\vec{ v}$.
 
 The function accepts the following arguments:
 - *pstore* --- pVDF samples;
@@ -400,8 +400,8 @@ The function accepts the following arguments:
 - *mode* --- string describing moments to calculate:
 	- `"C"` --- concentration;
 	- `"CF"` --- concentration, flux;
-	- `"CFP"` --- concentration, flux, pressure (${\bf p}_{ij,\ i = j}$);
-	- `"CFPS"` --- concentration, flux, pressure, stress (${\bf p}_{ij,\ i \ne j}$).
+	- `"CFP"` --- concentration, flux, pressure ($\vec{ p}_{ij,\ i = j}$);
+	- `"CFPS"` --- concentration, flux, pressure, stress ($\vec{ p}_{ij,\ i \ne j}$).
 
 Resulting functional object has following signature
 `() -> _ltplib.RET_ERRC`.
