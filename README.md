@@ -392,7 +392,7 @@ $n = \int_\vec{ v}f(\vec{ r},\ \vec{ v})\ {\rm d}\vec{ v}$;
 - flux vector
 $\vec{ v} = \int_\vec{ v}\vec{ v}\ f(\vec{ r},\ \vec{ v})\ {\rm d}\vec{ v}$;
 - pressure/stress tensor
-$\vec{ p} = \int_\vec{ v}\vec{ v}\otimes\vec{ v}\ f(\vec{ r},\ \vec{ v})\ {\rm d}\vec{ v}$.
+${\rm p} = \int_\vec{ v}\vec{ v}\otimes\vec{ v}\ f(\vec{ r},\ \vec{ v})\ {\rm d}\vec{ v}$.
 
 The function accepts the following arguments:
 - *pstore* --- pVDF samples;
@@ -401,7 +401,7 @@ The function accepts the following arguments:
 	- `"C"` --- concentration;
 	- `"CF"` --- concentration, flux;
 	- `"CFP"` --- concentration, flux, pressure ($\vec{ p}_{ij,\ i = j}$);
-	- `"CFPS"` --- concentration, flux, pressure, stress ($\vec{ p}_{ij,\ i \ne j}$).
+	- `"CFPS"` --- concentration, flux, pressure, stress (${\rm p}_{ij,\ i \ne j}$).
 
 Resulting functional object has following signature
 `() -> _ltplib.RET_ERRC`.
