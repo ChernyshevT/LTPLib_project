@@ -395,7 +395,7 @@ The function accepts the following arguments:
 Resulting functional object has following signature
 `() -> _ltplib.RET_ERRC`.
 
-## `_ltplib.bind_remap_fn`
+### `_ltplib.bind_remap_fn`
 This binding is used to transfer data between value cache and numpy array.
 The function accepts the following arguments:
 - *vcache* --- value cache (local data);
