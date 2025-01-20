@@ -170,7 +170,7 @@ directly `"CSEC": cs_data` or as a tuple with additional parameters
 `"CSEC" : (cs_data, {"scale" : 1e4, "exterp": 1})`.
 The *scale* parameter works together with *rescale*, and *exterp* overwrites the global value.
 Cross-section can be defined analytically as a python-function of two arguments
-$\sigma(\varepsilon,\,\varepsilon_{\rm th})$, for example:
+$\sigma(\varepsilon,\ \varepsilon_{\rm th})$, for example:
 ```python
  "CSEC" : lambda en, th: 1e-15*(en-th)/((en-th)**2+1),
 ```
@@ -211,7 +211,7 @@ Framework \_ltplib includes first-order approximation for $\sigma(\varepsilon,\ 
 ```math
 	\sigma_{\rm m} = 2\pi\int_{0}^{\pi}
 	\left[1-\cos\alpha\sqrt{1-\frac{\varepsilon_{\rm th}}{\varepsilon}}\right]
-	\sigma(\varepsilon,\,\alpha)\ {\rm d}\alpha.
+	\sigma(\varepsilon,\ \alpha)\ {\rm d}\alpha.
 ```
 Internally, fitting-parameter $\xi(\varepsilon)$ [^janssen2016] ,[^flynn2024] is used:
 ```math
