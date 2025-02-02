@@ -11,7 +11,7 @@ Features:
 > [!NOTE]
 > The current version of \_ltplib does not provide build-in field solvers, external one should be used.
 
-The code is based on former Θ-Hall [^chernyshev2019], [^chernyshev2022], but it was heavily modified and rewritten from scratch.
+The code is based on former Θ-Hall [^chernyshev2019][^chernyshev2022], but it was heavily modified and rewritten from scratch.
 
 [^chernyshev2019]: Chernyshev, T., Son, E., & Gorshkov, O. (2019). _2D3V kinetic simulation of Hall effect thruster, including azimuthal waves and diamagnetic effect_. In Journal of Physics D: Applied Physics (Vol. 52, Issue 44, p. 444002). IOP Publishing. 
 [DOI:10.1088/1361-6463/ab35cb](https://doi.org/10.1088/1361-6463/ab35cb)
@@ -38,7 +38,7 @@ The following sections provide a brief overview for \_ltplib components.
 
 ## Main classes
 ### `_ltplib.grid` (problem's geometry)
-Gird is a primary class for every simulation. It describes geometry of the problem, boundary conditions, and spatial-decomposition for parallel computation. The code uses sightly modified approach of tile-decomposition described before in [^decyk2014], [^decyk2015]. The class constructor accepts following arguments:
+Gird is a primary class for every simulation. It describes geometry of the problem, boundary conditions, and spatial-decomposition for parallel computation. The code uses sightly modified approach of tile-decomposition described before in [^decyk2014][^decyk2015]. The class constructor accepts following arguments:
 1. *nd* -- number of spatial dimensions;
 1. *step* -- list containing spatial steps along the each axis;
 1. *axes* -- list describing spatial decomposition along the each axis;
@@ -218,7 +218,7 @@ Framework \_ltplib includes first-order approximation for $\sigma(\varepsilon,\ 
 	\left[1-\cos\alpha\sqrt{1-\frac{\varepsilon_{\rm th}}{\varepsilon}}\right]
 	\sigma(\varepsilon,\ \alpha)\ {\rm d}\alpha.
 ```
-Internally, fitting-parameter $\xi(\varepsilon)$ [^janssen2016] ,[^flynn2024] is used:
+Internally, fitting-parameter $\xi(\varepsilon)$ [^janssen2016][^flynn2024] is used:
 ```math
 	\frac{\sigma_{\rm m}}{\sigma}
 	= 1+\sqrt{1-\frac{\varepsilon_{\rm th}}{\varepsilon}} \cdot
@@ -263,7 +263,7 @@ From energy and impulse conservation
 where $\beta_{1}$ & $\beta_{2}$ are polar scattering angles.
 As a result, ionization collisions are always considered anisotropic.
 
-The energy-spectrum for secondary electrons uses Opal-Peterson-Beaty approximation (OPB-approximation, [^opal1971], [^opal1972]).
+The energy-spectrum for secondary electrons uses Opal-Peterson-Beaty approximation (OPB-approximation, [^opal1971][^opal1972]).
 The spectrum is defined by a single parameter
 $\varepsilon_{\rm OPB}\sim\varepsilon_{\rm th}$ (field `"OPBPARAM"`).
 If it is not given, $\varepsilon_{\rm th}$ will be used instead.
