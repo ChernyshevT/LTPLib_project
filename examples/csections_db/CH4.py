@@ -11,7 +11,7 @@
 	# Cross Sections for Electron Collisions with Methane
 	# doi: 10.1063/1.4918630,  cite: song2015
 	{"TYPE":"ELASTIC",
-	 "REF":r"\cite{0.1007/BF01447255,song2015}",
+	 "REF":r"\cite{morgan1992,song2015}",
 	 "CSEC":(f"{fpath}/CH4/ELASTIC.txt",
 	 {"search":"DATABASE:         Morgan (Kinema Research  Software)"}),
 	 "MTCS":(f"{fpath}/CH4/ELASTIC.txt",
