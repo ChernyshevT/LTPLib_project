@@ -13,10 +13,14 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 	}
 	
 	// setup axes
-	if (py::len(cfg["axes"]) != nd) throw std::invalid_argument("axes");
+	if (py::len(cfg["axes"]) != nd) {
+		throw_bad_arg("len(axes) = {} != {}", py::len(cfg["axes"]), nd);
+	}
 	size_t lctr_size{1};
 	for (auto axis : cfg["axes"]) {
-		if (py::len(axis) <= 2) throw std::invalid_argument("axes");
+		if (py::len(axis) <= 1) {
+			throw_bad_arg("len(axix) = {} <= {}", py::len(axis), 1);
+		}
 		
 		std::vector<u32> axpts;
 		std::vector<f32> edpts;
@@ -38,15 +42,13 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 		if (nd == 2 and py::cast<std::string>(cfg["cylcrd"]) == "x"s) {
 			flags["cylcrd"] = 1;
 		} else {
-			throw std::invalid_argument
-			(fmt::format("grid{} isn't suitable for cylindrical coordinates!", nd));
+			throw_bad_arg("grid{} isn't suitable for cylindrical coordinates!", nd);
 		}
 	}
 	flags.insert({"loopax", 0}); if (cfg.contains("loopax")) {
 		for (auto c : py::cast<std::string>(cfg["loopax"])) {
 			if (u8(c-'x') >= nd) {
-				throw std::invalid_argument
-				(fmt::format("invalid loop axis: \'{}\'!", c));
+				throw_bad_arg("invalid loop axis: \'{}\'!", c);
 			}
 			flags["loopax"] |= 1<<(c-'x'); //TODO CHECK FİX
 		}
@@ -70,12 +72,12 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 		
 		size_t k{0}, sh{1};
 		for (int i{nd-1}; i >= 0; --i) {
-			if (map[i] >= shape[i]) throw std::invalid_argument("node is out of domain");
+			if (map[i] >= shape[i]) throw_bad_arg("node is out of domain");
 			
 			k  += (map[i]+1)*sh;
 			sh *= shape[i]+2;
 		}
-		if (lctr[k] != 0) throw std::invalid_argument("node is duplicated");
+		if (lctr[k] != 0) throw_bad_arg("node is duplicated");
 		lctr[k] = nodes.size()+1;
 		
 		u64 mshift{0};

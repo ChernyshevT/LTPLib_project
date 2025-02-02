@@ -2,6 +2,8 @@
 
 import json, argparse, os
 
+from typing import Callable
+
 def fix(obj):
 	if isinstance(obj, str) and len(obj) and obj[0]=="@":
 		return eval(obj[1:])
@@ -19,6 +21,19 @@ def is_valid_directory(path):
 	if not os.path.isdir(path):
 		raise argparse.ArgumentTypeError(f"\"{path}\" is not a valid directory")
 	return path
+	
+################################################################################
+
+def check_arg(validator: Callable, error_msg: str):
+	class action_cls(argparse.Action):
+		def __call__(self, parser, namespace, values, option_string=None):
+			if not validator(values):
+				if option_string:
+					parser.error(f"argument {option_string}: {error_msg.format(values)}")
+				else:
+					pass
+			setattr(namespace, self.dest, values)
+	return action_cls
 
 ################################################################################
 def parse_args(args, cfg):
@@ -37,5 +52,4 @@ def parse_args(args, cfg):
 	return parser.parse_args(args[1:])
 
 ################################################################################
-# Specify the entities to export
-__all__ = ["parse_args","argparse"]
+__all__ = ["argparse", "check_arg", "parse_args"]

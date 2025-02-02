@@ -1,5 +1,5 @@
-
-#!/usr/bin/env python3
+import os, sys
+import numpy as np
 
 TeX_preamble =\
 r"""
@@ -21,8 +21,6 @@ mp.rc("lines",      linewidth=0.5)
 mp.rc("text",       usetex=True)
 mp.rc("text.latex", **{"preamble":TeX_preamble})
 import matplotlib.pyplot as plt
-
-import numpy as np
 
 ################################################################################
 def mk_subplots(ws, hs, name="", **kws):
@@ -62,7 +60,7 @@ def make_legend(ax, lines, labels, **kwargs):
 
 ################################################################################
 def save_fig(fig, **kwargs):
-	import os
+	
 	import logging; logger = logging.getLogger();
 	
 	if fpath := kwargs.get("fpath"):
@@ -81,7 +79,6 @@ def save_fig(fig, **kwargs):
 
 ################################################################################
 def show_streams(ax, step, order):
-	# ~ xs =
 	pass
 
 	

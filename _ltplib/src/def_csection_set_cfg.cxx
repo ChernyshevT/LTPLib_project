@@ -33,10 +33,10 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts) {
 		default: throw std::invalid_argument \
 		(fmt::format("unknown field \"{}\"", py::cast<std::string>(key)));
 		case "TYPE"_hash:
-			info = py::cast<std::string>(val);
+			descr = py::cast<std::string>(val);
 			switch (_hash(val)) {
 				default: throw std::invalid_argument \
-				(fmt::format("invalid TYPE: \"{}\"!", info));
+				(fmt::format("invalid TYPE: \"{}\"!", descr));
 				case "ELASTIC"_hash:
 					opc = opcode::ELASTIC;
 					continue;
@@ -80,11 +80,11 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts) {
 		case "SWAWN"_hash:
 			throw std::logic_error ("\"SPAWN\" is not implemented yet!");
 		case "COMMENT"_hash: try {
-				extra["comment"] = entry["COMMENT"];
+				extra["comment"] = py::cast<std::string>(entry["COMMENT"]);
 			} catch (...) {}
 			continue;
 		case "REF"_hash: try {
-				extra["ref"] = entry["REF"];
+				extra["ref"] = py::cast<std::string>(entry["REF"]);
 			} catch (...) {}
 			continue;
 	}
@@ -93,13 +93,7 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts) {
 	if (enth < 0 \
 	or (enth != 0 and opc == opcode::ELASTIC) \
 	or (enth == 0 and opc != opcode::ELASTIC and opc != opcode::ATTACHMENT)) \
-	throw std::invalid_argument (fmt::format("{}/THRESHOLD = {}", info, enth));
-	
-	if (opc >= opcode::IONIZATION and FLAGS[MTCS_DEF]) throw \
-	std::invalid_argument (fmt::format("{}/MTCS makes no sense", info));
-	
-	if (opc >= opcode::IONIZATION and FLAGS[DCSFN_DEF]) throw \
-	std::invalid_argument (fmt::format("{}/DCSFN makes no sense", info));
+	throw std::invalid_argument (fmt::format("{}/THRESHOLD = {}", descr, enth));
 	
 	/****************************************************************************/
 	csfunc_t _fn0, _fn1, _fnX; // funcs to capture (we can not use references here!)
@@ -150,6 +144,12 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts) {
 			return (enel >= th ? s1 / MTCS_from_DCS (xi, ef) : NAN);
 		};
 	}
+	
+	if (opc >= opcode::IONIZATION and FLAGS[MTCS_DEF]) throw \
+	std::invalid_argument (fmt::format("{}/MTCS makes no sense", descr));
+	if (opc >= opcode::IONIZATION and FLAGS[DCSFN_DEF]) throw \
+	std::invalid_argument (fmt::format("{}/DCSFN makes no sense", descr));
+	
 	/****************************************************************************/
 	fn0 = std::move(_fn0);
 	fn1 = std::move(_fn1);
@@ -400,8 +400,8 @@ csection_set_cfg::csection_set_cfg (
 			db_entries.emplace_back(entry, opts);
 			auto &dentry = db_entries.back();
 			
-			chinfo.push_back(fmt::format("{}+{} {}"
-			, ptinfo[tag], bginfo[flags.n0_idx], dentry.info));
+			chinfo.push_back\
+			(fmt::format("{}+{} {}", ptinfo[tag], bginfo[flags.n0_idx], dentry.descr));
 
 			add_cs(tag, flags.jset>0, dentry);
 			add_op(0, dentry.opc);

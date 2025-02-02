@@ -24,7 +24,7 @@ typedef std::function<f32(f32)> csfunc_t;
 struct db_entry_t {
 	opcode         opc;
 	std::bitset<5> FLAGS{0};
-	std::string    info;
+	std::string  descr;
 	f32          enth;
 	f32          rmax;
 	csfunc_t       fn0;

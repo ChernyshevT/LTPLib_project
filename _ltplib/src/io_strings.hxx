@@ -76,7 +76,8 @@ inline constexpr size_t _hash (const char *str, size_t n=0) {
 	// FNV-1a
 	size_t res{0xcbf29ce484222325}, prime{0x00000100000001b3};
 	for (size_t i{0}; i < n or str[i]; ++i) {
-		res = (res ^ str[i]) * prime;
+		res = res ^ str[i];
+		res = res * prime;
 	}
 	return res;
 }
@@ -213,14 +214,19 @@ namespace logger {
 
 }
 
+template <typename... ts>
+void throw_bad_arg(fmt::format_string<ts...> fmt_str, ts&&... args) {
+	throw std::invalid_argument(fmt::format(fmt_str, std::forward<ts>(args)...));
+}
+
 template<typename tp>
 const char* datatypecode() {
 	if constexpr (std::is_same<tp, u8>::value)  return "u8";
 	if constexpr (std::is_same<tp, u16>::value) return "u16";
 	if constexpr (std::is_same<tp, u32>::value) return "u32";
 	if constexpr (std::is_same<tp, u64>::value) return "u64";
-	if constexpr (std::is_same<tp, f32>::value)    return "f32";
-	if constexpr (std::is_same<tp, f64>::value)   return "f64";
+	if constexpr (std::is_same<tp, f32>::value) return "f32";
+	if constexpr (std::is_same<tp, f64>::value) return "f64";
 	else throw;
 }
 

@@ -325,7 +325,7 @@ where `dt` is time step. Two solvers are available.
 
 #### Explicit scheme
 This is 2nd-order integrator utilizes Leap-Frog algorithm with Boris splitting scheme [^birdsall2018].
-This scheme is is widely known and it is *de-facto standard* in context of plasma simulation. 
+This scheme is is widely known and it is *de-facto standard* in context of plasma simulation [^vxb-rotation]. 
 In this scheme samples' coordinates and velocities are shifted by $\delta t/2$:
 ```math
 	\left\{\begin{align}
@@ -342,6 +342,8 @@ The scheme is encoded by `"LEAPF"`-keyword.
 
 [^birdsall2018]: Birdsall, C. K., & Langdon, A. B. (2018). _Plasma Physics via Computer Simulation._ CRC Press.
 [DOI:10.1201/9781315275048](https://doi.org/10.1201/9781315275048)
+
+[^vxb-rotation]: [particleincell.com/2011/vxb-rotation](https://www.particleincell.com/2011/vxb-rotation)
 
 #### Semi-implicit scheme
 This 2nd-order scheme was introduced by Borodachev and Kolomiets [^borodachev2011].
@@ -409,18 +411,6 @@ Resulting functional object has following signature
 [^saint-raymond2009]: Saint-Raymond, L. (2009). _Hydrodynamic Limits of the Boltzmann Equation._ In Lecture Notes in Mathematics. Springer Berlin Heidelberg.
 [DOI:10.1007/978-3-540-92847-8](https://doi.org/10.1007/978-3-540-92847-8)
 
-### `_ltplib.bind_remap_fn`
-This binding is used to transfer data between value cache and numpy array.
-The function accepts the following arguments:
-- *vcache* --- value cache (local data);
-- *direction* --- string;
-- *iodata* --- numpy array (global data).
-```python
-_ltplib.bind_remap_fn(vcache, "<", iodata) # to copy from iodata to vcache
-_ltplib.bind_remap_fn(vcache, ">", iodata) # to copy from vcache to iodata 
-```
-Functional object's signature is `() -> ()`.
-
 ### `_ltplib.bind_mcsim_fn` (collision simulation)
 This binding is used to perform Monte-Carlo simulation.
 The arguments are:
@@ -436,6 +426,18 @@ where `dt` is time step and `seed` is random number.
 #### Search algorithm
 
 (To be done...)
+
+### `_ltplib.bind_remap_fn`
+This binding is used to transfer data between value cache and numpy array.
+The function accepts the following arguments:
+- *vcache* --- value cache (local data);
+- *direction* --- string;
+- *iodata* --- numpy array (global data).
+```python
+_ltplib.bind_remap_fn(vcache, "<", iodata) # to copy from iodata to vcache
+_ltplib.bind_remap_fn(vcache, ">", iodata) # to copy from vcache to iodata 
+```
+Functional object's signature is `() -> ()`.
 
 # Code examples for \ltplib
 

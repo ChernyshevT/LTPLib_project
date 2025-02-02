@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 import os, io, zipfile, json
 import numpy as np
-from types import SimpleNamespace
 
-import os
-import logging; logger = logging.getLogger()
+from types import SimpleNamespace
+from .loggers import *
 
 ################################################################################
 def to_namspace(obj):
@@ -35,6 +34,8 @@ class npEncoder(json.JSONEncoder):
 		return json.JSONEncoder.default(self, obj)
 
 ################################################################################
+
+logger = get_logger()
 
 class load_frame:
 	__slots__ = ("_zipf", "_list", "files")
@@ -107,7 +108,7 @@ def save_frame(fname, mode="w", **kwargs):
 			nsize = sum([zinfo.file_size for zinfo in zipf.filelist])
 			
 			szstr = " KMGT"
-			while nsize>1024:
+			while nsize > 512:
 				nsize /= 1024; szstr = szstr[1:]
 				
 			logger.info(f"{msg} ok ({nsize:.2f}{szstr[0]}B)")

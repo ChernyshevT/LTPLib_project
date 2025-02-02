@@ -90,12 +90,12 @@ PYBIND11_MODULE (_ltplib, m) {
 	
 	// define base functions:
 	void def_remap_funcs(py::module &);
-	void def_pspawn_funcs(py::module &);
+	// void def_pspawn_funcs(py::module &);
 	void def_ppost_funcs(py::module &);
 	void def_ppush_funcs(py::module &);
 	void def_order_funcs(py::module &);
-	void def_pcheck_funcs(py::module &);
-	void def_psort_funcs(py::module &);
+	// void def_pcheck_funcs(py::module &);
+	// void def_psort_funcs(py::module &);
 	void def_mcsim_funcs(py::module &);
 	void def_err_codes(py::module &);
 	def_remap_funcs(m);

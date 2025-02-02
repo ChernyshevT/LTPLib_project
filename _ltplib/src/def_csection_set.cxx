@@ -167,9 +167,13 @@ bgdescr : the string to describe all the background components separated by spac
 /******************************************************************************/
 void def_csections(py::module &m) {
 	
-	py::class_<csection_set_holder> cls (m, "csection_set",
-	CSECTION_SET_DESCR); cls
+	py::class_<csection_set_holder> cs_cls (m, "csection_set",
+	CSECTION_SET_DESCR);
 	
+	py::class_<db_entry_t> entry_cls (cs_cls, "db_entry",
+	"cross-section database entry");
+	
+	/* start cross-section database class */ cs_cls
 	.def(py::init<std::vector<py::dict>, f32, py::str, py::str, py::kwargs>
 	(), "cfg"_a, "max_energy"_a, "ptdescr"_a="e", "bgdescr"_a=""s,
 	CSECTION_SET_INIT)
@@ -257,6 +261,47 @@ void def_csections(py::module &m) {
 		);
 	}, "iterate over db_entries", py::keep_alive<0, 1>())
 	
-	/* end class */;
+	/* end cross-section class */;
+	
+	/* start database entry class */ entry_cls
+	.def_readonly("descr", &db_entry_t::descr,
+	"channel's description")
+
+	.def ("__str__",
+	[] (const db_entry_t& self) -> std::string {
+		return self.descr;
+	})
+	
+	.def_readonly("enth", &db_entry_t::enth,
+	"energy threshold")
+	
+	.def_readonly("rate_max", &db_entry_t::rmax,
+	"null-collision cumulative rate")
+	
+	.def_readonly("rate_fn", &db_entry_t::fnR,
+	"function for energy-depended cumulative rate")
+	
+	.def_readonly("csec_fn", &db_entry_t::fn0,
+	"function for cross-section")
+	
+	.def_property_readonly("mtcs_fn",
+	[] (const db_entry_t& self) -> std::optional<csfunc_t> {
+		if (self.fn1) {
+			return self.fn1;
+		} else {
+			return std::nullopt;
+		}
+	}, "function for momentum-transfer cross-section (or None)")
+	
+	.def ("__getattr__",
+	[] (const db_entry_t& self, py::str key) -> std::optional<py::object> {
+		if (self.extra.contains(key)) {
+			return self.extra[key];
+		} else {
+			return std::nullopt;
+		}
+	})
+	
+	/* end database entry class */;
 }
 
