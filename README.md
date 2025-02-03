@@ -424,8 +424,55 @@ Functional object's signature is
 where `dt` is time step and `seed` is random number.
 
 #### Search algorithm
+To simulate the collisions, \_ltplib uses Poisson's flow of random events,
+where collision probability during fixed time-step $\delta t$ is
+```math
+P = 1 - \exp\left(-n_0\vartheta\delta t\right)
+\simeq n_0\vartheta \delta t \ll 1,
+```
+where $n_0$ is background's component concentration,
+$\vartheta = \sigma\left|\vec{v}\right|$ (differential reaction rate),
+$\sigma$ & $\left|\vec{v}\right|$ are reaction's cross-section and relative velocity.
+The search procedure is based on null-collision (rejection-sampling) technique [^brennan1991][^elhafi2021].
+Each k-th differential reaction rate is supplemented with counter-term $\tilde{\vartheta}$ such that
+```math
+\vartheta_{\rm [k]}(\varepsilon) + \tilde{\vartheta}_{\rm [k]}(\varepsilon)
+= \max(\vartheta_{\rm [k]} ~ \forall\varepsilon) = Const,
+```
+then cumulative rates are introduced
+```math
+\left\{\begin{align}
+	& \bar{\vartheta}_{\rm [0]}
+	& =
+	& 0
+	\\
+	& \bar{\vartheta}_{\rm [k]}
+	& =
+	& \bar{\vartheta}_{\rm [k-1]} + \max(\vartheta_{\rm [k]} ~ \forall\varepsilon).
+\end{align}\right.
+```
+The simulation is organized as a binary search and simple check for each pair of components:
+```math
+\left\{\begin{align}
+	& \bar{\vartheta}_{\rm [k]}
+	& >
+	& \vartheta^{\ast}
+	& \geqslant
+	& \bar{\vartheta}_{\rm [k-1]}
+	\\
+	& \vartheta^{\ast}
+	& <
+	& \bar{\vartheta}_{\rm [k]}
+	& -
+	& \tilde{\vartheta}_{\rm [k]}(\varepsilon),
+\end{align}\right.
+```
+where $\vartheta^{\ast} = {R^{\ast} / n_0 \delta t}$,
+and $R^{\ast}\in(0,~1)$ is a random value with uniform distribution generated for the each sample.
 
-(To be done...)
+[^brennan1991]: Brennan, M. J. (1991). _Optimization of Monte Carlo codes using null collision techniques for experimental simulation at low E/N_. In IEEE Transactions on Plasma Science (Vol. 19, Issue 2, pp. 256–261). Institute of Electrical and Electronics Engineers (IEEE). [DOI:10.1109/27.106822](https://doi.org/10.1109/27.106822)
+
+[^elhafi2021]: El Hafi, M., Blanco, S., Dauchet, J., Fournier, R., Galtier, M., Ibarrart, L., Tregan, J.-M., & Villefranque, N. (2021). _Three viewpoints on null-collision Monte Carlo algorithms._ In Journal of Quantitative Spectroscopy and Radiative Transfer (Vol. 260, p. 107402). Elsevier BV. [DOI:10.1016/j.jqsrt.2020.107402](https://doi.org/10.1016/j.jqsrt.2020.107402)
 
 ### `_ltplib.bind_remap_fn`
 This binding is used to transfer data between value cache and numpy array.
@@ -439,6 +486,8 @@ _ltplib.bind_remap_fn(vcache, ">", iodata) # to copy from vcache to iodata
 ```
 Functional object's signature is `() -> ()`.
 
-# Code examples for \ltplib
+# Code examples for \_ltplib
+
+## `examples/run_localsim.py`
 
 (To be done...)
