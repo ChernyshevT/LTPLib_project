@@ -469,11 +469,12 @@ The simulation is organized as a binary search and simple check for each pair of
 ```
 where $\vartheta^{\ast} = {R^{\ast} / n_0 \delta t}$,
 and $R^{\ast}\in(0,~1)$ is a random value with uniform distribution generated for the each sample.
+
 The next two figures illustrates this approach.
 Here the first image shows cross-section set for electron-methane interactions and
 the second image shows internal representation for corresponding cumulative rates that are used in search algorithm.
 Color-flooded regions correspond to successful reactions.
-
+<br>
 <img src="./docs/imgs/CH4-csects.png" alt="Cross-section set for electron-methane interactions" width="768"/>
 <br>
 <img src="./docs/imgs/CH4-rates.png" alt="Internal representation for corresponding cumulative rates" width="768"/>
