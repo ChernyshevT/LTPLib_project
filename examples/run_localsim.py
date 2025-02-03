@@ -5,6 +5,7 @@ import numpy   as np
 import _ltplib as ltp
 
 from datetime     import datetime
+from time         import time
 from importlib    import import_module
 from util.frames  import *
 from util.loggers import *
@@ -31,9 +32,6 @@ def inject_parts (pstore, npp_in, x0, x1, vt):
 
 def main(args):
 	ltp.load_backend("default");
-	
-	import time
-	from calcs import ve
 	
 	for k,v in vars(args).items():
 		if v is None:
@@ -92,9 +90,8 @@ def main(args):
 	for k,v in cfg.items():
 		unitx = {"N0":" 1/cm3", "EN":" Td", "BN":" Hx", "E0":" V/cm", "B0":" G"}.get(k,"") #CGS
 		logger.info(f"{k:<8} : {v}"+unitx)
-	##############################################################################
-	dt = args.dt
-	##############################################################################
+	
+	#####################
 	# create fake 1d grid
 	grid = ltp.grid(1 
 	, step=[1]
@@ -102,7 +99,7 @@ def main(args):
 	, nodes=[[i] for i in range(args.nodes)]
 	, loopax="x")
 
-	##############################################################################
+	#######################
 	# init particle storage
 	import consts
 	pstore_cfg = {
@@ -112,7 +109,7 @@ def main(args):
 		],
 	}
 	pstore = ltp.pstore(grid, **pstore_cfg)
-	##############################################################################
+	######################################################
 	# declare value caches and corresponding numpy-arrays
 	emfield = ltp.vcache(grid, "f32", vsize=2, order=1)
 	bgrnd   = ltp.vcache(grid, "f32", vsize=len(cset.bglist), order=0)
@@ -166,7 +163,7 @@ def main(args):
 		t0, t1 = (irun-1)*args.nsub*args.dt, irun*args.nsub*args.dt
 		logger.info(f"frame#{irun:06d} ({t0*1e9:10.4f} -> {t1*1e9:10.4f}ns)..")
 		
-		iclc, tclc = 0, time.time()
+		iclc, tclc = 0, time()
 		# start frame [t --> t + dt*args.nsub], clear data
 		g_cfreq[...] = 0; remap_cfreq_in()
 		
@@ -174,14 +171,14 @@ def main(args):
 		for isub in range (1, args.nsub+1):
 			
 			seed = np.random.randint(0xFFFFFFFF, dtype=np.uint32)
-			ts[1] += mcsim_fn(dt, seed)().dtime
+			ts[1] += mcsim_fn(args.dt, seed)().dtime
 			
-			ts[2] += ppush_fn(dt)().dtime; order_fn()()
+			ts[2] += ppush_fn(args.dt)().dtime; order_fn()()
 			
 			npp = len(pstore); j1 += npp
 		
 		# end frame
-		tclc = time.time()-tclc
+		tclc = time()-tclc
 		logger.info(f"time {'frame':<10} : {tclc:>6.2f} s, ({npp} samples)")
 		for key,tval in zip(tdescr, ts[1:]):
 			logger.info(f"time {key:<10} : {tval:>6.2f} s, {tval/j1*1e9:>6.2f} ns/sample")
@@ -200,7 +197,7 @@ def main(args):
 		remap_cfreq_out();
 		outv = {
 			"pdata": pts[:, 1:],
-			"cfreq": np.sum(g_cfreq, axis=0, dtype=np.float32)/j1/dt,
+			"cfreq": np.sum(g_cfreq, axis=0, dtype=np.float32)/j1/args.dt,
 			"fluid": {
 				# cm/s
 				"u0": np.sqrt(np.mean(np.sum(pts[:, 1:]**2, axis=1))),
