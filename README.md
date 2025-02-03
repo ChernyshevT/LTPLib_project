@@ -392,18 +392,18 @@ This binding is used to calculate raw pVDF moments [^saint-raymond2009]:
 - concentration
 $n = \int_\vec{ v}f(\vec{ r},\ \vec{ v})\ {\rm d}\vec{ v}$;
 - flux vector
-$\vec{ v} = \int_\vec{ v}\vec{ v}\ f(\vec{ r},\ \vec{ v})\ {\rm d}\vec{ v}$;
+$\vec{f} = n\vec{u} =\int_\vec{ v}\vec{ v}\ f(\vec{ r},\ \vec{ v})\ {\rm d}\vec{ v}$, where $\vec{u}$ is flux velocity;
 - pressure/stress tensor
-${\rm p} = \int_\vec{ v}\vec{ v}\otimes\vec{ v}\ f(\vec{ r},\ \vec{ v})\ {\rm d}\vec{ v}$.
+${\rm p} = \int_\vec{ v}\vec{ v}\otimes\vec{ v}\ f(\vec{ r},\ \vec{v})\ {\rm d}\vec{v}$.
 
 The function accepts the following arguments:
 - *pstore* --- pVDF samples;
 - *ptfluid* --- value cache for the result (`dtype="f32"`);
 - *mode* --- string describing moments to calculate:
-	- `"C"` --- concentration;
-	- `"CF"` --- concentration, flux;
-	- `"CFP"` --- concentration, flux, pressure ($\vec{ p}_{ij,\ i = j}$);
-	- `"CFPS"` --- concentration, flux, pressure, stress (${\rm p}_{ij,\ i \ne j}$).
+	- `"C"` --- concentration ($n$);
+	- `"CF"` --- concentration, flux ($\vec{f}$);
+	- `"CFP"` --- concentration, flux, pressure (${\rm Tr}({\rm p})$);
+	- `"CFPS"` --- concentration, flux, pressure, stress (${\rm p}$).
 
 Resulting functional object has following signature
 `() -> _ltplib.RET_ERRC`.
