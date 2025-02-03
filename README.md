@@ -492,7 +492,7 @@ The function accepts the following arguments:
 _ltplib.bind_remap_fn(vcache, "<", iodata) # to copy from iodata to vcache
 _ltplib.bind_remap_fn(vcache, ">", iodata) # to copy from vcache to iodata 
 ```
-Functional object's signature is `() -> ()`.
+Functional object's signature is `() -> None`.
 
 # Code examples for \_ltplib
 
