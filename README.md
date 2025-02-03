@@ -108,8 +108,21 @@ pstore_cfg = [
 
 pstore = ltp.pstore(grid, **pstore_cfg)
 ```
+#### Methods
 
-To load samples into the class `pstore.inject` method should be called. Method accepts dictionary, where keys correspond to `"ptinfo"`, and values are numpy arrays to load. The shape of input array should match `[npp, grid.nd+3]`, where `npp` is the number of samples to add. The components of sample's vector are $\{x\,\dots\,v_x\,v_y\,v_z\}$.
+To **inject** samples into the class `pstore.inject({...})` method should be called.
+Method accepts dictionary, where keys correspond to component keys from `"ptinfo"`,
+and values are numpy-arrays to load.
+The shape of input array should match `[npp, grid.nd+3]`, where `npp` is the number of samples to add.
+The components of sample's vector are $\{x\,\dots\,v_x\,v_y\,v_z\}$.
+
+In order to **extract** the samples `pstore.extract()` should be used.
+Method accepts no arguments and returns the pair:
+1. numpy-arrays containing all the samples,
+1. list of indexes defining the sample-range for each component (the order of components is the same as in ptinfo).
+
+To **reset** (clean) the storage use `pstore.reset()`.
+Also, calling `len(pstore)` will return the total number of samples.
 
 ### `_ltplib.vcache` (value cache)
 This class is used as a universal node-local cache for grid-based values. For example, it can be used to store electromagnetic field, pVDF moments, background densities, collision frequencies.
@@ -118,6 +131,12 @@ Class constructor accepts following arguments:
 1. *dtype* --- the string describing type (`"f32"` or `"u32"`).
 1. *vsize* --- number of components per grid unit (optional, default `1`).
 1. *order* --- form-factor's order (optional, default `0`).
+
+There are following useful properties:
+- `vcache.dtype` -- python-type,
+- `vcache.shape` -- shape of representing array,
+- `vcache.order` -- form-factor's order,
+- `vcache.cfg` -- helper to construct numpy-arrays: `numpy.array(**pstore.cfg)`.
 
 ### `_ltplib.csection_set` (cross-section set)
 This class stores cross-section database for Monte-Carlo simulation.
