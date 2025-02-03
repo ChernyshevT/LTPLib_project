@@ -424,7 +424,7 @@ Functional object's signature is
 where `dt` is time step and `seed` is random number.
 
 #### Search algorithm
-To simulate the collisions, \_ltplib uses Poisson's flow of random events,
+To simulate the collisions, \_ltplib uses Poisson's flow of random events[^birdsall1991-2],
 where collision probability during fixed time-step $\delta t$ is
 ```math
 P = 1 - \exp\left(-n_0\vartheta\delta t\right)
@@ -433,7 +433,7 @@ P = 1 - \exp\left(-n_0\vartheta\delta t\right)
 where $n_0$ is background's component concentration,
 $\vartheta = \sigma\left|\vec{v}\right|$ (differential reaction rate),
 $\sigma$ & $\left|\vec{v}\right|$ are reaction's cross-section and relative velocity.
-The search procedure is based on null-collision (rejection-sampling) technique [^brennan1991][^elhafi2021].
+The search procedure is based on null-collision (rejection-sampling) technique[^brennan1991][^elhafi2021].
 Each k-th differential reaction rate is supplemented with counter-term $\tilde{\vartheta}$ such that
 ```math
 \vartheta_{\rm [k]}(\varepsilon) + \tilde{\vartheta}_{\rm [k]}(\varepsilon)
@@ -477,6 +477,9 @@ Color-flooded regions correspond to successful reactions.
 <img src="./docs/imgs/CH4-csects.png" alt="Cross-section set for electron-methane interactions" width="768"/>
 <br>
 <img src="./docs/imgs/CH4-rates.png" alt="Internal representation for corresponding cumulative rates" width="768"/>
+
+[^birdsall1991-2]: Birdsall, C. K. (1991). _Particle-in-cell charged-particle simulations, plus Monte Carlo collisions with neutral atoms, PIC-MCC._ In IEEE Transactions on Plasma Science (Vol. 19, Issue 2, pp. 65–85). Institute of Electrical and Electronics Engineers (IEEE).
+[DOI:10.1109/27.106800](https://doi.org/10.1109/27.106800)
 
 [^brennan1991]: Brennan, M. J. (1991). _Optimization of Monte Carlo codes using null collision techniques for experimental simulation at low E/N_. In IEEE Transactions on Plasma Science (Vol. 19, Issue 2, pp. 256–261). Institute of Electrical and Electronics Engineers (IEEE). [DOI:10.1109/27.106822](https://doi.org/10.1109/27.106822)
 
