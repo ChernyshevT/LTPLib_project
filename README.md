@@ -493,10 +493,11 @@ The next two figures illustrates this approach.
 Here the first image shows cross-section set for electron-methane interactions and
 the second image shows internal representation for corresponding cumulative rates that are used in search algorithm.
 Color-flooded regions correspond to successful reactions.
+The preset with these coss-sections can be found in [`examples/csections_db/CH4.py`](./blob/main/examples/csections_db/CH4.py).
 <br>
-<img src="./docs/imgs/CH4-csects.png" alt="Cross-section set for electron-methane interactions" width="768"/>
+<img src="./blob/main/docs/imgs/CH4-csects.png" alt="Cross-section set for electron-methane interactions" width="768"/>
 <br>
-<img src="./docs/imgs/CH4-rates.png" alt="Internal representation for corresponding cumulative rates" width="768"/>
+<img src="./blob/main/docs/imgs/CH4-rates.png" alt="Internal representation for corresponding cumulative rates" width="768"/>
 
 [^birdsall1991-2]: Birdsall, C. K. (1991). _Particle-in-cell charged-particle simulations, plus Monte Carlo collisions with neutral atoms, PIC-MCC._ In IEEE Transactions on Plasma Science (Vol. 19, Issue 2, pp. 65–85). Institute of Electrical and Electronics Engineers (IEEE).
 [DOI:10.1109/27.106800](https://doi.org/10.1109/27.106800)
@@ -519,6 +520,48 @@ Functional object's signature is `() -> None`.
 
 # Code examples for \_ltplib
 
+All our code examples build with the same template and use shared code snippets from `examples/util`.
+One should note our custom format for input/output data described in [`examples/util/frames.py`](./blob/main/examples/util/frames.py).
+We store data as uncompressed `.zip`-files, partially compatible with standard [`.npz`](https://numpy.org/doc/stable/reference/generated/numpy.lib.npyio.NpzFile.html)-format.
+The contents of the archive could be numpy-arrays, generic python data (will be converted in `.json`) and plain text.
+Function `util.load_frame(fname: str)` loads frame.
+The saved data can be accessed with dot-operator: `frame.data`.
+In the case of absence of the data `None` will be returned.
+
+
 ## `examples/run_localsim.py`
+This problem shows an example of so-called spatial-local approximation.
+This approximation assumes that there are no spatial-gradients, thus spatial coordinate can be ignored
+and eVDF (<ins>e</ins>lectron <ins>V</ins>elocity <ins>D</ins>istribution <ins>F</ins>unction) is global.
+The global eVDF evolves under influence of external crossed electric and magnetic fields.
+This problem statement is close to typical swarm-simulation, see articles [^tejerodelcaz2019][^dias2023] for example.
+
+The code runs from command line with following parameters:
+- *-h, --help* shows help and exit.
+- *--bginfo* list of background components and their molar fractions, separated by spaces.
+The presets for the each backgrounds are stored in [`examples/csections_db`](./blob/main/examples/csections_db).
+The syntax as follows `--bginfo KEY1:FRACTION1 KEY2:FRACTION2`.
+- *--nbg* sets the total background's concentration ($n_0$).
+- *--EN* sets reduced electric field ($E_x/n_0$, in Townsend units).
+- *--BN* sets reduced magnetic field ($B_z/n_0$, in Huxley units).
+- *--max_energy* sets energy limit for `_ltplib.csection_set`.
+- *--te* sets initial temperature of an electron ensemble (in eV units).
+- *--dt* sets time step ($\delta t$, seconds).
+- *--nsub* sets the number of time-steps per one frame.
+- *--nrun* sets the number of frames to calculate.
+- *--npp* defines an initial size of the electron ensemble (it will grow due to ionization events).
+- *--resample* this options is used to resample the ensemble each frame to keep its size constant.
+- *--extra* this option sets extra capacity for the `_ltplib.pstore` (npp -> npp*(1+extra)).
+- *--save* sets directory to save the results of simulation.
+- *--run* this option is used to run simulation without asking (batch mode).
+- *--loglevel* DEBUG|INFO|WARNING|ERROR. 
+
+[^tejerodelcaz2019]: Tejero-del-Caz, A., Guerra, V., Gonçalves, D., da Silva, M. L., Marques, L., Pinhão, N., Pintassilgo, C. D., & Alves, L. L. (2019). _The LisbOn KInetics Boltzmann solver._ In Plasma Sources Science and Technology (Vol. 28, Issue 4, p. 043001). IOP Publishing.
+[DOI:10.1088/1361-6595/ab0537](https://doi.org/10.1088/1361-6595/ab0537)
+
+[^dias2023]: Dias, T. C., Tejero-del-Caz, A., Alves, L. L., & Guerra, V. (2023). _The LisbOn KInetics Monte Carlo solver._ In Computer Physics Communications (Vol. 282, p. 108554). Elsevier BV. 
+[DOI:10.1016/j.cpc.2022.108554](https://doi.org/10.1016/j.cpc.2022.108554)
+
+
 
 (To be done...)

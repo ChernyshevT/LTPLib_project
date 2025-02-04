@@ -1,4 +1,4 @@
-# database for c+CH4 interactions
+# database for e+CH4 interactions
 [
 	{"TYPE":"BACKGROUND", "KEY":"CH4",
 	 "MASSRATE":3.420074282530393e-05},
@@ -7,15 +7,14 @@
 	# A critical evaluation of low-energy electron impact cross sections for
 	# plasma processing modeling. II: Cl4, SiH4, and CH4
 	# doi: 10.1007/BF01447255, cite: morgan1992
-	#
 	# Cross Sections for Electron Collisions with Methane
 	# doi: 10.1063/1.4918630,  cite: song2015
 	{"TYPE":"ELASTIC",
 	 "REF":r"\cite{morgan1992,song2015}",
 	 "CSEC":(f"{fpath}/CH4/ELASTIC.txt",
-	 {"search":"DATABASE:         Morgan (Kinema Research  Software)"}),
+	 dict(search="DATABASE:         Morgan (Kinema Research  Software)")),
 	 "MTCS":(f"{fpath}/CH4/ELASTIC.txt",
-	 {"search":"DATABASE:         Community database"}),
+	 dict(search="DATABASE:         Community database")),
 	},
 
 	{"TYPE":"ATTACHMENT",   "THRESHOLD":6.0, "COMMENT":"CH3+H^-",
@@ -67,7 +66,6 @@
 	},
 	{"TYPE":"DISSOCIATION", "THRESHOLD":14.0,
 	 "COMMENT":"C+2H2", "REF":r"\cite{gadoum2018}\footnote{Something is wrong with analytical approximation, data-points were used instead.}",
-	# something is wrong with analytical approx!
 	# "CSEC": lambda en, th=14.0, a=[0.5681,0.8807,4.0006,1.1164]: \
 	#  1e-20*(a[0]*(th/en)**a[1] * (1 - (th/en)**a[2])**a[3]).real
 	 "CSEC":(f"{fpath}/CH4/INELASTIC.txt",

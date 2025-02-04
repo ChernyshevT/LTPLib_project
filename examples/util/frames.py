@@ -37,10 +37,10 @@ class npEncoder(json.JSONEncoder):
 
 logger = get_logger()
 
-class load_frame:
+class frame_cls:
 	__slots__ = ("_zipf", "_list", "files")
 
-	def __init__(self, fname):
+	def __init__(self, fname: str):
 		self._zipf = zipfile.ZipFile(fname, "r")
 		self._list = [os.path.splitext(f)[0] for f in self._zipf.namelist()]
 		self.files = self._zipf.namelist()
@@ -49,7 +49,7 @@ class load_frame:
 	def __dir__(self):
 		return self._list
 
-	def __getitem__(self, key):
+	def __getitem__(self, key: str):
 		import io, json
 		###############################
 		if f"{key}.json" in self.files:
@@ -66,10 +66,10 @@ class load_frame:
 		return None
 		#raise ValueError(f"invalid key: \"{key}\"")
 
-	def __getattr__(self, key):
+	def __getattr__(self, key: str):
 		return self[key]
 
-	def __contains__(self, key):
+	def __contains__(self, key: str):
 		if f"{key}.json" in self.files:
 			return 3
 		if f"{key}.npy"  in self.files:
@@ -77,6 +77,9 @@ class load_frame:
 		if f"{key}.txt"  in self.files:
 			return 1
 		return 0
+
+def load_frame(fname: str):
+	return frame_cls(fname)
 
 ################################################################################
 

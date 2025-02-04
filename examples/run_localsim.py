@@ -184,7 +184,6 @@ def main(args):
 			logger.info(f"time {key:<10} : {tval:>6.2f} s, {tval/j1*1e9:>6.2f} ns/sample")
 		
 		pts, _ = pstore.extract()
-		
 		# keep ensemble's size constant
 		if args.resample and args.npp != npp:
 			pstore.reset()
