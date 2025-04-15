@@ -22,11 +22,11 @@ The code is based on former Θ-Hall [^chernyshev2019][^chernyshev2022], but it w
 ## Build instructions
 The framework uses [pybind11](https://github.com/pybind/pybind11) to create transparent interface between python and c++ codes. Dependencies will be downloaded automatically by CMake FetchContent. To build the code just run the following statement
 ```sh
-mkdir _ltplib/build && cd _ltplib/build && cmake .. && cmake --build .
+cd build && cmake .. && cmake --build . --target install
 ```
 As a result, two libraries will be generated:
-1. `_ltplib/build/src/_ltplib.so`, is the framework itself;
-1. `_ltplib/build/src/_default/_default.so`, the backend library containing OpenMP-based solvers.
+1. `_ltplib/_ltplib.so`, is the framework itself;
+1. `_ltplib/_default.so`, the backend library containing OpenMP-based solvers.
 
 Native python-way installation via pip is not supported yet, so just copy both binaries in your project's directory. Is is highly recommended to have [numpy](https://github.com/numpy/numpy) installed. It is not necessary to run \_ltplib, but [numpy.ndarray](https://numpy.org/doc/stable/reference/arrays.ndarray.html) is used as a main interface between userspace python-code and \_ltplib.
 Build-in documentation is available as follows:
