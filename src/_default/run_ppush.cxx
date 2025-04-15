@@ -11,8 +11,10 @@
 #include "common/pushers.hxx"
 #include "common/loop_over.hxx"
 
+#include "run_order.cxx"
+
 template<u8 nd, u8 mode, u8 ord, u8 cylcrd=0>
-RET_ERRC run_ppush
+u32 run_ppush
 (const grid_t<nd> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	
 	constexpr int md{nd>1 ? nd>2 ? 27 : 9 : 3};
@@ -29,7 +31,7 @@ RET_ERRC run_ppush
 	dt = mode ? dt*0.5 : dt;
 
 	//////////////////////////////////////////////////////////////////////////////
-	u8 flags{0};
+	u32 flags{0};
 	#pragma omp parallel for
 	for (u32 k=0; k<grid.size; ++k) {
 
@@ -136,18 +138,13 @@ RET_ERRC run_ppush
 				pool.index[i]=ncl[i-1];
 			}
 		} else {
-			flags |= ERR_FLAG::OVERFLOW;
+			#pragma omp atomic
+			flags |= ERR_CODE::OVERFLOW;
 		}
 	}
 	// end omp parallel for
 	
-	if (flags) {
-		return {ERR_CODE::PPUSH_ERR, flags};
-	} else {
-		return {ERR_CODE::SUCCESS, flags};
-	}
-	
-	
+	return flags;
 }
 
 #include "run_ppush_fns.cxx"

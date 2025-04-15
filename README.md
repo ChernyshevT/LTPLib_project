@@ -397,15 +397,6 @@ Our implementation caches $t$-moment field contribution for the each sample, so 
 [^tajima2018-book]: Tajima, T. (2018). _Computational Plasma Physics._ CRC Press. 
 [DOI:10.1201/9780429501470](https://doi.org/10.1201/9780429501470)
 
-### `_ltplib.bind_order_fn`
-After the run of `ppush_fn` the coherence of *pstore* is violated because of samples leaving the nodes.
-This function is used to create the binding to restore the coherence.
-The function accepts only one argument:
-- *pstore* --- pVDF samples.
-
-Resulting functional object has following signature
-`() -> _ltplib.RET_ERRC`.
-
 ### `_ltplib.bind_ppost_fn` (obtain pVDF moments)
 This binding is used to calculate raw pVDF moments [^saint-raymond2009]:
 - concentration

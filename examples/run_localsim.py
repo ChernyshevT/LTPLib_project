@@ -109,6 +109,7 @@ def main(args):
 		],
 	}
 	pstore = ltp.pstore(grid, **pstore_cfg)
+	
 	######################################################
 	# declare value caches and corresponding numpy-arrays
 	emfield = ltp.vcache(grid, "f32", vsize=2, order=1)
@@ -118,11 +119,13 @@ def main(args):
 	g_emfield = np.zeros(**emfield.cfg)
 	g_cfreq   = np.zeros(**cfreq.cfg)
 	m_cfreq   = np.zeros(**{**cfreq.cfg, **{"dtype":np.float32}})
-
+	
+	# set em-field
 	g_emfield[..., 0] = -E0/2.99792458e2  # (V/cm -> statV/cm) #CGS
 	g_emfield[..., 1] = +B0/2.99792458e10 # (G -> G*s/cm)      #CGS
 	ltp.bind_remap_fn(emfield, "<", g_emfield)()
 	
+	# set background
 	g_bgrnd   = np.ones (**bgrnd.cfg)
 	for j, frac in enumerate(fracs):
 		g_bgrnd[..., j] = args.nbg*frac
@@ -135,16 +138,6 @@ def main(args):
 	remap_cfreq_out = ltp.bind_remap_fn (cfreq, ">", g_cfreq)
 	remap_cfreq_in  = ltp.bind_remap_fn (cfreq, "<", g_cfreq)
 
-	##############################################################################
-	fname = f"{args.save}.zip"
-	if args.save and os.path.exists(fname):
-		if not args.run:
-			if input(f"\tdir \"{fname}\" already exists, delete it? [y] ") == "y":
-				os.remove(fname)
-			else:
-				exit(0)
-		else:
-			raise RuntimeError(f"dir \"{fname}\" already exists!")
 	##############################################################################
 	if args.run == False or not (args.run or input(f"run? [y|yes] or.. ") in ["y", "yes"]):
 		exit(0)
@@ -163,18 +156,21 @@ def main(args):
 		t0, t1 = (irun-1)*args.nsub*args.dt, irun*args.nsub*args.dt
 		logger.info(f"frame#{irun:06d} ({t0*1e9:10.4f} -> {t1*1e9:10.4f}ns)..")
 		
-		iclc, tclc = 0, time()
+		tclc = time()
 		# start frame [t --> t + dt*args.nsub], clear data
-		g_cfreq[...] = 0; remap_cfreq_in()
+		g_cfreq[...] = 0; remap_cfreq_in() # set zero to cfreq cache
 		
 		ts[:] = 0.0; j1 = 0
 		for isub in range (1, args.nsub+1):
 			
-			seed = np.random.randint(0xFFFFFFFF, dtype=np.uint32)
-			ts[1] += mcsim_fn(args.dt, seed)().dtime
-			
-			ts[2] += ppush_fn(args.dt)().dtime; order_fn()()
-			
+			t0 = time()
+			mcsim_fn(args.dt, np.random.randint(0xFFFFFFFF, dtype=np.uint32))()
+			t1 = time()
+			ppush_fn(args.dt)()
+			#order_fn()()
+			t2 = time()
+			ts[1] += t1-t0
+			ts[2] += t2-t1
 			npp = len(pstore); j1 += npp
 		
 		# end frame

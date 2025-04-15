@@ -75,13 +75,8 @@ void def_mcsim_funcs (py::module &m) {
 			backend, fn_name, (void*)(&grid), (void*)(&pstore), (void*)(&cfreq), (void*)(&cset), (void*)(&bgrnd) 
 			);
 			auto &&fn = libs[backend].get_function<mcsim_fn_t<nd>>(fn_name);
-			return [&, fn] (f32 dt, u32 seed) {
-				auto tv0 = std::chrono::high_resolution_clock::now();
-				RET_ERRC retv = fn (grid, pstore, cfreq, cset, bgrnd, dt, seed);
-				auto tv1 = std::chrono::high_resolution_clock::now();
-
-				retv.dtime = std::chrono::duration_cast<std::chrono::microseconds>(tv1-tv0).count()*1e-6;
-				return retv;
+			return [&, fn] (f32 dt, u32 seed) -> RET_ERRC {
+				return RET_ERRC{fn (grid, pstore, cfreq, cset, bgrnd, dt, seed)};
 			};
 		}, *pstore.gridp);
 	}, "pstore"_a, "cfreq"_a ,"cset"_a, "bgrnd"_a, PMCSIM_FN);

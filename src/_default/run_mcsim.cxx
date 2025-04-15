@@ -9,11 +9,11 @@
 #include "common/collisions.hxx"
 
 template<u8 nd>
-RET_ERRC run_mcsim
+u32 run_mcsim
 (const grid_t<nd> &grid, pstore_t &pstore, vcache_t<u32> &cflatt
 , const csection_set_t &cset, const vcache_t<f32> &bglatt, f32 dt, u32 seed) {
 	
-	u8 flags{0};
+	u32 flags{0};
 	#pragma omp parallel for
 	for (u32 k=0; k<grid.size; ++k) {
 
@@ -26,8 +26,8 @@ RET_ERRC run_mcsim
 		for (u32 j{0}; j<j1; ++j) {
 			struct {
 				part_t data[1 + (nd+3)];
-				u8 *tag =  data[0].tag;
-				f32   *pos = &data[1].vec;
+				u8  *tag =  data[0].tag;
+				f32 *pos = &data[1].vec;
 			} p0, p1;
 			u32 idx[nd];
 			
@@ -35,17 +35,15 @@ RET_ERRC run_mcsim
 				p0.data[i] = pool.parts[j][i];
 			}
 			
-			u8 flag{0};
+			u32 flag{0};
 			for (u8 i{0u}; i<nd; ++i) {
 				idx[i] = u32((p0.pos[i]-node.edgel[i])/grid.step[i]);
-				flag = flag
-				| (ERR_FLAG::NANVALUE*(p0.pos[i] != p0.pos[i]))
-				| (ERR_FLAG::OUTOFRANGE*(p0.pos[i] == p0.pos[i])*(idx[i] >= node.shape[i]))
-				;
+				flag |= ERR_CODE::OUTOFRANGE*(idx[i] >= node.shape[i]);
 			}
 			if (flag) {
 				#pragma omp atomic
 				flags |= flag;
+				
 				continue;
 			}
 			
@@ -60,12 +58,14 @@ RET_ERRC run_mcsim
 				
 				case cltype::ERROR_ENLIMIT:
 					#pragma omp atomic
-					flags |= ERR_FLAG::ENERGYMAX;
+					flags |= ERR_CODE::ENERGYMAX;
+					
 				goto skip;
 				
 				case cltype::ERROR_PROBMAX:
 					#pragma omp atomic
-					flags |= ERR_FLAG::PROBMAX;
+					flags |= ERR_CODE::PROBMAX;
+					
 				goto skip;
 				
 				// collisions
@@ -82,7 +82,9 @@ RET_ERRC run_mcsim
 				// transform victim from the current pool (reqire sorting or second run)
 				case cltype::IONIZATIONRUN: // swapn same secondary particles
 					if (j1 == pool.npmax) {
-						flags |= ERR_FLAG::OVERFLOW;
+						#pragma omp atomic
+						flags |= ERR_CODE::OVERFLOW;
+						
 						goto skip;
 					}
 					cl.do_ionization_run(p0.pos+nd);
@@ -132,13 +134,10 @@ RET_ERRC run_mcsim
 	}
 	// end omp parallel for
 
-	if (flags) {
-		return {ERR_CODE::PMCSIM_ERR, flags};
-	} else {
-		return {ERR_CODE::SUCCESS};
-	}
+	return flags;
 }
 
+/*
 #define EXPORT_PMCSIM_FN(N) \
 extern "C" LIB_EXPORT \
 RET_ERRC mcsim##N##_fn ( \
@@ -149,3 +148,4 @@ const csection_set_t &cset, const vcache_t<f32> &bg, f32 dt, u32 seed \
 EXPORT_PMCSIM_FN(1)
 EXPORT_PMCSIM_FN(2)
 EXPORT_PMCSIM_FN(3)
+*/

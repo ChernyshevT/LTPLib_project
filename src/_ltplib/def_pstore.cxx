@@ -45,7 +45,7 @@ template<u8 nd> inject_fn_t construct_inject_fn
 	};
 }
 
-template<u8 nd> extract_fn_t construct_extract_fn
+	template<u8 nd> extract_fn_t construct_extract_fn
 (const pstore_holder& self, const grid_t<nd>& grid) {
 	
 	return [&] (void) -> std::tuple<parts_output_t, std::vector<size_t>> {

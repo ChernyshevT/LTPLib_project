@@ -97,14 +97,9 @@ void def_ppost_funcs (py::module &m) {
 			logger::debug("bind {}->{} &grid={}, &pstore={}, &ptfluid={}, mode={}",
 			backend, fn_name, (void*)(&grid), (void*)(&pstore), (void*)(&ptfluid), (std::string)(mode));
 			
-			auto fn = libs[backend].get_function<ppost_fn_t<nd>>(fn_name);
-			return [&, fn] (void) {
-				auto tv0 = std::chrono::high_resolution_clock::now();
-				RET_ERRC retv = fn (grid, pstore, ptfluid);
-				auto tv1 = std::chrono::high_resolution_clock::now();
-
-				retv.dtime = std::chrono::duration_cast<std::chrono::microseconds>(tv1-tv0).count()*1e-6;
-				return retv;
+			auto &&fn = libs[backend].get_function<ppost_fn_t<nd>>(fn_name);
+			return [&, fn] (void) -> RET_ERRC {
+				return RET_ERRC{fn (grid, pstore, ptfluid)};
 			};
 		}, *pstore.gridp);
 	}, "pstore"_a, "ptfluid"_a, "mode"_a="C",

@@ -33,7 +33,7 @@ add_library(_ltplib SHARED
 	def_csection_set.cxx
 	def_err_codes.cxx
 	def_mcsim_funcs.cxx
-	def_order_funcs.cxx
+	#def_order_funcs.cxx
 	def_ppost_funcs.cxx
 	def_ppush_funcs.cxx
 	def_remap_funcs.cxx
@@ -51,6 +51,7 @@ target_link_libraries(_ltplib PRIVATE pybind11::module fmt::fmt-header-only)
 
 # Include pybind11 and fmt headers
 target_include_directories(_ltplib PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/..
 	${pybind11_INCLUDE_DIRS}
 	${fmt_SOURCE_DIR}/include
 )

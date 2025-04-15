@@ -31,7 +31,7 @@ add_library(_default SHARED
 	run_ppost.cxx
 	run_mcsim.cxx
 	run_remap.cxx
-	run_order.cxx
+	#run_order.cxx
 )
 
 set_target_properties(_default PROPERTIES LIBRARY_OUTPUT_NAME
@@ -49,7 +49,9 @@ endif()
 find_package(OpenMP REQUIRED)
 target_link_libraries(_default PRIVATE OpenMP::OpenMP_CXX)
 
-target_include_directories(_default PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
+target_include_directories(_default PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/..
+)
 
 target_compile_options(_default PRIVATE
 	-Wall

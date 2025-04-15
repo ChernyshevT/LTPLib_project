@@ -93,7 +93,7 @@ PYBIND11_MODULE (_ltplib, m) {
 	// void def_pspawn_funcs(py::module &);
 	void def_ppost_funcs(py::module &);
 	void def_ppush_funcs(py::module &);
-	void def_order_funcs(py::module &);
+	// void def_order_funcs(py::module &);
 	// void def_pcheck_funcs(py::module &);
 	// void def_psort_funcs(py::module &);
 	void def_mcsim_funcs(py::module &);
@@ -102,7 +102,7 @@ PYBIND11_MODULE (_ltplib, m) {
 	// [TBD] def_pspawn_funcs(m);
 	def_ppost_funcs(m);
 	def_ppush_funcs(m);
-	def_order_funcs(m);
+	// def_order_funcs(m);
 	
 	//[TBD] def_psort_funcs(m); // required for mcc (maybe)
 	def_mcsim_funcs(m); // monte-carlo simulation
@@ -111,7 +111,6 @@ PYBIND11_MODULE (_ltplib, m) {
 	// define utils module (poisson eq, fft, etc..):
 	
 	void def_mod_utils(py::module &);
-	
 	
 	// define local kinetics
 	

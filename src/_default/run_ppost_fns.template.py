@@ -1,9 +1,16 @@
 text = \
 """extern "C" LIB_EXPORT
-RET_ERRC ppost{{nd}}_{{mode}}_{{order}}_fn
+u32 ppost{{nd}}_{{mode}}_{{order}}_fn
 (const grid_t<{{nd}}> &grid, const pstore_t &pstore, vcache_t<f32> &ptfluid) {
-	return run_ppost<{{nd}}, POST_MODE::{{mode}}, FORM_ORDER::{{order}}>
+	u32 flags;
+
+	flags = run_ppost<{{nd}}, POST_MODE::{{mode}}, FORM_ORDER::{{order}}>
 	(grid, pstore, ptfluid);
+	if (flags) {
+		return ERR_CODE::PPOST_ERR | flags;
+	} else {
+		return ERR_CODE::SUCCESS;
+	}
 }
 """
 

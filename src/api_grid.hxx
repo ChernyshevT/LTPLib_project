@@ -207,13 +207,13 @@ public:
 		}
 		
 		template<u8 order>
-		inline u8 get_form (form_t<nd, order> *form, f32 pos[]) {
-			u8 flag{0};
+		inline u32 get_form (form_t<nd, order> *form, f32 pos[]) {
+			u32 flag{0};
 			for (u8 i{0}; i<nd; ++i) {
 				form->idx[i] \
 				= calc_form<order>(form->vals+i*(order+1), (pos[i]-edgel[i])/step[i]);
 				
-				flag |= (form->idx[i] >= shape[i])*ERR_FLAG::OUTOFRANGE;
+				flag |= (form->idx[i] >= shape[i])*ERR_CODE::OUTOFRANGE;
 			}
 			return flag;
 		}

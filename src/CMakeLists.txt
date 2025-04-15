@@ -13,8 +13,8 @@ endif()
 include(FetchContent)
 find_package(Python3 COMPONENTS Interpreter Development)
 
-add_subdirectory(src)
-add_subdirectory(src/_default)
+add_subdirectory(_ltplib)
+add_subdirectory(_default)
 
 #~ install(TARGETS _ltplib backend
 	#~ LIBRARY DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ltplib

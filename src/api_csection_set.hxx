@@ -8,7 +8,7 @@ struct mprog_t {
 	//op-code
 	enum opc_t : u16 {
 		JMP = 0,       // jump to position
-		SETCSID,       // set csection id (if nonzero) 
+		SETCSID,       // set csection id (if nonzero)
 		MASSRATE,      
 		SELECTBG,      // set bg's density id, [$m/M$, $u_0$, $v_{T0}$]
 		SEARCH,        // start binary search for null-collision
@@ -22,10 +22,10 @@ struct mprog_t {
 		SETDCSFACTOR,
 		SETOPBFACTOR,
 		END,
-	} opc : 4; //16 commands max
+	} opc : 5; //32 commands max
 	//argument
 	u16
-	  arg : 12;
+	  arg : 11;
 };
 typedef mprog_t::opc_t opcode;
 //@LISTING{end:mprog_t}
@@ -92,7 +92,7 @@ struct csection_set_t {
 		return csection_t(tabs + ncsect + tsize*k);
 	};
 	
-	inline u16 search (f32 *r, f32 r0, u16 j, u16 n) const {
+	inline u16 search (f32 r0, u16 j, u16 n) const {
 		u16  lf{0}, rt{n}, mid;
 		while (lf < rt) {
 			mid = (lf+rt)/2;
@@ -102,7 +102,6 @@ struct csection_set_t {
 				lf = mid+1;
 			}
 		}
-		(*r) = tabs[j+n-1];
 		return lf;
 	};
 	

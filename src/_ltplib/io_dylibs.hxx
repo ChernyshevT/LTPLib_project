@@ -311,3 +311,15 @@ class dylibs_t {
 public:
 	const dylib & operator [] (std::string key);
 };
+
+namespace backend {
+	template<typename T> T *
+	get_fn  (const std::string &);
+
+	template<typename T>T &
+	get_var (const std::string &);
+	
+	void
+	load    (const std::string &);
+}
+

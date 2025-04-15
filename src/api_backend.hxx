@@ -1,5 +1,5 @@
-#ifndef _BACKEND_IFACE_HEADER
-#define _BACKEND_IFACE_HEADER
+#pragma once
+#define API_V "API2025-04-01"
 
 #if defined(_WIN32) || defined(_WIN64)
 #define LIB_EXPORT __declspec(dllexport)
@@ -7,51 +7,50 @@
 #define LIB_EXPORT __attribute__ ((visibility ("default")))
 #endif
 
-#define API_V "API2024-11-23"
-
-//~ #define STRING(s) #s
 #include "typedefs.hxx"
-
-template<u8 nd>
-struct grid_t;
-
-template<typename tp>
-struct vcache_t;
-
-struct pstore_t;
-
-struct csection_set_t;
-
-/******************************************************************************/
 
 /*******************************************************************************
 ** RETURN VALUES **************************************************************/
-enum ERR_CODE : u8 {
-	SUCCESS     = 0x00,
-	PPOST_ERR   = 0x01, // OUTOFRANGE
-	PPUSH_ERR   = 0x02, // OVERFLOW|OUTOFRANGE|NANVALUE
-	PORDER_ERR  = 0x04, // OVERFLOW|
-	PMCSIM_ERR  = 0x08, // OVERFLOW|NANVALUE|OUTOFRANGE|ENERGYMAX|PROBMAX
-	PCHECK_ERR  = 0x10, // OUTOFRANGE|NANVALUE|RUNAWAYPT|FASTPT
-	INVALID_SEQ = 0xff, // something went wrong
-};
-#undef OVERFLOW
-enum ERR_FLAG : u8 {
-	NIL         = 0x00,
-	OVERFLOW    = 0x01, // too many particles
-	OUTOFRANGE  = 0x02, // particle lies outside of the pool or NaN occured
-	NANVALUE    = 0x04, // something went really wrong...
-	ENERGYMAX   = 0x08, // particle's collision energy > max_energy
-	PROBMAX     = 0x10, // particle's collision probability > 0.25
-	RUNAWAYPT   = 0x20, // particle jumps over half of the segment (log error)
-	FASTPT      = 0x40, // particle jumps over the grid spacing    (log warning)
+enum ERR_CODE : u32 {
+	SUCCESS     = 0x0,
+	INVALID_SEQ = 0x1,
+	PPOST_ERR   = 0x2,
+	PPUSH_ERR   = 0x4,
+	ORDER_ERR   = 0x8,
+	MCSIM_ERR   = 0x10,
+	OVERFLOW    = 0x20,
+	OUTOFRANGE  = 0x40,
+	PROBMAX     = 0x80,
+	ENERGYMAX   = 0x100,
 };
 
 struct RET_ERRC {
-	u8  code;
-	u8  flags;
-	f32 dtime;
+ u32 flags;
 };
+
+/******************************************************************************/
+template<u8 nd> struct          grid_t;
+
+template<typename tp> struct    vcache_t;
+
+struct                          pstore_t;
+
+struct                          csection_set_t;
+
+/*******************************************************************************
+** API for pstore operations **************************************************/
+
+template<u8 nd> using _inject_fn_t = u32
+(const grid_t<nd> &, pstore_t &, u64, u8, f32[]);
+
+template<u8 nd> using _extract_fn_t = void
+(const grid_t<nd> &, const pstore_t &, u64[], f32[]);
+
+template<u8 nd> using _countpp_fn_t = void
+(const grid_t<nd> &, pstore_t &, u64[]);
+
+template<u8 nd> using _reset_fn_t = void
+(const grid_t<nd> &, pstore_t &);
  
 /*******************************************************************************
 ** API for particles' form-factors ********************************************/
@@ -73,9 +72,12 @@ enum POST_MODE : u8 {
 	CFPS = 10 // concentration, flux, pressure, stress
 };
 
-template<u8 nd> using ppost_fn_t
-= RET_ERRC
-  (const grid_t<nd> &, const pstore_t &, vcache_t<f32> &);
+template<u8 nd>
+using ppost_fn_t = u32 (
+	const grid_t<nd> &,
+	const pstore_t &,
+	vcache_t<f32> &
+);
 
 /*******************************************************************************
 ** API for ppush functions ****************************************************/
@@ -93,7 +95,7 @@ enum PUSH_MODE : u8 {
 //es-flag
 
 template<u8 nd>
-using ppush_fn_t = RET_ERRC (
+using ppush_fn_t = u32 (
 	const grid_t<nd> &,
 	pstore_t &,
 	const vcache_t<f32> &,
@@ -105,7 +107,7 @@ using ppush_fn_t = RET_ERRC (
 ** API for order functions ***************************************************/
 
 template<u8 nd>
-using order_fn_t = RET_ERRC (
+using order_fn_t = u32 (
 	const grid_t<nd> &,
 	pstore_t &
 );
@@ -114,7 +116,7 @@ using order_fn_t = RET_ERRC (
 ** API for pcheck functions ***************************************************/
 
 template<u8 nd>
-using pcheck_fn_t = RET_ERRC (
+using pcheck_fn_t = u32 (
 	const grid_t<nd> &,
 	const pstore_t &,
 	f32
@@ -138,7 +140,7 @@ using remap_fn_t = void (
 /*******************************************************************************
 ** API for Monte-Carlo simulation functions ***********************************/
 
-template<u8 nd> using mcsim_fn_t = RET_ERRC (
+template<u8 nd> using mcsim_fn_t = u32 (
 	const grid_t<nd> &,
 	pstore_t &,
 	vcache_t<u32> &,
@@ -146,17 +148,6 @@ template<u8 nd> using mcsim_fn_t = RET_ERRC (
 	const vcache_t<f32> &,
 	f32,
 	u32
-);
-
-/*******************************************************************************
-** API for local-simulation ***************************************************/
-
-using mcsim_fn_local_t = RET_ERRC (
-	pstore_t &, u32 *, const csection_set_t &, f32 *, f32, u32
-);
-
-using ppush_fn_local_t = RET_ERRC (
-	pstore_t &, f32*, f32, u32
 );
 
 /*******************************************************************************
@@ -203,5 +194,3 @@ struct ndarray_iface {
 #include "api_pstore.hxx"
 #include "api_vcache.hxx"
 #include "api_csection_set.hxx"
-
-#endif

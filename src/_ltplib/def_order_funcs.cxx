@@ -46,13 +46,8 @@ void def_order_funcs (py::module &m) {
 			backend, fn_name, (void*)(&grid), (void*)(&pstore));
 			
 			auto fn = libs[backend].get_function<order_fn_t<nd>>(fn_name);
-			return [&, fn] (void) {
-				auto tv0 = std::chrono::high_resolution_clock::now();
-				RET_ERRC retv = fn (grid, pstore);
-				auto tv1 = std::chrono::high_resolution_clock::now();
-
-				retv.dtime = std::chrono::duration_cast<std::chrono::microseconds>(tv1-tv0).count()*1e-6;
-				return retv;
+			return [&, fn] (void) -> RET_ERRC {
+				return fn (grid, pstore);
 			};
 		}, *pstore.gridp);
 	}, "pstore"_a,

@@ -11,10 +11,10 @@
 #include "common/loop_over.hxx"
 
 template<u8 nd, u8 mode, u8 ord>
-RET_ERRC run_ppost
+u32 run_ppost
 (const grid_t<nd> &grid, const pstore_t &pstore, vcache_t<f32> &latt) {
 
-	u8 flags{0};
+	u32 flags{0};
 	#pragma omp parallel for
 	for (u32 k=0; k<grid.size; ++k) {
 		
@@ -87,11 +87,7 @@ RET_ERRC run_ppost
 	}
 	// end omp parallel for
 
-	if (flags) {
-		return {ERR_CODE::PPOST_ERR, (ERR_FLAG)flags};
-	} else {
-		return {ERR_CODE::SUCCESS};
-	}
+	return flags;
 }
 
 #include "run_ppost_fns.cxx"

@@ -95,17 +95,17 @@ void def_remap_funcs (py::module &m) {
 				"remap{}{}_{}_fn",
 				nd,
 				datatypecode<tp>(),
-				mode == '<'? "NODES" :
-				mode == '>'? "ARRAY" :
+				mode == '<' ? "NODES" :
+				mode == '>' ? "ARRAY" :
 				throw std::invalid_argument
 				(fmt::format("invalid mode (\"{}\")", mode))
 			);
 			logger::debug ("bind {}->{}(&grid={}, &latt={}, iodata={})"
-			, backend
-			, fn_name
-			, (void*)(&grid)
-			, (void*)(&latt)
-			, (void*)(ptr)
+				, backend
+				, fn_name
+				, (void*)(&grid)
+				, (void*)(&latt)
+				, (void*)(ptr)
 			);
 			
 			auto &&fn = libs[backend].get_function<remap_fn_t<nd,tp>>(fn_name);

@@ -133,14 +133,10 @@ void def_ppush_funcs (py::module &m) {
 			("bind {}->{} &grid={}, &pstore={}, &emfield={}, fcode={}",
 			backend, fn_name, (void*)(&grid), (void*)(&pstore), (void*)(&emfield), fcode);
 			
-			auto fn = libs[backend].get_function<ppush_fn_t<nd>>(fn_name);
-			return [&, fcode, fn] (f32 dt) {
-				auto tv0 = std::chrono::high_resolution_clock::now();
-				RET_ERRC retv = fn (grid, pstore, emfield, dt, fcode);
-				auto tv1 = std::chrono::high_resolution_clock::now();
-				
-				retv.dtime = std::chrono::duration_cast<std::chrono::microseconds>(tv1-tv0).count()*1e-6;
-				return retv;
+			auto &&fn = libs[backend].get_function<ppush_fn_t<nd>>(fn_name);
+			
+			return [&, fcode, fn] (f32 dt) -> RET_ERRC {
+				return RET_ERRC{fn (grid, pstore, emfield, dt, fcode)};
 			};
 		}, *pstore.gridp);
 	}, "pstore"_a, "descr"_a, "emfield"_a, PPUSH_FN);

@@ -6,13 +6,16 @@
 
 collision_t inline mcrun
 (rng_t& rng, const csection_set_t& cset, u8 tag, f32 v1[], f32 bg[], f32 dt) {
+	
+	f32 R0{rng.uniform(0.0f, 1.0f)};
+	f32 N0dt{0.0f};
+	u16 j{0}; /* current channel id */
+	u16 k;    /* active channel */    
+	u16 n;    /* number of channels in the current set */;
+	
 	// spawn object to return
 	collision_t cl(rng);
-	// vars...
-	f32 R0{rng.uniform(0.0f, 1.0f)}, R1, N0dt{0.0f};
-	// current channel id, shift to jump, number of chnnels in the current set
-	u16 j{0}, k, n;
-	
+
 	auto cmd {cset.progs+tag};
 	next: switch (cmd->opc) {
 		
@@ -38,7 +41,7 @@ collision_t inline mcrun
 		
 		case opcode::SEARCH:
 			n = cmd->arg;
-			k = cset.search(&R1, R0/N0dt, j, n); /* R1 will be modified */
+			k = cset.search(R0/N0dt, j, n);
 			if (k < n) {
 				auto entry = cset[j+k];
 				f32 enel = cl.do_energy(v1, cset.cffts[tag]);
@@ -55,8 +58,9 @@ collision_t inline mcrun
 					k = n;
 				}
 			}
+			R0 -= cset.tabs[j+n-1]*N0dt; /*  */
+			
 			j += k;
-			R0  -= R1*N0dt;
 			cmd += 1+k;
 		goto next;
 		
@@ -75,7 +79,7 @@ collision_t inline mcrun
 			cl.type = cltype::IONIZATIONRUN;
 			cl.nsee = 1;
 			cmd += cmd->arg;
-			goto next;
+		goto next;
 		
 		case opcode::ATTACHMENT:
 			cl.type = cltype::ATTACHMENT;
@@ -98,7 +102,6 @@ collision_t inline mcrun
 			cl.type = cltype::ERROR_PROBMAX;
 			cl.chnl = 0;
 		}
-		
 	}
 	end: return cl;
 }
