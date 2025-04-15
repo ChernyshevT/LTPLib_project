@@ -13,14 +13,14 @@ endif()
 include(FetchContent)
 find_package(Python3 COMPONENTS Interpreter Development)
 
-add_subdirectory(_ltplib)
-add_subdirectory(_default)
+add_subdirectory(src/_ltplib)
+add_subdirectory(src/_default)
 
-#~ install(TARGETS _ltplib backend
-	#~ LIBRARY DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ltplib
-#~ )
+install(TARGETS _ltplib _default
+	LIBRARY DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/_ltplib
+)
 
-# cmake -S src -B build
-# cmake --build . --target install
+# cd build
 # cmake ..
+# cmake --build . --target install
 # cmake --build . --target clean && rm CMakeCache.txt

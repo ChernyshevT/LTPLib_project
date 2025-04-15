@@ -19,6 +19,7 @@ FetchContent_Declare(
 	GIT_TAG        master
 	GIT_PROGRESS   TRUE
 )
+set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(fmt)
 
 ################################################################################
