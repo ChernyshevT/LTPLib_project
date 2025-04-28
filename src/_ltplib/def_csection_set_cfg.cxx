@@ -77,7 +77,7 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts) {
 			extra["OPBPARAM"] = py::cast<f32>(entry["OPBPARAM"]);
 			FLAGS.set(OPBPARAM_DEF);
 			continue;
-		case "SWAWN"_hash:
+		case "SPAWN"_hash:
 			throw std::logic_error ("\"SPAWN\" is not implemented yet!");
 		case "COMMENT"_hash: try {
 				extra["comment"] = py::cast<std::string>(entry["COMMENT"]);
@@ -715,9 +715,10 @@ f32 DCS_from_MTCS (f32 sm, f32 s0, f32 ef) {
 		f0 = sqrtf(1.0-1.0/ef);
 	}
 	
-	if (v0 >= f0) throw std::invalid_argument (fmt::format( \
-	"invalid MTCS/ICS ratio: |1-σₘ/σ| >= √(1-ε/εₜ),  (1 - {:5.2e}/{:5.2e} = {:f} >= {:f})!",\
-	sm, s0, v0, f0));
+	if (v0 >= f0) throw std::invalid_argument (
+	fmt::format("invalid MTCS/ICS ratio: |1-σₘ/σ| >= √(1-ε/εₜ)"
+	", (1 - {:5.2e}/{:5.2e} = {:f} >= {:f})!", sm, s0, v0, f0)
+	);
 	
 	do {
 		x = 0.5*(xs[0]+xs[1]);

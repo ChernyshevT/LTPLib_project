@@ -1,10 +1,8 @@
 #include "api_backend.hxx"
 
-template<u8 nd>
+template<u8 nd, u8 md=nd>1? nd>2? 27: 9: 3>
 u32 run_order
 (const grid_t<nd>& grid, pstore_t & pstore) {
-	
-	constexpr u8 md{nd>1 ? nd>2 ? 27 : 9 : 3};
 
 	u32 flags{0};
 	#pragma omp parallel for
@@ -51,17 +49,4 @@ u32 run_order
 	
 	return flags;
 }
-
-/*
-#define EXPORT_PORDER_FN(N) \
-extern "C" LIB_EXPORT \
-RET_ERRC order##N##_fn(const grid_t<N> &grid, pstore_t & pstore) { \
-	return run_order<N>(grid, pstore); \
-}
-
-EXPORT_PORDER_FN(1)
-EXPORT_PORDER_FN(2)
-EXPORT_PORDER_FN(3)
-*/
-
 

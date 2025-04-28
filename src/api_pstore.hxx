@@ -52,10 +52,10 @@ struct pool_t {
 };
 ////////////////////////////////////////////////////////////////////////////////
 struct pstore_t {
-	part_t   *ppdata;
+	part_t *ppdata;
 	u32 *pindex;
 	u32 *pflags;
-	f32    *cffts;
+	f32 *cffts;
 
 	size_t npmax, nargs;
 	//~ u32 nsamples;

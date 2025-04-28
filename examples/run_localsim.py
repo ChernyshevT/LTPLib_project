@@ -133,7 +133,6 @@ def main(args):
 	
 	##############################################################################
 	ppush_fn = ltp.bind_ppush_fn (pstore, "ExBz", emfield)
-	order_fn = ltp.bind_order_fn (pstore)
 	mcsim_fn = ltp.bind_mcsim_fn (pstore, cfreq, cset, bgrnd)
 	remap_cfreq_out = ltp.bind_remap_fn (cfreq, ">", g_cfreq)
 	remap_cfreq_in  = ltp.bind_remap_fn (cfreq, "<", g_cfreq)
@@ -167,7 +166,6 @@ def main(args):
 			mcsim_fn(args.dt, np.random.randint(0xFFFFFFFF, dtype=np.uint32))()
 			t1 = time()
 			ppush_fn(args.dt)()
-			#order_fn()()
 			t2 = time()
 			ts[1] += t1-t0
 			ts[2] += t2-t1

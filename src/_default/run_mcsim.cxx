@@ -137,6 +137,8 @@ u32 run_mcsim
 	return flags;
 }
 
+#include "run_mcsim_fns.cxx"
+
 /*
 #define EXPORT_PMCSIM_FN(N) \
 extern "C" LIB_EXPORT \

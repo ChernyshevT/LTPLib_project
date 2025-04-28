@@ -16,8 +16,14 @@ find_package(Python3 COMPONENTS Interpreter Development)
 add_subdirectory(src/_ltplib)
 add_subdirectory(src/_default)
 
+if(DEFINED ENV{INSTALL_DIR})
+	set(INSTALL_DIR $ENV{INSTALL_DIR})
+else()
+	set(INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
+endif()
+
 install(TARGETS _ltplib _default
-	LIBRARY DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/_ltplib
+	LIBRARY DESTINATION ${INSTALL_DIR}
 )
 
 # cd build
