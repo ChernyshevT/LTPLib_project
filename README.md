@@ -12,6 +12,9 @@ Features:
 > The current version of \_ltplib does not provide build-in field solvers, external one should be used.
 
 The code is based on former Θ-Hall [^chernyshev2019][^chernyshev2022], but it was heavily modified and rewritten from scratch.
+The project was inspired by [eduPIC](https://github.com/donkozoltan/eduPIC),
+[PIC-skeleton-codes](https://github.com/UCLA-Plasma-Simulation-Group/PIC-skeleton-codes),
+and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 
 [^chernyshev2019]: Chernyshev, T., Son, E., & Gorshkov, O. (2019). _2D3V kinetic simulation of Hall effect thruster, including azimuthal waves and diamagnetic effect_. In Journal of Physics D: Applied Physics (Vol. 52, Issue 44, p. 444002). IOP Publishing. 
 [DOI:10.1088/1361-6463/ab35cb](https://doi.org/10.1088/1361-6463/ab35cb)
