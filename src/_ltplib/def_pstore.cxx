@@ -294,8 +294,9 @@ void def_pstores (py::module &m) {
 	
 	.def(py::init<const grid_holder&, std::vector<py::dict>, u32, u8
 	, py::kwargs> ()
-	, "grid"_a, "ptinfo"_a, "npmax"_a, "nargs"_a=0,
-	PSTORE_INIT)
+	, "grid"_a, "ptinfo"_a, "npmax"_a, "nargs"_a=0, PSTORE_INIT,
+	py::keep_alive<1, 2>()
+	)
 
 	.def_property_readonly("ptlist", [] (const pstore_holder& self) {
 		return self.cfg->ptinfo;

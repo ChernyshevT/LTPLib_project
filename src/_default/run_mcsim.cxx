@@ -138,16 +138,3 @@ u32 run_mcsim
 }
 
 #include "run_mcsim_fns.cxx"
-
-/*
-#define EXPORT_PMCSIM_FN(N) \
-extern "C" LIB_EXPORT \
-RET_ERRC mcsim##N##_fn ( \
-const grid_t<N> &grid, pstore_t &pstore, vcache_t<u32> &cfreq, \
-const csection_set_t &cset, const vcache_t<f32> &bg, f32 dt, u32 seed \
-) {return run_mcsim<N>(grid, pstore, cfreq, cset, bg, dt, seed);}
-
-EXPORT_PMCSIM_FN(1)
-EXPORT_PMCSIM_FN(2)
-EXPORT_PMCSIM_FN(3)
-*/

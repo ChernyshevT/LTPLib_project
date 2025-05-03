@@ -79,6 +79,12 @@ void def_mcsim_funcs (py::module &m) {
 				return RET_ERRC{fn (grid, pstore, cfreq, cset, bgrnd, dt, seed)};
 			};
 		}, *pstore.gridp);
-	}, "pstore"_a, "cfreq"_a ,"cset"_a, "bgrnd"_a, PMCSIM_FN);
+	}, "pstore"_a, "cfreq"_a ,"cset"_a, "bgrnd"_a
+	, PMCSIM_FN
+	, py::keep_alive<0, 1>()
+	, py::keep_alive<0, 2>()
+	, py::keep_alive<0, 3>()
+	, py::keep_alive<0, 4>()
+	);
 	
 }

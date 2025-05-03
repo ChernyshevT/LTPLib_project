@@ -109,8 +109,9 @@ void def_vcache(py::module &m) {
 	py::class_<vcache_holder> cls (m, "vcache"); cls
 	
 	.def(py::init<const grid_holder&, std::string, u8, u8, py::kwargs>
-	(), "grid"_a, "dtype"_a, "vsize"_a=1, "order"_a=0,
-	"")
+	(), "grid"_a, "dtype"_a, "vsize"_a=1, "order"_a=0
+	,""
+	, py::keep_alive<1, 2>())
 
 	.def("__len__",
 	[] (const vcache_holder& self) {

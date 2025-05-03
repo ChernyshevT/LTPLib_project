@@ -75,7 +75,7 @@ vcache : segmented data
 
 direction : '<' (from array to data) or '>' (from data to array)
 
-iodata : global array
+vdata : global data array
 
 )pbdoc"
 };
@@ -84,11 +84,11 @@ iodata : global array
 void def_remap_funcs (py::module &m) {
 	
 	m.def("bind_remap_fn",
-	[] (vcache_holder& latt_h, char mode, py::array &iodata) {
+	[] (vcache_holder& vcache_h, char mode, py::array &iodata) {
 		
 		return std::visit([&] <u8 nd, typename tp>
-		(const grid_t<nd>& grid, vcache_t<tp>& latt) -> std::function<void(void)> {
-			tp* ptr = check_array_arg<nd, tp>(grid, iodata, latt.order, latt.vsize);
+		(const grid_t<nd>& grid, vcache_t<tp>& vcache) -> std::function<void(void)> {
+			tp* ptr = check_array_arg<nd, tp>(grid, iodata, vcache.order, vcache.vsize);
 			
 			std::string backend = "default";
 			std::string fn_name = fmt::format (
@@ -100,19 +100,19 @@ void def_remap_funcs (py::module &m) {
 				throw std::invalid_argument
 				(fmt::format("invalid mode (\"{}\")", mode))
 			);
-			logger::debug ("bind {}->{}(&grid={}, &latt={}, iodata={})"
+			logger::debug ("bind {}->{} &grid={}, &vcache={}, &vdata={}"
 				, backend
 				, fn_name
 				, (void*)(&grid)
-				, (void*)(&latt)
+				, (void*)(&vcache)
 				, (void*)(ptr)
 			);
 			
 			auto &&fn = libs[backend].get_function<remap_fn_t<nd,tp>>(fn_name);
 			return [&, ptr, fn] () mutable {
-				return fn (grid, latt, ptr);
+				return fn (grid, vcache, ptr);
 			};
-		}, *(latt_h.gridp), latt_h);
+		}, *(vcache_h.gridp), vcache_h);
 	}, "vcache"_a, "direction"_a ,"iodata"_a,
 	REMAP_FN);
 }

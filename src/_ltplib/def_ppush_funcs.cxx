@@ -139,5 +139,9 @@ void def_ppush_funcs (py::module &m) {
 				return RET_ERRC{fn (grid, pstore, emfield, dt, fcode)};
 			};
 		}, *pstore.gridp);
-	}, "pstore"_a, "descr"_a, "emfield"_a, PPUSH_FN);
+	}, "pstore"_a, "descr"_a, "emfield"_a
+	, PPUSH_FN
+	, py::keep_alive<0, 1>()
+	, py::keep_alive<0, 3>()
+	);
 }

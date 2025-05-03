@@ -174,24 +174,28 @@ void def_csections(py::module &m) {
 	"cross-section database entry");
 	
 	/* start cross-section database class */ cs_cls
+	
 	.def(py::init<std::vector<py::dict>, f32, py::str, py::str, py::kwargs>
-	(), "cfg"_a, "max_energy"_a, "ptdescr"_a="e", "bgdescr"_a=""s,
-	CSECTION_SET_INIT)
+	(), "cfg"_a, "max_energy"_a, "ptdescr"_a="e", "bgdescr"_a=""s
+	, CSECTION_SET_INIT)
 	
 	.def_readonly("max_energy", &csection_set_holder::max_energy,
 	"energy limit")
 	
 	.def_property_readonly("chinfo", [] (const csection_set_holder& self) {
 		return self.cfg->chinfo;
-	}, "reaction channels' description")
+	}, "reaction channels' description"
+	, py::keep_alive<0, 1>())
 	
 	.def_property_readonly("ptlist", [] (const csection_set_holder& self) {
 		return self.cfg->ptinfo;
-	}, "list of active components")
+	}, "list of active components"
+	, py::keep_alive<0, 1>())
 	
 	.def_property_readonly("bglist", [] (const csection_set_holder& self) {
 		return self.cfg->bginfo;
-	}, "list of background components")
+	}, "list of background components"
+	, py::keep_alive<0, 1>())
 
 	.def_property_readonly("points", [] (const csection_set_holder& self) {
 		return py::array_t<f32> (py::memoryview::from_buffer (
@@ -200,7 +204,8 @@ void def_csections(py::module &m) {
 			/* strides  */ {sizeof(f32)},
 			/* readonly */ true
 		));
-	}, "energy-grid used in the lookup-table")
+	}, "energy-grid used in the lookup-table"
+	, py::keep_alive<0, 1>())
 	
 	.def_property_readonly("cffts", [] (const csection_set_holder& self) {
 		return py::array_t<f32> (py::memoryview::from_buffer (
@@ -209,7 +214,8 @@ void def_csections(py::module &m) {
 			/* strides  */ {sizeof(f32)},
 			/* readonly */ true
 		));
-	}, "internal cache for various coefficients being used")
+	}, "internal cache for various coefficients being used"
+	, py::keep_alive<0, 1>())
 
 	.def_property_readonly("tabs", [] (const csection_set_holder& self) {
 		std::vector<py::ssize_t> shape(2), strides(2);
@@ -224,7 +230,8 @@ void def_csections(py::module &m) {
 			/* strides  */ std::move(strides),
 			/* readonly */ true
 		));
-	}, "internal cache for the lookup-table")
+	}, "internal cache for the lookup-table"
+	, py::keep_alive<0, 1>())
 	
 	.def_property_readonly("progs", [] (const csection_set_holder& self) {
 		std::vector<std::string> progs_repr;
@@ -246,22 +253,26 @@ void def_csections(py::module &m) {
 
 	.def_property_readonly("db_entries", [] (const csection_set_holder& self) {
 		return self.cfg->db_entries;
-	}, "database entries for diagnostic/visualization")
+	}, "database entries for diagnostic/visualization"
+	, py::keep_alive<0, 1>())
 	
 	.def("__getitem__", [] (const csection_set_holder& self, u16 k) {
 		if (k < self.cfg->db_entries.size()) {
 			return self.cfg->db_entries[k];
 		} else throw \
 		py::index_error(fmt::format("{} >= {}", k, self.cfg->db_entries.size()));
-	}, "channel_id"_a, "returns specific entry, same as db_entries[channel_id]")
+	}, "channel_id"_a, "returns specific entry, same as db_entries[channel_id]"
+	, py::keep_alive<0, 1>())
 	
 	.def("__iter__", [] (const csection_set_holder& self) {
 		return py::make_iterator(
 			self.cfg->db_entries.begin(), self.cfg->db_entries.end()
 		);
-	}, "iterate over db_entries", py::keep_alive<0, 1>())
+	}, "iterate over db_entries"
+	, py::keep_alive<0, 1>())
 	
 	/* end cross-section class */;
+	
 	
 	/* start database entry class */ entry_cls
 	.def_readonly("descr", &db_entry_t::descr,
@@ -278,16 +289,18 @@ void def_csections(py::module &m) {
 	.def_readonly("rate_max", &db_entry_t::rmax,
 	"null-collision cumulative rate")
 	
-	.def_readonly("rate_fn", &db_entry_t::fnR,
-	"function for energy-depended cumulative rate")
+	.def_property_readonly("rate_fn", [] (const db_entry_t& self) -> csfunc_t {
+		return self.fns.at("C_RATE");
+	}, "function for energy-depended cumulative rate")
 	
-	.def_readonly("csec_fn", &db_entry_t::fn0,
-	"function for cross-section")
+	.def_property_readonly("csec_fn", [] (const db_entry_t& self) -> csfunc_t {
+		return self.fns.at("CS0");
+	}, "function for cross-section")
 	
 	.def_property_readonly("mtcs_fn",
 	[] (const db_entry_t& self) -> std::optional<csfunc_t> {
-		if (self.fn1) {
-			return self.fn1;
+		if (self.fns.contains("CS1")) {
+			return self.fns.at("CS1");
 		} else {
 			return std::nullopt;
 		}

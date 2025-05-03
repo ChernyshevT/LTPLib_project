@@ -52,11 +52,7 @@ Returns
 void def_ppost_funcs (py::module &m) {
 
 	m.def("bind_ppost_fn",
-	[] (pstore_holder &pstore, vcache_holder &ptfluid_h, py::str mode) 
-	{
-		if (not pstore.gridp) throw std::logic_error (
-		"Can not use this binding for spatial-local mode!");
-		
+	[] (pstore_holder &pstore, vcache_holder &ptfluid_h, py::str mode) {
 		return std::visit([&] <u8 nd>
 		(const grid_t<nd>& grid) -> std::function<RET_ERRC(void)> {
 			auto &ptfluid = std::get<vcache_t<f32>>(ptfluid_h);
@@ -102,8 +98,11 @@ void def_ppost_funcs (py::module &m) {
 				return RET_ERRC{fn (grid, pstore, ptfluid)};
 			};
 		}, *pstore.gridp);
-	}, "pstore"_a, "ptfluid"_a, "mode"_a="C",
-	PPOST_FN);
+	}, "pstore"_a, "ptfluid"_a, "mode"_a="C"
+	, PPOST_FN
+	, py::keep_alive<0, 1>()
+	, py::keep_alive<0, 2>()
+	);
 }
 
 

@@ -1,5 +1,5 @@
-/*
- * _ltplib.cxx def_*.?xx api_*.hxx com_*.?xx run_*.?xx
+/* Low Temperature Plasma Library
+ * _ltplib.cxx def_*.?xx  io_*.?xx
  * 
  * Copyright 2024 Timofey Chernyshev
  * <thunarux@protonmail.com, chernyshev.tv@ihed.ras.ru>
@@ -18,7 +18,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301, USA.
- * 
  *
  */
 

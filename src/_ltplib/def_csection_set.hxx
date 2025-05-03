@@ -5,8 +5,8 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 namespace py = pybind11; using namespace pybind11::literals;
-#include "api_csection_set.hxx"
 #include "typedefs.hxx"
+#include "api_csection_set.hxx"
 #include "io_strings.hxx"
 #include "io_memory.hxx"
 
@@ -18,6 +18,7 @@ namespace py = pybind11; using namespace pybind11::literals;
 #include <fstream>
 #include <regex>
 #include <bitset>
+#include <unordered_map>
 
 typedef std::function<f32(f32)> csfunc_t;
 
@@ -34,7 +35,9 @@ struct db_entry_t {
 	
 	py::dict       extra;
 	
-	db_entry_t (py::dict entry, py::dict opts);
+	std::unordered_map<std::string, csfunc_t> fns; 
+	
+	db_entry_t (py::dict entry, py::dict opts, const std::vector<std::string>&);
 };
 
 /******************************************************************************/

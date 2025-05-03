@@ -388,6 +388,7 @@ As a result, only $\vec{ E}$ & $\vec{ B}$ fields at time moment $t+\delta t$ are
 The system can be solved as iterative predictor-corrector process.
 - Initial rough approximation (predictor step) assumes $\vec{ a}(t+\delta t) = \vec{ a}(t)$.
 - Following corrector step adjusts approximation using updated field values.
+The scheme is encoded by `"IMPL0"` & `"IMPLR"` keywords.
 
 Usually, $\lesssim 3$ additional iterations are enough to minimize  an error of closure.
 Our implementation caches $t$-moment field contribution for the each sample, so one should set double *nargs*-parameter for *pstore*.

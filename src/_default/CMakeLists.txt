@@ -54,12 +54,7 @@ target_include_directories(_default PRIVATE
 )
 
 target_compile_options(_default PRIVATE
-	-Wall
-	-Wpedantic
-	-Werror
-	-fno-sanitize=all
-	-O3
+	$<$<C_COMPILER_ID:GNU>:-Wall -Wpedantic -Werror -fno-sanitize=all -O3>
+	$<$<C_COMPILER_ID:Clang>:-Wall -Wpedantic -Werror -fno-sanitize=all -O3>
+	$<$<C_COMPILER_ID:MSVC>:/Wall /WX /O2>
 )
-if(DEFINED OPTS)
-	target_compile_options(_default PRIVATE ${OPTS})
-endif()

@@ -54,10 +54,9 @@ struct csection_t {
 // Energies lies on a $2^{j/2-4}-0.0625$ grid, where $j\in\mathbb{N}$
 // arg = $\varepsilon >= \varepsilon^{*}$ 
 	
-	const f32  enth;
-	f32       *tab;
+	const f32 enth, *tab;
 
-	 csection_t (f32 lnk[]) : enth{lnk[0]}, tab{lnk+1} {
+	 csection_t (const f32 lnk[]) : enth{lnk[0]}, tab{lnk+1} {
 	};
 
 	inline f32 operator [] (f32 arg) const {

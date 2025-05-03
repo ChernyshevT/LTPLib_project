@@ -1,6 +1,6 @@
 #include "api_backend.hxx"
 
-template<u8 nd, u8 md=nd>1? nd>2? 27: 9: 3>
+template<u8 nd, u8 md=(nd>1? nd>2? 27: 9: 3)>
 u32 run_order
 (const grid_t<nd>& grid, pstore_t & pstore) {
 

@@ -23,7 +23,6 @@ set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(fmt)
 
 ################################################################################
-#~ file(GLOB SOURCES *.cpp)
 add_library(_ltplib SHARED 
 	_ltplib.cxx
 	def_grid_cfg.cxx
@@ -59,10 +58,7 @@ target_include_directories(_ltplib PRIVATE
 
 # Set compiler flags for _ltplib
 target_compile_options(_ltplib PRIVATE
-	-Wall
-	-Wpedantic
-	-fvisibility=hidden
+	$<$<C_COMPILER_ID:GNU>:-Wall -Wpedantic -Werror -O3>
+	$<$<C_COMPILER_ID:Clang>:-Wall -Wpedantic -Werror -O3>
+	$<$<C_COMPILER_ID:MSVC>:/Wall /WX /O2>
 )
-if(DEFINED OPTS)
-	target_compile_options(_ltplib PRIVATE ${OPTS})
-endif()
