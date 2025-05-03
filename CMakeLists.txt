@@ -24,7 +24,5 @@ install(TARGETS _ltplib _default
 	LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
 
-# cd build
-# cmake ..
-# cmake --build . --target install
-# cmake --build . --target clean && rm CMakeCache.txt
+# cmake ./build
+# cmake --build ./build --target install
