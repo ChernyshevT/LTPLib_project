@@ -50,10 +50,11 @@
 	# Set of the Electron Collision Cross Sections for Methane Molecule
 	# doi:  10.1109/TPS.2018.2885610, cite: gadoum2018
 	{"TYPE":"DISSOCIATION", "THRESHOLD":8.8,
+	 # this cross-section seems overeestimated in high-energy region!
 	 "COMMENT":"CH3+H", "REF":r"\cite{gadoum2018}",
 	 "CSEC": lambda en, th, a=[4.9441,0.3863,1.4973,1.2794]: 
 	  1e-20*(a[0]*(th/en)**a[1] * (1 - (th/en)**a[2])**a[3]).real
-	},
+	}, 
 	{"TYPE":"DISSOCIATION", "THRESHOLD":9.4,
 	 "COMMENT":"CH2+H2", "REF":r"\cite{gadoum2018}",
 	 "CSEC": lambda en, th, a=[1.2903,0.5079,1.3305,1.2262]: \

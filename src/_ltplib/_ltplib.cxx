@@ -75,7 +75,13 @@ PYBIND11_MODULE (_ltplib, m) {
 	m.attr("__doc__")     = _LTBLIB;
 	m.attr("__version__") = "build: " __DATE__ " " __TIME__;
 	
-	m.def("load_backend", [&](std::string backend){libs[backend];});
+	m.def("load_backend", [&](std::string backend) {
+		std::string out;
+		out = py::module::import("_ltplib").attr("__file__").cast<std::string>();
+		fmt::print("{}\n", out);
+		
+		libs[backend];
+	});
 
 	// define base primitives
 	void def_csections(py::module &);
@@ -109,10 +115,7 @@ PYBIND11_MODULE (_ltplib, m) {
 	
 	// define utils module (poisson eq, fft, etc..):
 	
-	void def_mod_utils(py::module &);
-	
-	// define local kinetics
-	
-	void def_mod_local(py::module &);
+	void def_poisson_eq(py::module &);
+	def_poisson_eq(m);
 	
 }

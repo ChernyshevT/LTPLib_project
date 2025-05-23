@@ -123,14 +123,14 @@ template<u8 nd, u8 pushm, u8 clcrd=0>
 inline void push_pt
 (f32 pt[], const f32 fpt[], const f32 dt) noexcept {
 
-#if defined(BACKEND_DEBUG) || defined(FUNC_DEBUG)
-bool _debug_check{false};
-f32 p0[nd+3];
-	for (u8 i{0u}; i<nd+3; ++i) {
-		p0[i] = pt[i];
-		_debug_check or_eq (p0[i] != p0[i]);
-	}
-#endif
+	#if defined(BACKEND_DEBUG) || defined(FUNC_DEBUG)
+	bool _debug_check{false};
+	f32 p0[nd+3];
+		for (u8 i{0u}; i<nd+3; ++i) {
+			p0[i] = pt[i];
+			_debug_check or_eq (p0[i] != p0[i]);
+		}
+	#endif
 
 	// explicit (boris method)
 	if constexpr (pushm == PUSH_MODE::LEAPF) {
@@ -139,11 +139,13 @@ f32 p0[nd+3];
 		if constexpr (clcrd and nd == 2) {
 			f32 vx,vy,vz,x,y,z,r,a,sina,cosa;
 			
-			vx = pt[nd+0];
-			vy = pt[nd+1];
-			vz = pt[nd+2];
-			x  = vx*dt + pt[0];
-			y  = vy*dt + pt[1];
+			x  = pt[0];
+			y  = pt[1];
+			vx = pt[2];
+			vy = pt[3];
+			vz = pt[4];
+			x  = vx*dt + x;
+			y  = vy*dt + y;
 			z  = vz*dt;
 			r  = sqrtf(y*y + z*z);
 			/*
@@ -158,9 +160,9 @@ f32 p0[nd+3];
 			cosa = cos(a);
 			pt[0] = x;
 			pt[1] = r;
-			pt[nd+0] = vx;
-			pt[nd+1] = vy*cosa + vz*sina;
-			pt[nd+2] = vz*cosa - vy*sina; 
+			pt[2] = vx;
+			pt[3] = vy*cosa + vz*sina;
+			pt[4] = vz*cosa - vy*sina; 
 		} else for (size_t i{0}; i<nd; ++i) {
 			pt[i] = pt[i] + pt[nd+i]*dt;
 		}

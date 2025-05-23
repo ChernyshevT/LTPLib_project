@@ -54,9 +54,7 @@ collision_t inline mcrun
 					cl.chnl  = j+k+1;
 					cl.enth  = enth;
 					cl.ensys = enel-enth;
-				} else {
-					k = n;
-				}
+				} else goto end; /* null-collision IS happen */
 			}
 			R0 -= cset.tabs[j+n-1]*N0dt; /*  */
 			

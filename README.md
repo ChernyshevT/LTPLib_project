@@ -25,7 +25,7 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 ## Build instructions
 The framework uses [pybind11](https://github.com/pybind/pybind11) to create transparent interface between python and c++ codes. Dependencies will be downloaded automatically by CMake FetchContent. To build the code just run the following statement
 ```sh
-cmake ./build && cmake --build ./build --target install
+cmake -S src -B build && cmake --build build --target install
 ```
 As a result, two libraries will be generated in `examples`-dir:
 1. `examples/_default.so`, the backend library containing OpenMP-based solvers;
@@ -522,7 +522,6 @@ The contents of the archive could be numpy-arrays, generic python data (will be 
 Function `util.load_frame(fname: str)` loads frame.
 The saved data can be accessed with dot-operator: `frame.data`.
 In the case of absence of the data `None` will be returned.
-
 
 ## `examples/run_localsim.py`
 This problem shows an example of so-called spatial-local approximation.

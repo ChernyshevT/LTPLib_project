@@ -9,11 +9,10 @@ class mem_holder {
 	struct {
 		std::vector<std::tuple<void**, size_t>>
 			reqs;
-		std::map<void**, std::tuple<void*, size_t>>
-			srcs;
 		std::unique_ptr<std::byte[], std::function<void(void*)>>
 			data;
-		size_t size{0};
+		size_t
+			size{0};
 	} m;
 
 public:
@@ -52,10 +51,11 @@ public:
 
 		size_t shift{0};
 		for(auto& [p, n] : m.reqs) {
-			*p  = &(m.data[shift]); shift += n;
+			if (p) {
+				*p  = &(m.data[shift]);
+			}
+			shift += n;
 		}
-		
-		
 
 		return *this;
 	}

@@ -37,6 +37,7 @@ add_library(_ltplib SHARED
 	def_ppost_funcs.cxx
 	def_ppush_funcs.cxx
 	def_remap_funcs.cxx
+	def_poisson_eq.cxx
 )
 
 set_target_properties(_ltplib PROPERTIES LIBRARY_OUTPUT_NAME
@@ -48,6 +49,10 @@ set_target_properties(_ltplib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Link pybind11 and fmt directly
 target_link_libraries(_ltplib PRIVATE pybind11::module fmt::fmt-header-only)
+
+# Find OpenMP (this will automatically set up the correct compiler flags)
+find_package(OpenMP REQUIRED)
+target_link_libraries(_ltplib PRIVATE OpenMP::OpenMP_CXX)
 
 # Include pybind11 and fmt headers
 target_include_directories(_ltplib PRIVATE

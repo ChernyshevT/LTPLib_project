@@ -72,7 +72,7 @@ namespace {
 			0b110101011001,
 			0b11100111101100111101010110010001,
 		};
-		for (u64 flag{fmask[nd]}; flag; flag >>= nd+1) {
+		for (u64 flag{fmask[nd]}; flag; flag = flag>>(nd+1)) {
 			//////////////////////////////////////////////////////////////////////////
 			#pragma omp parallel for schedule(dynamic)
 			for (u32 k=0; k<grid.size; ++k) {

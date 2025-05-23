@@ -33,12 +33,12 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts, const std::vector<std::st
 	for (auto [key, val] : entry) switch (_hash(key)) {
 		
 		default:
-			throw_bad_arg("unknown field \"{}\"", py::cast<std::string>(key));
+			throw bad_arg("unknown field \"{}\"", py::cast<std::string>(key));
 		case "TYPE"_hash:
 			descr = py::cast<std::string>(val);
 			switch (_hash(val)) {
 				default:
-					throw_bad_arg("invalid \"TYPE\" field: \"{}\"!", descr);
+					throw bad_arg("invalid \"TYPE\" field: \"{}\"!", descr);
 				case "ELASTIC"_hash:
 					opc = opcode::ELASTIC;
 					continue;
@@ -95,11 +95,11 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts, const std::vector<std::st
 	if (enth < 0 \
 	or (enth != 0 and opc == opcode::ELASTIC) \
 	or (enth == 0 and opc != opcode::ELASTIC and opc != opcode::ATTACHMENT)) {
-		throw_bad_arg("{}/THRESHOLD = {}", descr, enth);
+		throw bad_arg("{}/THRESHOLD = {}", descr, enth);
 	}
 	/****************************************************************************/
 	if (opc >= opcode::IONIZATION and (FLAGS[MTCS_DEF] | FLAGS[DCSFN_DEF])) {
-		throw_bad_arg("{}/MTCS makes no sense", descr);
+		throw bad_arg("{}/MTCS makes no sense", descr);
 	}
 	/****************************************************************************/
 	if (FLAGS[CSEC_DEF]) {
@@ -119,7 +119,7 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts, const std::vector<std::st
 	/****************************************************************************/
 	if (FLAGS[CSEC_DEF] and FLAGS[MTCS_DEF]) {
 		if (FLAGS[DCSFN_DEF]) {
-			throw_bad_arg("can not use both \"MTCS\" & \"DCSFN\"");
+			throw bad_arg("can not use both \"MTCS\" & \"DCSFN\"");
 		}
 		
 		fns["DCS"] = \
@@ -132,7 +132,7 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts, const std::vector<std::st
 	}
 	if (FLAGS[CSEC_DEF] and FLAGS[DCSFN_DEF]) {
 		if (FLAGS[MTCS_DEF]) {
-			throw_bad_arg("can not use both \"MTCS\" & \"DCSFN\"");
+			throw bad_arg("can not use both \"MTCS\" & \"DCSFN\"");
 		}
 		
 		fns["CS1"] = \
@@ -145,7 +145,7 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts, const std::vector<std::st
 	}
 	if (FLAGS[MTCS_DEF] and FLAGS[DCSFN_DEF]) {
 		if (FLAGS[CSEC_DEF]) {
-			throw_bad_arg("can not use all three of \"CS\", \"MTCS\" & \"DCSFN\"");
+			throw bad_arg("can not use all three of \"CS\", \"MTCS\" & \"DCSFN\"");
 		}
 		
 		fns["CS0"] = \
@@ -177,7 +177,7 @@ csection_set_cfg::csection_set_cfg (
 	
 	/****************************************************************************/
 	if (max_energy < 10.0f) {
-		throw_bad_arg("invalid max_energy ({:e} < 10 eV)!", max_energy);
+		throw bad_arg("invalid max_energy ({:e} < 10 eV)!", max_energy);
 	} else {
 		points.reserve(256);
 		f32 e0;
@@ -189,7 +189,7 @@ csection_set_cfg::csection_set_cfg (
 	}
 	/****************************************************************************/
 	if (not ptinfo.size()) {
-		throw_bad_arg("empty \"ptinfo\" parameter!");
+		throw bad_arg("empty \"ptinfo\" parameter!");
 	}
 	
 	cffts.resize(ptinfo.size());
@@ -291,7 +291,7 @@ csection_set_cfg::csection_set_cfg (
 		}
 		
 		if (rmx == rsh) {
-			throw_bad_arg("collision with zero effect!");
+			throw bad_arg("collision with zero effect!");
 		} else {
 			ptabs[0].push_back(rmx);
 		}
@@ -343,22 +343,22 @@ csection_set_cfg::csection_set_cfg (
 						cffts[tag] = py::cast<f32>(entry["ENCFFT"]);
 						TYPE_isdefined = true;
 					} else {
-						throw_bad_arg("invalid order of active components (\"{}\")!", key);
+						throw bad_arg("invalid order of active components (\"{}\")!", key);
 					}
 				}	else {
-					throw_bad_arg ("PARTICLE:  \"KEY\" or/and \"ENCFFT\" is/are not defined!");
+					throw bad_arg ("PARTICLE:  \"KEY\" or/and \"ENCFFT\" is/are not defined!");
 				}
 			} continue;
 			
 			case "BACKGROUND"_hash: {
-				if (not TYPE_isdefined) throw_bad_arg
+				if (not TYPE_isdefined) throw bad_arg
 				("\"PARTICLE\" entry is not defined!");
 				
 				flags.reset();
 				std::string key;
 				if (entry.contains("KEY")) {
 					key = py::cast<std::string>(entry["KEY"]);
-					if (not bgset.insert(key).second) throw_bad_arg("background \"{}\" is already set!", key);
+					if (not bgset.insert(key).second) throw bad_arg("background \"{}\" is already set!", key);
 					
 					if (not defbg) {
 						logger::debug("csection_set: add background \"{}\"", key);
@@ -372,7 +372,7 @@ csection_set_cfg::csection_set_cfg (
 						logger::info("csection_set: skip background \"{}\"", key);
 						flags.skip = 1;
 					}
-				} else throw_bad_arg("BACKGROUND: \"KEY\" is not defined!");
+				} else throw bad_arg("BACKGROUND: \"KEY\" is not defined!");
 
 				if (not flags.skip and entry.contains("MASSRATE")) {
 					flags.massrate_def = 1;
@@ -381,7 +381,7 @@ csection_set_cfg::csection_set_cfg (
 						flags.massrate_idx = add_cf(2.0f*mrate);
 						add_op(0, opcode::MASSRATE, flags.massrate_idx);
 					} else {
-						throw_bad_arg("\"MASSRATE\": {}!", mrate);
+						throw bad_arg("\"MASSRATE\": {}!", mrate);
 					}
 				}
 
@@ -401,7 +401,7 @@ csection_set_cfg::csection_set_cfg (
 		
 		/* add processess *********************************************************/
 		if (not flags.n0_def) {
-			throw_bad_arg("background is not defined yet!");
+			throw bad_arg("background is not defined yet!");
 		}
 		db_entries.emplace_back(entry, opts, ptinfo);
 		auto& db_entry{db_entries.back()};
@@ -426,7 +426,7 @@ csection_set_cfg::csection_set_cfg (
 		++flags.jset;
 		
 	} catch (const std::exception& e) {
-		throw_bad_arg("entry[{}]: {}", &entry-&entries[0], e.what());
+		throw bad_arg("entry[{}]: {}", &entry-&entries[0], e.what());
 	}
 	if (k2) {
 		// null-collision search cmd
@@ -501,7 +501,7 @@ csection_set_cfg::csection_set_cfg (
 csfunc_t from_data
 (std::vector<std::array<f32,2>>&& xys, f32 enth, py::dict opts) {
 	
-	if (xys.size() < 3) throw_bad_arg("no enough data points");
+	if (xys.size() < 3) throw bad_arg("no enough data points");
 
 	f32 exterp = py::cast<f32>(opts.attr("get")("exterp", DEFAULT_EXTERP));
 	f32 scale  = py::cast<f32>(opts.attr("get")("scale", 1.0f)) \
@@ -513,11 +513,11 @@ csfunc_t from_data
 	for (auto [x, y] : xys) {
 		
 		if (not (std::isfinite(x) or std::isfinite(y) or x >= 0)) {
-			throw_bad_arg("point#{} invalid data ({}, {})!", j, x, y);
+			throw bad_arg("point#{} invalid data ({}, {})!", j, x, y);
 		}
 		
 		if ((j ? xys[j-1][0] : -INFINITY) >= x) {
-			throw_bad_arg("point#{} unsorted values in x-column", j);
+			throw bad_arg("point#{} unsorted values in x-column", j);
 		}
 		
 		// collect  extrapolation coeffs.
@@ -545,7 +545,7 @@ csfunc_t from_data
 		logger::debug\
 		("build extrapolation using {} points: a={:e}, b={:e}", nex, a, b);
 		
-		if (nex == 1 or a > 0.0f) throw_bad_arg("failed to extrapolate");
+		if (nex == 1 or a > 0.0f) throw bad_arg("failed to extrapolate");
 	}
 	
 	return [=] (f32 x) -> f32 {
@@ -621,7 +621,7 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
 		
 		auto fp = std::ifstream(std::filesystem::path(fname));
 		if (not fp.is_open()) {
-			throw_bad_arg("error opening file \"{}\"", fname);
+			throw bad_arg("error opening file \"{}\"", fname);
 		} else {
 			logger::debug("reading \"{}\"", fname);
 		}
@@ -668,11 +668,11 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
 				auto [x, y] = parse_vals<f32, f32>(line);
 				// check values
 				if (not (std::isfinite(x) or std::isfinite(y) or x >= 0)) {
-					throw_bad_arg("invalid data-point ({}, {})!", x, y);
+					throw bad_arg("invalid data-point ({}, {})!", x, y);
 				}
 				// check sorted
 				if (xys.size() > 0 and xys[xys.size()-1][0] >= x) {
-					throw_bad_arg("unsorted values in energy-column, ({} >= {})!"\
+					throw bad_arg("unsorted values in energy-column, ({} >= {})!"\
 					, xys[xys.size()-1][0], x);
 				}
 				xys.push_back({x, y});
@@ -680,11 +680,11 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
 			}
 
 		} catch (std::exception& e) {
-			throw_bad_arg("{} LINE#{}: {}", fname, n, e.what());
+			throw bad_arg("{} LINE#{}: {}", fname, n, e.what());
 		}
 		
 		if (not foundPattern and not pattern.empty()) {
-			throw_bad_arg("didn't find pattern \"{}\" in file \"{}\"", pattern, fname);
+			throw bad_arg("didn't find pattern \"{}\" in file \"{}\"", pattern, fname);
 		}
 		return from_data(std::move(xys), enth, opts);
 	}
@@ -711,7 +711,7 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
  ******************************************************************************/
 f32 MTCS_from_DCS (f32 x, f32 ef) {
 	if (fabsf(x) >= 1.0f) {
-		throw_bad_arg("invalid DCS value |{}| >= 1", fabsf(x));
+		throw bad_arg("invalid DCS value |{}| >= 1", fabsf(x));
 	}
 	
 	f32 f0, v0;
@@ -737,7 +737,7 @@ f32 DCS_from_MTCS (f32 sm, f32 s0, f32 ef) {
 	}
 	
 	if (v0 >= f0) {
-		throw_bad_arg(\
+		throw bad_arg(\
 		"invalid MTCS/ICS ratio: |1-σₘ/σ| >= √(1-ε/εₜ)"
 		", (1 - {:5.2e}/{:5.2e} = {:f} >= {:f})!", sm, s0, v0, f0
 		);

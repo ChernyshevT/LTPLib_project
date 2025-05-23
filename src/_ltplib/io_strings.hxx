@@ -215,9 +215,9 @@ namespace logger {
 }
 
 template <typename... ts>
-void throw_bad_arg(fmt::format_string<ts...> fmt_str, ts&&... args) {
-	throw std::invalid_argument(fmt::format(fmt_str, std::forward<ts>(args)...));
-}
+std::invalid_argument bad_arg (fmt::format_string<ts...> fmt_str, ts&&... args) {
+	return std::invalid_argument(fmt::format(fmt_str, std::forward<ts>(args)...));
+};
 
 template<typename tp>
 const char* datatypecode() {
