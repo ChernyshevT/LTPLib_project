@@ -101,7 +101,7 @@ struct SOR_solver_t {
 					default:
 						continue;
 					
-					case LFDIFF: // ([b]-[0])/(dx*dx)
+					case LFDIFF: // ([0]-[b])/(dx*dx)
 						kL = 0;
 						for (u8 i{0u}; i<nd; ++i) {
 							kR += offst[i+1] * (pos[i]-(i==j));
