@@ -1,18 +1,18 @@
-# \_ltplib: <ins>L</ins>ow <ins>T</ins>emperature <ins>P</ins>lasma <ins>Lib</ins>rary
-The middle-layer framework that provides simple python-interface to construct PiC+MCC simulations (Particles in Cells + Monte-Carlo Collisions).
-The library offers a range of functions and primitives to facilitate a wide class of low-temperature plasma problems.
-By creating a more abstract and user-friendly interface, \_ltplib aims to enable researchers and engineers to formulate and solve simple & complex PiC+MCC problems in a flexible manner with aid of python.
+# **\_ltplib**: <ins>L</ins>ow <ins>T</ins>emperature <ins>P</ins>lasma <ins>Lib</ins>rary
+This is a middle-layer framework that provides a simple Python solutions to construct PiC+MCC simulations (Particles-in-Cells + Monte Carlo Collisions).
+The framework offers a range of functions and primitives to facilitate a broad range of low-temperature plasma kinetic problems.
+By creating a high-level user-friendly API, **\_ltplib** aims to enable researchers and engineers to formulate and solve both simple and complex PiC+MCC problems in a flexible manner with the aid of modern computational techniques.
 
 Features:
-- one-, two-, and three-dimension problems with periodic or absorptive boundary conditions;
-- high-order form-factors (up to 3);
+- one-, two-, and three-dimensional problems with periodic or absorptive boundary conditions;
+- high-order form factors (up to 3);
 - explicit or semi-implicit particle movers;
-- fast and flexible Monte-Carle module allowing to simulate arbitrary mixture of active and background components, taking into account anisotropic scattering.
+- fast and flexible Monte Carlo module allowing simulation of arbitrary mixtures of active and background components, taking into account anisotropic scattering.
 > [!NOTE]
-> The current version of \_ltplib does not provide build-in field solvers, external one should be used.
+> The current version of **\_ltplib** does not provide built-in field solvers. The external ones should be used.
 
-The code is based on former Θ-Hall [^chernyshev2019][^chernyshev2022], but it was heavily modified and rewritten from scratch.
-The project was inspired by [eduPIC](https://github.com/donkozoltan/eduPIC),
+The code is based on the former Θ-Hall [^chernyshev2019][^chernyshev2022], but it has been heavily modified and rewritten from scratch.
+The project is inspired by [eduPIC](https://github.com/donkozoltan/eduPIC),
 [PIC-skeleton-codes](https://github.com/UCLA-Plasma-Simulation-Group/PIC-skeleton-codes),
 and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 
@@ -23,25 +23,29 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 [DOI:10.1088/1361-6595/ac4179](https://doi.org/10.1088/1361-6595/ac4179)
 
 ## Build instructions
-The framework uses [pybind11](https://github.com/pybind/pybind11) to create transparent interface between python and c++ codes. Dependencies will be downloaded automatically by CMake FetchContent. To build the code just run the following statement
+The framework uses [pybind11](https://github.com/pybind/pybind11) to create a transparent interface between Python and C++ code. Dependencies are downloaded automatically by CMake FetchContent.
 ```sh
 cmake -S src -B build && cmake --build build --target install
 ```
-As a result, two libraries will be generated in `examples`-dir:
+As a result, two libraries will be generated in the `examples` directory:
 1. `examples/_default.so`, the backend library containing OpenMP-based solvers;
-1. `examples/_ltplib.so`, is the framework itself.
+1. `examples/_ltplib.so`, the framework itself.
 
-Native python-way installation via pip is not supported yet, so just copy both binaries in your project's directory. Is is highly recommended to have [numpy](https://github.com/numpy/numpy) installed. It is not necessary to run \_ltplib, but [numpy.ndarray](https://numpy.org/doc/stable/reference/arrays.ndarray.html) is used as a main interface between userspace python-code and \_ltplib.
+Native Python installation via pip is not yet supported, so just copy both binaries into your project's directory (or use `-DCMAKE_INSTALL_PREFIX`).
+It is highly recommended to have [numpy](https://github.com/numpy/numpy) installed.
+It is not necessary to run **\_ltplib**, but [numpy.ndarray](https://numpy.org/doc/stable/reference/arrays.ndarray.html) is used as a main interface between userspace python-code and **\_ltplib**.
 Build-in documentation is available as follows:
 ```python
 import _ltplib as ltp
 help(ltp)
 ```
-The following sections provide a brief overview for \_ltplib components.
+The following sections provide a brief overview for **\_ltplib** components.
 
 ## Main classes
 ### `_ltplib.grid` (problem's geometry)
-Gird is a primary class for every simulation. It describes geometry of the problem, boundary conditions, and spatial-decomposition for parallel computation. The code uses sightly modified approach of tile-decomposition described before in [^decyk2014][^decyk2015]. The class constructor accepts following arguments:
+The gird is a primary class for every simulation.
+It describes geometry of the problem, boundary conditions, and spatial-decomposition for parallel computation.
+The code uses sightly modified approach of tile-decomposition described before in [^decyk2014][^decyk2015]. The class constructor accepts following arguments:
 1. *nd* -- number of spatial dimensions;
 1. *step* -- list containing spatial steps along the each axis;
 1. *axes* -- list describing spatial decomposition along the each axis;
@@ -68,12 +72,12 @@ grid_cfg = [
   (0, 1), # (0 <= x/dx < 16), (20 <= y/dy < 40)
   ...
  ],
- # The links between the nodes will be builded automatically.
+ # The links between the nodes will be built automatically.
  
- # It is possible to mark some points as a particle absorbers
- # using following optional parameter:
+ # It is possible to mark some points as particle absorbers
+ # using the following optional parameter:
  "mask" : [...], # uint8 numpy array, with the same shape as grid axes.
- # Any value != 0 will be considered as adsorbing wall.
+ # Any value != 0 will be considered as an adsorbing wall.
  
  # For periodic boundary condition(s) axis(ex) should be marked:
  "loopax": "x",
@@ -172,7 +176,7 @@ Secondly, the background should be described (`"TYPE":"BACKGROUND"`)
 },
 ```
 > [!NOTE]
-> The current version of \_ltplib doesn't support flux & thermal thermal velocities for the background.
+> The current version of **\_ltplib** doesn't support flux & thermal thermal velocities for the background.
 > Such functionality will be added later. Now it is considered frozen in laboratory frame of reference.
 
 Processes' description follow next. For these entries `"TYPE"` could be
@@ -234,7 +238,7 @@ $\sigma(\varepsilon,\ \alpha)$, where
 $\sigma(\varepsilon)
 =2\pi\int_0^\pi \sin\alpha\ \sigma(\varepsilon,\ \alpha)\ {\rm d}\alpha$,
 $\alpha$ -- azimuthal scattering angle (relative to the incident direction).
-Framework \_ltplib includes first-order approximation for $\sigma(\varepsilon,\ \alpha)$ uning momentum-transfer cross-section:
+Framework **\_ltplib** includes first-order approximation for $\sigma(\varepsilon,\ \alpha)$ uning momentum-transfer cross-section:
 ```math
 	\sigma_{\rm m} = 2\pi\int_{0}^{\pi}
 	\left[1-\cos\alpha\sqrt{1-\frac{\varepsilon_{\rm th}}{\varepsilon}}\right]
@@ -438,7 +442,7 @@ Functional object's signature is
 where `dt` is time step and `seed` is random number.
 
 #### Search algorithm
-To simulate the collisions, \_ltplib uses Poisson's flow of random events[^birdsall1991-2],
+To simulate the collisions, **\_ltplib** uses Poisson's flow of random events[^birdsall1991-2],
 where collision probability during fixed time-step $\delta t$ is
 ```math
 P = 1 - \exp\left(-n_0\vartheta\delta t\right)
@@ -513,7 +517,7 @@ _ltplib.bind_remap_fn(vcache, ">", iodata) # to copy from vcache to iodata
 ```
 Functional object's signature is `() -> None`.
 
-# Code examples for \_ltplib
+# Code examples for **\_ltplib**
 
 All our code examples build with the same template and use shared code snippets from `examples/util`.
 One should note our custom format for input/output data described in [`examples/util/frames.py`](./examples/util/frames.py).

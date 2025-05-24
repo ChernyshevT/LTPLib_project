@@ -53,6 +53,8 @@ enum uTYPE : u8 { // unit type
 };
 /******************************************************************************/
 
+//~ https://scicomp.stackexchange.com/questions/20113/periodic-boundary-condition-for-the-heat-equation-in-0-1
+
 template<u8 nd, typename tp=f32 /* real or complex [TBD] */>
 struct SOR_solver_t {
 	u64  offst[nd+1]; // nx*ny*nz*1
@@ -97,19 +99,19 @@ struct SOR_solver_t {
 			// loop over each axis & update vnew
 			case SETAXIS:
 				for (u8 j{0u}; j<nd; ++j) switch CHECK_AXIS(ucode, j) {
-					
+					//0
 					default:
 						continue;
-					
+					//1
 					case LFDIFF: // ([0]-[b])/(dx*dx)
 						kL = 0;
 						for (u8 i{0u}; i<nd; ++i) {
-							kR += offst[i+1] * (pos[i]-(i==j));
+							kL += offst[i+1] * (pos[i]-(i==j));
 						}
 						vnew += 2*dstep[j]*vdata[kL];
 						cfft += 2*dstep[j];
 						continue;
-					
+					//2
 					case RTDIFF: // ([a]-[0])/(dx*dx)
 						kR = 0;
 						for (u8 i{0u}; i<nd; ++i) {
@@ -118,8 +120,8 @@ struct SOR_solver_t {
 						vnew += 2*dstep[j]*vdata[kR];
 						cfft += 2*dstep[j];
 						continue;
-					
-					case CNDIFF: // ([a]-[c])/(2*dx*dx)
+					//3
+					case CNDIFF: // ([a]-[b])/(2*dx*dx)
 						kL = 0; kR = 0;
 						for (u8 i{0u}; i<nd; ++i) {
 							kL += offst[i+1] * (pos[i]-(i==j));

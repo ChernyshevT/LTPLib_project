@@ -23,7 +23,7 @@ def main(args):
 	ltp.load_backend("default")
 	
 	lx,ly = 1.5,1.5
-	nx,ny = 75,75
+	nx,ny = 384,384
 	
 	shape = (nx+1,ny+1)
 	step  = [l/(k-1) for k,l in zip(shape,[lx,ly])]
@@ -32,7 +32,7 @@ def main(args):
 	vmap = np.zeros(shape, dtype=np.float32)
 	# set-up test distribution
 	xs,ys = np.meshgrid(*[np.linspace(-l/2,l/2,n) for n,l in zip(shape,[lx,ly])], indexing='ij')
-	vmap[...] =  np.cos(xs*np.pi*2)*np.cos(ys*np.pi*2)*1 + xs/lx
+	vmap[...] =  np.cos(xs*np.pi*2)*np.sin(ys*np.pi*2)*1 + xs/lx
 	
 	U = ltp.poisson_eq.uTYPE
 	# create array to encode finite differences:
@@ -43,17 +43,14 @@ def main(args):
 	umap[0, :] = U.VAL
 	umap[nx,:] = U.VAL
 	# set Dirichlet boundary for lower and upper edges
-	umap[1:nx, 0] = U.VAL
-	umap[1:nx,ny] = U.VAL
+	# ~ umap[1:nx, 0] = U.VAL; vmap[1:nx, 0] = 0
+	# ~ umap[1:nx,ny] = U.VAL; vmap[1:nx,ny] = 0
 	# set open boundary for lower and upper edges
 	umap[1:nx, 0] = U.XCN|U.YRT
 	umap[1:nx,ny] = U.XCN|U.YLF
 
 	# back-up voltage
-	_vmap = np.copy(vmap)
-	# fill original vmap with garpage to test the solver:
-	vmap[1:nx, 1:ny] = np.random.normal(size=[nx-1,ny-1])
-	
+	_vmap = np.copy(vmap)	
 	# create and fill array with charge-densities
 	_cmap = laplace(_vmap, step)
 	
@@ -61,13 +58,19 @@ def main(args):
 	eq = ltp.poisson_eq(step, umap, _cmap, vmap)
 	
 	
-	# SOR-iterations
-	for j in count(): 
-		verr = eq.iter(1.75)
-		print(f"\r#{j:06d}: {verr:e}",end="")
-		if verr <= 1e-4 or verr != verr:
-			print("")
-			break
+	for k in range(80):
+		# fill original vmap with garpage to test the solver:
+		vmap[1:nx, 1:ny] += np.random.normal(size=[nx-1,ny-1], scale=0.01)
+		# SOR-iterations
+		for j in count(): 
+			verr = eq.iter(1.95)
+			print(f"\r#{j:06d}: {verr:e}",end="")
+			if verr <= 1e-4 or verr != verr:
+				print("")
+				break
+			if j >= np.prod(vmap.shape):
+				print(" fail to converge!")
+				break
 	
 	#calculate corresponding charge-density:
 	cmap = laplace(vmap, step)
