@@ -350,7 +350,7 @@ $\varphi_{\rm iter}$ is a result of Gauss-Siedel (GS) iteration.
 The class constructor accepts two parameter:
 - *umap* --- numpy.ndarray[numpy.uint8], <ins>u</ins>nit <ins>map</ins>;
 - *step* --- list[float], grid step along each axis.
-$\varphi_{\rm iter}\left(\vec{r}_0\right) = \sum_{\forall k} C_k $\varphi\left(\vec{r}_k\right) -q\left(\vec{r}_0\right)$
+$\varphi_{\rm iter}\left(\vec{r}_0\right) = \sum_{\forall k} C_k \varphi\left(\vec{r}_k\right) -q\left(\vec{r}_0\right)$
 
 [^mittal2014]: Mittal, S. (2014). _A study of successive over-relaxation method parallelisation over modern HPC languages._ In International Journal of High Performance Computing and Networking, (Vol. 7, Issue 4, p. 292).
 [DOI:10.1504/ijhpcn.2014.062731](https://doi.org/10.1504/ijhpcn.2014.062731)
