@@ -338,19 +338,23 @@ If it is not given, $\varepsilon_{\rm th}$ will be used instead.
 ## `_ltplib.poisson_eq` (solver for Poisson equation)
 This class implements universal data-driven solver for Poisson equation:
 ```math
-\nabla^2_{\vec{r}} \varphi \left(\vec{r}\right) = q\left(\vec{r}\right),
+\nabla^2_{\vec{r}} \phi\left(\vec{r}\right) = q\left(\vec{r}\right),
 ```
-where $\varphi$ is scalar potential, $q$ is charge density.
+where $phi$ is scalar potential, $q$ is charge density.
 The solver is based on iterative SOR-method (Succesive Over-Relaxation)[^mittal2014]:
 ```math
-\varphi_{\rm new} = w\varphi_{\rm iter} - \left(1-w\right)\varphi_{\rm old},
+\phi_{\rm new} = w\phi_{\rm iter} - \left(1-w\right)\phi_{\rm old},
 ```
 where $w\in\left(0,\ 2\right)$ is a relaxation factor,
 $\varphi_{\rm iter}$ is a result of Gauss-Siedel (GS) iteration.
-The class constructor accepts two parameter:
-- *umap* --- numpy.ndarray[numpy.uint8], <ins>u</ins>nit <ins>map</ins>;
-- *step* --- list[float], grid step along each axis.
-$\varphi_{\rm iter}\left(\vec{r}_0\right) = \sum_{\forall k} C_k \varphi\left(\vec{r}_k\right) -q\left(\vec{r}_0\right)$
+The class constructor accepts two arguments:
+- *umap: numpy.ndarray[numpy.uint8]* --- <ins>u</ins>nit <ins>map</ins> is an array to encode type of each unit;
+- *step: list[float]* --- grid step along each axis.
+
+The following properties are acessible:
+- *poisson_eq.umap* --- just a read-only copy of the input argument;
+- *poisson_eq.cmap* --- <ins>c</ins>charge <ins>map</ins>, $q$;
+- *poisson_eq.vmap* --- <ins>c</ins>charge <ins>map</ins>, $\phi$;
 
 [^mittal2014]: Mittal, S. (2014). _A study of successive over-relaxation method parallelisation over modern HPC languages._ In International Journal of High Performance Computing and Networking, (Vol. 7, Issue 4, p. 292).
 [DOI:10.1504/ijhpcn.2014.062731](https://doi.org/10.1504/ijhpcn.2014.062731)
