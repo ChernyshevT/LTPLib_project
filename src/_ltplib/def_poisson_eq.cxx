@@ -25,7 +25,7 @@ typedef std::variant<
 
 typedef std::unordered_map<
 	const char*,
-	std::unique_ptr<std::byte[], std::function<void(void*)>>
+	std::unique_ptr<void, std::function<void(void*)>>
 > mholder_t;
 
 typedef const py::array_t<u8, py::array::c_style>&
@@ -73,9 +73,9 @@ struct poisson_eq_holder {
 				eq.dstep[nd-i-1] = 1.0f/_step[nd-i-1]/_step[nd-i-1];
 			}
 			
-			mholder["umap"]  = {(std::byte*)malloc(eq.offst[0]*sizeof(u8)),    &free};
-			mholder["cdata"] = {(std::byte*)malloc(eq.offst[0]*sizeof(f32)),   &free};
-			mholder["vdata"] = {(std::byte*)malloc(eq.offst[0]*sizeof(f32)*2), &free};
+			mholder["umap"]  = {malloc(eq.offst[0]*sizeof(u8)),    &free};
+			mholder["cdata"] = {malloc(eq.offst[0]*sizeof(f32)),   &free};
+			mholder["vdata"] = {malloc(eq.offst[0]*sizeof(f32)*2), &free};
 			
 			memcpy((void*)mholder.at("umap").get(), _umap.request().ptr, eq.offst[0]*sizeof(u8));
 			
