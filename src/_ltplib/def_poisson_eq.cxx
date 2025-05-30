@@ -8,303 +8,174 @@ using namespace pybind11::literals;
 #include <vector>
 #include <iostream>
 #include <complex.h>
+
 #include "typedefs.hxx"
+#include "api_backend.hxx"
+#include "common/poisson_eq.hxx"
+
 #include "io_strings.hxx"
-
-//https://math.stackexchange.com/questions/2706701/neumann-boundary-conditions-in-finite-difference
-
-
-/*
-CENTER:
-hx = 1/dx/dx
-u0*(2*hx+2*hy+2*hz) = hx*(uxl+uxr) + hy*(uyl+uyr) + hz*(uzl+uzr) - q
-
-NEWMANN:
-
-u0*(2*hx+2*hy+2*hz) = 2*hx*(uxr)-2*Ex0/dx  + hy*(uyl+uyr) + hz*(uzl+uzr) - q
-
-*/
-
-/***************** node zz xx yy **********************************************/
-#define SETVALUE   0b01'00'00'00 // boundary condition (Dirichlet)
-#define SETAXIS    0b10'00'00'00 // mark finite differences
-#define LFDIFF     0b00'00'00'01 // left finite difference
-#define RTDIFF     0b00'00'00'10 // right finite difference
-#define CNDIFF     0b00'00'00'11 // central finite difference
-
-#define CHECK_UNIT(arg)     (0b11'00'00'00 &  (arg))
-#define CHECK_AXIS(arg, ax) (0b00'00'00'11 & ((arg) >> ((ax) * 2)))
-
-enum uTYPE : u8 { // unit type
-	NIL = 0,
-	VAL = SETVALUE,
-	
-	XLF = SETAXIS | (LFDIFF<<0),
-	XRT = SETAXIS | (RTDIFF<<0),
-	XCN = SETAXIS | (CNDIFF<<0),
-
-	YLF = SETAXIS | (LFDIFF<<2),
-	YRT = SETAXIS | (RTDIFF<<2),
-	YCN = SETAXIS | (CNDIFF<<2),
-
-	ZLF = SETAXIS | (LFDIFF<<4),
-	ZRT = SETAXIS | (RTDIFF<<4),
-	ZCN = SETAXIS | (CNDIFF<<4),
-};
-/******************************************************************************/
-
-//~ https://scicomp.stackexchange.com/questions/20113/periodic-boundary-condition-for-the-heat-equation-in-0-1
-
-template<u8 nd, typename tp=f32 /* real or complex [TBD] */>
-struct SOR_solver_t {
-	u64  offst[nd+1]; // nx*ny*nz*1
-	u32  shape[nd];
-	f32  dstep[nd];   // 1/dx/dx
-	u8  *umap;        // cell-unit type;
-	f32 *cdata;       // 
-	f32 *pvdata[2];   // voltage (red & black units)
-	
-	/* pos: ix,iy,iz; nseq: red (0) -> black (1) */
-	inline f32 get_vnew (u32 pos[nd], u8 nseq) {
-		
-		// mid-point, left, right indexes
-		u64 k0{0}, kL, kR;
-		for (u8 i{0u}; i<nd; ++i) {
-			k0 += offst[i+1] * pos[i];
-		}
-		
-		f32 *vdata{pvdata[nseq]};
-		u8   ucode{umap[k0]};
-		f32  vnew{0.0f}, cfft{0.0f};
-
-		/* stencil:
-		 *           [a][a]   
-		 *            |/      
-		 *  y z  [b]-[0]-[a]
-		 *  |/       /|
-		 *  0-x   [b][b]
-		 **/
-
-		/* check the unit to perfornm the action **********************************/
-		switch CHECK_UNIT(ucode) {
-			
-			default:
-				vnew = NAN;
-				break;
-			
-			case SETVALUE: // [0]
-				vnew = vdata[k0];
-				break;
-			
-			// loop over each axis & update vnew
-			case SETAXIS:
-				for (u8 j{0u}; j<nd; ++j) switch CHECK_AXIS(ucode, j) {
-					//0
-					default:
-						continue;
-					//1
-					case LFDIFF: // ([0]-[b])/(dx*dx)
-						kL = 0;
-						for (u8 i{0u}; i<nd; ++i) {
-							kL += offst[i+1] * (pos[i]-(i==j));
-						}
-						vnew += 2*dstep[j]*vdata[kL];
-						cfft += 2*dstep[j];
-						continue;
-					//2
-					case RTDIFF: // ([a]-[0])/(dx*dx)
-						kR = 0;
-						for (u8 i{0u}; i<nd; ++i) {
-							kR += offst[i+1] * (pos[i]+(i==j));
-						}
-						vnew += 2*dstep[j]*vdata[kR];
-						cfft += 2*dstep[j];
-						continue;
-					//3
-					case CNDIFF: // ([a]-[b])/(2*dx*dx)
-						kL = 0; kR = 0;
-						for (u8 i{0u}; i<nd; ++i) {
-							kL += offst[i+1] * (pos[i]-(i==j));
-							kR += offst[i+1] * (pos[i]+(i==j));
-						}
-						vnew += (vdata[kL]+vdata[kR])*dstep[j];
-						cfft += 2*dstep[j];
-						continue;
-				}
-				vnew = (vnew-cdata[k0])/cfft;
-				break;
-		}
-		return vnew;
-	}
-	
-/*******************************************************************************
- * An implementation for SOR+GS method, see [Mittal(2014) S Mittal.
- * A study of successive over-relaxation method parallelisation over modern
- * HPC languages. IJHPCN. 7(4):292, 2014. doi: 10.1504/ijhpcn.2014.062731].
- ******************************************************************************/ 
- 
-	inline f32 iter (f32 w) {
-	/*****************************************************************************
-	 * red:   pvdata[0] -> pvdata[1]
-	 * black: pvdata[1] -> pvdata[1]
-	 * SOR:   pvdata[1] -> pvdata[0]
-	 ****************************************************************************/
-		
-		//~ fmt::print("{}\n", 40*"*"s);
-		//~ fmt::print("cache old values:\n");
-		/* cache old values */
-		#pragma omp parallel for
-		for (u64 uid=0; uid<offst[0]; ++uid) {
-			pvdata[1][uid] = pvdata[0][uid];
-			
-			//~ fmt::print("{:06d}: {:+e}\n", uid, pvdata[1][uid]);
-		}
-
-		/* loop over red/black-units */
-		for (u8 nseq : {0,1}) {
-			
-			//~ fmt::print("{}\n", 40*"*"s);
-			//~ fmt::print("{} sequence:\n", nseq==0? "red":"black");
-			/* loop over nodes */
-			//~ #pragma omp parallel for reduction(max:verr) private(vold, vnew)
-			#pragma omp parallel for
-			for (u64 uid=0; uid<offst[0]; ++uid) {
-				u32 pos[nd];
-				u32 sum{0};
-				u64 remain{uid};
-				for (u8 i{0u}; i<nd; ++i) {
-					pos[i] = remain / offst[i+1];
-					remain = remain % offst[i+1];
-					sum += pos[i];
-				}
-				if ( (u8)(sum%2) == nseq) {
-					
-					pvdata[1][uid] = get_vnew(pos, nseq);
-					//~ pvdata[1][uid] = nseq==0? (float)uid: -1.0f*(float)uid;
-					//~ fmt::print("{:c} (sum={:06d}) #{:06d} x{:02d} y{:02d} -> {:+e}\n"
-					//~ , nseq==0?'R':'B', sum, uid, pos[0], pos[1], pvdata[1][uid]);
-				}
-				
-			}
-		}
-		
-		//~ fmt::print("{}\n", 40*"*"s);
-		//~ fmt::print("finalization:\n");
-		/* perform SOR-step */
-		f32 verr{0.0f};
-		#pragma omp parallel for reduction(max:verr)
-		for (u64 uid=0; uid<offst[0]; ++uid) {
-			f32 vold{pvdata[0][uid]};
-			f32 vnew{pvdata[1][uid]};
-			
-			
-			vnew = w*vnew + (1.0f-w)*vold;
-			verr = std::max(fabsf(vnew - vold), verr);
-			
-			pvdata[0][uid] = vnew;
-			
-			//~ fmt::print("{:06d}: {:+e}\n", uid, pvdata[0][uid]);
-		}
-		
-		return verr;
-	}
-};
-
-template<u8 nd> using SOR_iter_t = void (SOR_solver_t<nd>&);
-
-//~ template<u8 nd>
-
+#include "io_dylibs.hxx"
+extern dylibs_t libs;
 
 typedef std::variant<
-	SOR_solver_t<1>,
-	SOR_solver_t<2>,
-	SOR_solver_t<3>
-> SOR_solver_v;
+	poisson_eq_t<1>,
+	poisson_eq_t<2>,
+	poisson_eq_t<3>
+> poisson_eq_v;
 
-typedef py::array_t<u8,  py::array::c_style> utype;
-typedef py::array_t<f32, py::array::c_style> vtype;
+typedef std::unordered_map<
+	const char*,
+	std::unique_ptr<std::byte[], std::function<void(void*)>>
+> mholder_t;
+
+typedef const py::array_t<u8, py::array::c_style>&
+  umap_a;
+
+typedef const std::vector<f32> &
+  step_a;
 
 /******************************************************************************/
 struct poisson_eq_holder {
 	
-	SOR_solver_v solver;
+	poisson_eq_v eq;
+	mholder_t    mholder;
 	
 	std::function<f32(f32)> iter_fn;
+	py::array umap;
+	py::array cmap;
+	py::array vmap;
+	
 	
 	/* ctor */
-	 poisson_eq_holder (std::vector<f32> &step_arg, utype &umap_arg, vtype &cdata_arg, vtype &vdata_arg) {
-		fmt::print("umap.ndim =  {}\n", umap_arg.request().ndim);
+	 poisson_eq_holder (umap_a _umap, step_a _step) {
 		
-		switch (umap_arg.request().ndim) {
+		switch (_umap.request().ndim) {
 			case 1:
-				this->solver = SOR_solver_v{SOR_solver_t<1>{}};
+				this->eq = poisson_eq_v{poisson_eq_t<1>{}};
 				break;
 			case 2:
-				this->solver = SOR_solver_v{SOR_solver_t<2>{}};
+				this->eq = poisson_eq_v{poisson_eq_t<2>{}};
 				break;
 			case 3:
-				this->solver = SOR_solver_v{SOR_solver_t<3>{}};
+				this->eq = poisson_eq_v{poisson_eq_t<3>{}};
 				break;
 			default:
-				throw bad_arg("invalid shape ({})", umap_arg.request().ndim);
+				throw bad_arg("invalid range ({})", _umap.request().ndim);
 		}
-		/* validate input */
-		if (umap_arg.request().ndim != cdata_arg.request().ndim
-		or  umap_arg.request().ndim != vdata_arg.request().ndim
-		or  umap_arg.request().ndim != (py::ssize_t)(step_arg.size())) throw bad_arg \
-		("incompatataple input: umap.ndim = {}, cdata.ndim = {}, vdata.ndim ={}"
-		, umap_arg.request().ndim, cdata_arg.request().ndim, vdata_arg.request().ndim);
 		
-		std::visit([&] <u8 nd> (SOR_solver_t<nd> &solver) {
-			fmt::print("register poisson_eq<{}>\n", nd);
+		std::visit([&] <u8 nd> (poisson_eq_t<nd> &eq) {
+			logger::debug("construct poisson_eq{} ({})", nd, (void*)(&eq));
 			
-			solver.offst[nd] = 1;
+			eq.offst[nd] = 1;
 			for (u8 i{0u}; i<nd; ++i) {
-				//~ fmt::print("{}\n", nd-i-1);
-				solver.shape[nd-i-1] = umap_arg.request().shape[nd-i-1];
-				solver.offst[nd-i-1] = solver.offst[nd-i]*solver.shape[nd-i-1];
-				solver.dstep[nd-i-1] = 1.0f/step_arg[nd-i-1]/step_arg[nd-i-1];
+				eq.shape[nd-i-1] = _umap.request().shape[nd-i-1];
+				eq.offst[nd-i-1] = eq.offst[nd-i]*eq.shape[nd-i-1];
+				eq.dstep[nd-i-1] = 1.0f/_step[nd-i-1]/_step[nd-i-1];
 			}
 			
-			solver.umap  = (u8* )(umap_arg.request().ptr);
-			solver.cdata = (f32*)(cdata_arg.request().ptr);
+			mholder["umap"]  = {(std::byte*)malloc(eq.offst[0]*sizeof(u8)),    &free};
+			mholder["cdata"] = {(std::byte*)malloc(eq.offst[0]*sizeof(f32)),   &free};
+			mholder["vdata"] = {(std::byte*)malloc(eq.offst[0]*sizeof(f32)*2), &free};
 			
-			solver.pvdata[0] = (f32*)(vdata_arg.request().ptr);
-			solver.pvdata[1] = new f32[solver.offst[0]];
-		}, this->solver);
+			memcpy((void*)mholder.at("umap").get(), _umap.request().ptr, eq.offst[0]*sizeof(u8));
+			
+			eq.umap  = (u8*)mholder.at("umap").get();
+			eq.cdata = (f32*)mholder.at("cdata").get();
+			eq.vdata = (f32*)mholder.at("vdata").get();
+			
+		}, this->eq);
+
+		/**************************************************************************/
+		this->cmap = 
+		std::visit([&] <u8 nd> (poisson_eq_t<nd> &eq) -> py::array_t<f32> {
+			std::vector<py::ssize_t> shape(nd), strides(nd);
+			for (auto i{1u}; i<=nd; ++i) {
+				shape  [nd-i] = eq.shape[nd-i];
+				strides[nd-i] = (i==1? sizeof(f32) : strides[nd-i+1]*shape[nd-i+1]);
+			}
+			return py::memoryview::from_buffer(
+				/* ptr    */ eq.cdata,
+				/*shape   */ std::move(shape),
+				/*strides */ std::move(strides),
+				/*readonly*/ false
+			);
+		}, this->eq);
 		
+		/**************************************************************************/
+		this->vmap = 
+		std::visit([&] <u8 nd> (poisson_eq_t<nd> &eq) -> py::array_t<f32> {
+			std::vector<py::ssize_t> shape(nd), strides(nd);
+			for (auto i{1u}; i<=nd; ++i) {
+				shape  [nd-i] = eq.shape[nd-i];
+				strides[nd-i] = (i==1? sizeof(f32) : strides[nd-i+1]*shape[nd-i+1]);
+			}
+			return py::memoryview::from_buffer(
+				/* ptr    */ eq.vdata,
+				/*shape   */ std::move(shape),
+				/*strides */ std::move(strides),
+				/*readonly*/ false
+			);
+		}, this->eq);
+
+		/**************************************************************************/
 		this->iter_fn = \
-		std::visit([&] <u8 nd> (SOR_solver_t<nd> &solver) -> decltype(this->iter_fn) {
-			return [&] (f32 w) -> f32 {
-				return solver.iter(w);
+		std::visit([&] <u8 nd> (poisson_eq_t<nd> &eq) -> decltype(this->iter_fn) {
+			
+			auto backend = "default";
+			auto fn_name = fmt::format("SOR_iter{}_fn", nd);
+			logger::debug ("bind {}->{}", backend, fn_name);
+			auto &&fn = libs[backend].get_function<SOR_iter_fn_t<nd>>(fn_name);
+			return [&, fn] (f32 w) -> f32 {
+				return fn(eq, w);
 			};
-		}, this->solver); 
-		
-	} /* end ctor */
+		}, this->eq);  
+	}
+	/* end ctor */
 	
 };
-/******************************************************************************/
-
-//~ bool validate_umap (u8 umap[], u32 shape[], u8 nd, u8 md=0) {
-	//~ if (md < nd) {
-	//~ } else {
-	//~ }
-//~ }
 
 /******************************************************************************/
-
 void def_poisson_eq(py::module &m) {
 	fmt::print("register poisson eq (experimental)\n");
 	
 	py::class_<poisson_eq_holder> cls (m, "poisson_eq"); cls
 	
-	.def(py::init<std::vector<f32> &, utype &, vtype &, vtype &>()
-	, py::keep_alive<1, 3>(), py::keep_alive<1, 4>(), py::keep_alive<1, 5>())
+	.def(py::init<umap_a, step_a>()
+	, "universal poisson eq. solver")
+	
+	.def_readonly("vmap", &poisson_eq_holder::vmap,
+	"voltage-map array")
+	
+	.def_readonly("cmap", &poisson_eq_holder::cmap,
+	"charge-map array")
 	
 	.def("iter", [] (poisson_eq_holder& self, f32 w) -> f32 {
+		if (w<=0.0f or w>=2.0f) {
+			throw bad_arg("invalid wrelax parameter ({})!", w);
+		}
 		return self.iter_fn(w);
-	})
-	;
+	}, "wrelax"_a=1.0f, "perform SOR-iteration")
+	
+	; /* end class */
+
+
+	/****************************************************************************/
+	enum uTYPE : u8 { // unit type
+		NIL = 0,
+		VAL = SETVALUE,
+		
+		XLF = SETAXIS | (LFDIFF<<0),
+		XRT = SETAXIS | (RTDIFF<<0),
+		XCN = SETAXIS | (CNDIFF<<0),
+
+		YLF = SETAXIS | (LFDIFF<<2),
+		YRT = SETAXIS | (RTDIFF<<2),
+		YCN = SETAXIS | (CNDIFF<<2),
+
+		ZLF = SETAXIS | (LFDIFF<<4),
+		ZRT = SETAXIS | (RTDIFF<<4),
+		ZCN = SETAXIS | (CNDIFF<<4),
+	};
 	
 	py::enum_<uTYPE> (cls, "uTYPE", py::arithmetic())
 	.value("NIL", uTYPE::NIL)

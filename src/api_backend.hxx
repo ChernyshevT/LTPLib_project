@@ -153,25 +153,11 @@ template<u8 nd> using mcsim_fn_t = u32 (
 /*******************************************************************************
 ** API for poisson equation ***************************************************/
 
-enum GRAD_MODE : u8 {
-	REGULAR = 0,
-	LFBOUND = 1,
-	RTBOUND = 2,
-	LFLOOP  = 3,
-	RTLOOP  = 4,
-	LFSAME  = 5,
-	RTSAME  = 6,
-	SKIP    = 7,
-};
+template<u8 nd>
+struct poisson_eq_t;
 
-template<u8 nd> using poisson_eq_fn_t = f32 (
-	const grid_t<nd> &,
-	const u8 *,
-	std::complex<f32> *,
-	f32 *,
-	u8,
-	u8
-);
+template<u8 nd>
+using SOR_iter_fn_t = f32 (poisson_eq_t<nd> &, f32);
 
 /******************************************************************************/
 

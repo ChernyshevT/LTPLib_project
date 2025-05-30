@@ -32,6 +32,7 @@ add_library(_default SHARED
 	run_mcsim.cxx
 	run_remap.cxx
 	#run_order.cxx
+	run_poisson_eq.cxx
 )
 
 set_target_properties(_default PROPERTIES LIBRARY_OUTPUT_NAME

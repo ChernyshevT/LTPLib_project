@@ -27,39 +27,39 @@ std::string __repr__(const RET_ERRC & e) {
 	}
 	if (e.flags & ERR_CODE::INVALID_SEQ) {
 		msg = fmt::format("{}{}INVALID_SEQ"
-		, msg, msg.empty() ? '|' : '\0');
+		, msg, !msg.empty()?"|":"");
 	}
 	if (e.flags & ERR_CODE::PPOST_ERR) {
-		msg = fmt::format("{}{}PPOST_ERR"
-		, msg, msg.empty() ? '|' : '\0');
+		msg = fmt::format("{}{}PPOST"
+		, msg, !msg.empty()?"|":"");
 	}
 	if (e.flags & ERR_CODE::PPUSH_ERR) {
-		msg = fmt::format("{}{}PPUSH_ERR"
-		, msg, msg.empty() ? '|' : '\0');
+		msg = fmt::format("{}{}PPUSH"
+		, msg, !msg.empty()?"|":"");
 	}
 	if (e.flags & ERR_CODE::ORDER_ERR) {
-		msg = fmt::format("{}{}ORDER_ERR"
-		, msg, msg.empty() ? '|' : '\0');
+		msg = fmt::format("{}{}ORDER"
+		, msg, !msg.empty()?"|":"");
 	}
 	if (e.flags & ERR_CODE::MCSIM_ERR) {
-		msg = fmt::format("{}{}MCSIM_ERR"
-		, msg, msg.empty() ? '|' : '\0');
+		msg = fmt::format("{}{}MCSIM"
+		, msg, !msg.empty()?"|":"");
 	}
 	if (e.flags & ERR_CODE::OVERFLOW) {
 		msg = fmt::format("{}{}OVERFLOW"
-		, msg, msg.empty() ? '|' : '\0');
+		, msg, !msg.empty()?"|":"");
 	}
 	if (e.flags & ERR_CODE::OUTOFRANGE) {
 		msg = fmt::format("{}{}OUTOFRANGE"
-		, msg, msg.empty() ? '|' : '\0');
+		, msg, !msg.empty()?"|":"");
 	}
 	if (e.flags & ERR_CODE::ENERGYMAX) {
 		msg = fmt::format("{}{}ENERGYMAX"
-		, msg, msg.empty() ? '|' : '\0');
+		, msg, !msg.empty()?"|":"");
 	}
 	if (e.flags & ERR_CODE::PROBMAX) {
 		msg = fmt::format("{}{}PROBMAX"
-		, msg, msg.empty() ? '|' : '\0');
+		, msg, !msg.empty()?"|":"");
 	}
 	return msg;
 }
