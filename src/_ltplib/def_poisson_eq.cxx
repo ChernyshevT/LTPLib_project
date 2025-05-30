@@ -86,6 +86,22 @@ struct poisson_eq_holder {
 		}, this->eq);
 
 		/**************************************************************************/
+		this->umap = 
+		std::visit([&] <u8 nd> (poisson_eq_t<nd> &eq) -> py::array_t<u8> {
+			std::vector<py::ssize_t> shape(nd), strides(nd);
+			for (auto i{1u}; i<=nd; ++i) {
+				shape  [nd-i] = eq.shape[nd-i];
+				strides[nd-i] = (i==1? sizeof(u8) : strides[nd-i+1]*shape[nd-i+1]);
+			}
+			return py::memoryview::from_buffer(
+				/* ptr    */ eq.umap,
+				/*shape   */ std::move(shape),
+				/*strides */ std::move(strides),
+				/*readonly*/ true
+			);
+		}, this->eq);
+		
+		/**************************************************************************/
 		this->cmap = 
 		std::visit([&] <u8 nd> (poisson_eq_t<nd> &eq) -> py::array_t<f32> {
 			std::vector<py::ssize_t> shape(nd), strides(nd);
@@ -136,18 +152,20 @@ struct poisson_eq_holder {
 
 /******************************************************************************/
 void def_poisson_eq(py::module &m) {
-	fmt::print("register poisson eq (experimental)\n");
-	
+
 	py::class_<poisson_eq_holder> cls (m, "poisson_eq"); cls
 	
 	.def(py::init<umap_a, step_a>()
 	, "universal poisson eq. solver")
+
+	.def_readonly("umap", &poisson_eq_holder::umap,
+	"unit-map array")
+
+	.def_readonly("cmap", &poisson_eq_holder::cmap,
+	"charge-map array")
 	
 	.def_readonly("vmap", &poisson_eq_holder::vmap,
 	"voltage-map array")
-	
-	.def_readonly("cmap", &poisson_eq_holder::cmap,
-	"charge-map array")
 	
 	.def("iter", [] (poisson_eq_holder& self, f32 w) -> f32 {
 		if (w<=0.0f or w>=2.0f) {
@@ -164,31 +182,32 @@ void def_poisson_eq(py::module &m) {
 		NIL = 0,
 		VAL = SETVALUE,
 		
-		XLF = SETAXIS | (LFDIFF<<0),
-		XRT = SETAXIS | (RTDIFF<<0),
-		XCN = SETAXIS | (CNDIFF<<0),
+		XLFOPEN = SETAXIS | (LFDIFF<<0),
+		XRTOPEN = SETAXIS | (RTDIFF<<0),
+		XCENTER = SETAXIS | (CNDIFF<<0),
 
-		YLF = SETAXIS | (LFDIFF<<2),
-		YRT = SETAXIS | (RTDIFF<<2),
-		YCN = SETAXIS | (CNDIFF<<2),
+		YLFOPEN = SETAXIS | (LFDIFF<<2),
+		YRTOPEN = SETAXIS | (RTDIFF<<2),
+		YCENTER = SETAXIS | (CNDIFF<<2),
 
-		ZLF = SETAXIS | (LFDIFF<<4),
-		ZRT = SETAXIS | (RTDIFF<<4),
-		ZCN = SETAXIS | (CNDIFF<<4),
+		ZLFOPEN = SETAXIS | (LFDIFF<<4),
+		ZRTOPEN = SETAXIS | (RTDIFF<<4),
+		ZCENTER = SETAXIS | (CNDIFF<<4),
 	};
 	
 	py::enum_<uTYPE> (cls, "uTYPE", py::arithmetic())
 	.value("NIL", uTYPE::NIL)
 	.value("VAL", uTYPE::VAL)
-	.value("XLF", uTYPE::XLF)
-	.value("XRT", uTYPE::XRT)
-	.value("XCN", uTYPE::XCN)
-	.value("YLF", uTYPE::YLF)
-	.value("YRT", uTYPE::YRT)
-	.value("YCN", uTYPE::YCN)
-	.value("ZLF", uTYPE::ZLF)
-	.value("ZRT", uTYPE::ZRT)
-	.value("ZCN", uTYPE::ZCN)
+	.value("XLFOPEN", uTYPE::XLFOPEN)
+	.value("XRTOPEN", uTYPE::XRTOPEN)
+	.value("XCENTER", uTYPE::XCENTER)
+	.value("YLFOPEN", uTYPE::YLFOPEN)
+	.value("YRTOPEN", uTYPE::YRTOPEN)
+	.value("YCENTER", uTYPE::YCENTER)
+	.value("ZLFOPEN", uTYPE::ZLFOPEN)
+	.value("ZRTOPEN", uTYPE::ZRTOPEN)
+	.value("ZCENTER", uTYPE::ZCENTER)
+
 	.export_values()
 	;
 }

@@ -40,11 +40,30 @@ struct poisson_eq_t {
 				vnew = NAN;
 				break;
 			
-			case SETVALUE: // [0]
-			case SETAXIS|SETVALUE:
+			case SETVALUE:
 				vnew = vdata[idpt];
 				break;
-			
+
+			// loop over each axis & update vnew
+			case SETAXIS: [[likely]]
+				for (u8 j{0u}; j<nd; ++j) {
+					idlf = 0; idrt = 0;
+					for (u8 i{0u}; i<nd; ++i) {
+						shlf = pos[i] - (i==j)*(CHECK_AXIS(ucode,j)&LFDIFF? 1 : -1);
+						shrt = pos[i] + (i==j)*(CHECK_AXIS(ucode,j)&RTDIFF? 1 : -1);
+						
+						shlf = (shlf < shape[i])? shlf: shape[i]-1;
+						shrt = (shrt < shape[i])? shrt: 0;
+						
+						idlf += offst[i+1]*(shlf);
+						idrt += offst[i+1]*(shrt);
+					}
+					vnew += (vcached[idlf]+vcached[idrt])*dstep[j];
+					cfft += 2*dstep[j];
+				}
+				vnew = (vnew-cdata[idpt])/cfft;
+				break;
+				
 			/*
 			// loop over each axis & update vnew
 			case SETAXIS:
@@ -81,28 +100,12 @@ struct poisson_eq_t {
 						cfft += 2*dstep[j];
 						continue;
 				}
-			*/
-
-			// loop over each axis & update vnew
-			case SETAXIS:
-				for (u8 j{0u}; j<nd; ++j) {
-					idlf = 0; idrt = 0;
-					for (u8 i{0u}; i<nd; ++i) {
-						shlf = pos[i] - (i==j)*(CHECK_AXIS(ucode,j)&LFDIFF? 1 : -1);
-						shrt = pos[i] + (i==j)*(CHECK_AXIS(ucode,j)&RTDIFF? 1 : -1);
-						
-						shlf = (shlf < shape[i])? shlf: shape[i]-1;
-						shrt = (shrt < shape[i])? shrt: 0;
-						
-						idlf += offst[i+1]*shlf;
-						idrt += offst[i+1]*shrt;
-					}
-					vnew += (vcached[idlf]+vcached[idrt])*dstep[j];
-					cfft += 2*dstep[j];
-				}
 				vnew = (vnew-cdata[idpt])/cfft;
 				break;
+			*/
 		}
 		return vnew;
 	} 
 };
+
+

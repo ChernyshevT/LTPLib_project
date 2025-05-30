@@ -7,6 +7,59 @@ from itertools import count
 from util.plots   import *
 from util.loggers import *
 
+def show_umap(umap):
+	U = ltp.poisson_eq.uTYPE
+	
+	fig,ax = mk_subplots([2,10,2],[2,10,2], dpi=200)
+	
+	xlfs, xrts, xcns, ylfs, yrts, ycns, vals = [],[],[],[],[],[],[]
+	for x in range(umap.shape[0]):
+		for y in range(umap.shape[1]):
+			ucode = umap[x,y]
+			if ucode == U.VAL:
+				vals.append((x,y))
+				#ax.plot(x,y,"sk",markersize=2)
+			else:
+				match ucode & U.XCENTER:
+					case U.XLFOPEN:
+						xlfs.append((x,y))
+					case U.XRTOPEN:
+						xrts.append((x,y))
+					case U.XCENTER:
+						xcns.append((x,y))
+				match ucode & U.YCENTER:
+					case U.YLFOPEN:
+						ylfs.append((x,y))
+					case U.YRTOPEN:
+						yrts.append((x,y))
+					case U.YCENTER:
+						ycns.append((x,y))
+	
+	############################################################
+	ax.plot(*zip(*vals), ls="", c="k", marker="s", markersize=2, label="VAL")
+	ax.plot(*zip(*xlfs), ls="", c="k", marker=0,   markersize=4, label="XLF")
+	ax.plot(*zip(*xrts), ls="", c="k", marker=1,   markersize=4, label="XRT")
+	ax.plot(*zip(*xcns), ls="", c="k", marker="_", markersize=8, label="XCN")
+	ax.plot(*zip(*ylfs), ls="", c="k", marker=3,   markersize=4, label="YLF")
+	ax.plot(*zip(*yrts), ls="", c="k", marker=2,   markersize=4, label="YRT")
+	ax.plot(*zip(*ycns), ls="", c="k", marker="|", markersize=8, label="YCN")
+	
+	legend_conf = {
+		"bbox_to_anchor":(1,0,1,1),
+		"fontsize":10,
+		"borderaxespad":0,
+		"columnspacing":0.25,
+		"labelspacing" :1,
+		"frameon":1,
+		"handlelength":.75,
+		"loc":"center left",
+		"ncol":1,
+	}
+	ax.legend(**legend_conf)
+	
+	plt.show()
+
+
 def laplace(vmap, step):
 	cmap = np.zeros_like(vmap)
 
@@ -24,9 +77,9 @@ def main(args):
 	ltp.load_backend("default")
 	
 	lx,ly = 1.5,1.5
-	nx,ny = 128,63
+	nx,ny = 240,231
 	
-	ytype = 2
+	ytype = 1
 	
 	shape = (nx+1,ny+1)
 	step  = [l/(k-1) for k,l in zip(shape,[lx,ly])]
@@ -41,22 +94,27 @@ def main(args):
 	# create array to encode finite differences:
 	umap = np.zeros(shape, dtype=np.uint8)
 	# set central differences for x and y axes:
-	umap[... ]    = U.XCN|U.YCN
-	# set Dirichlet boundary for left and right edges
-	umap[0, :] = U.VAL|U.XRT
-	umap[nx,:] = U.VAL|U.XLF
+	# ~ umap[... ]    = U.XCN|U.YCN
+	# ~ # set Dirichlet boundary for left and right edges
+	# ~ umap[0, :] = U.VAL
+	# ~ umap[nx,:] = U.VAL
 	
-	if   ytype==2:
-		pass
-	elif ytype==1:
-		# set open boundary for lower and upper edges
-		umap[1:nx, 0] = U.XCN|U.YRT
-		umap[1:nx,ny] = U.XCN|U.YLF
-	else:
-		# set Dirichlet boundary for lower and upper edges
-		umap[1:nx, 0] = U.VAL; _vmap[1:nx, 0] = 0
-		umap[1:nx,ny] = U.VAL; _vmap[1:nx,ny] = 0
+	umap[0, :]   = umap[0, :]   | U.XRTOPEN 
+	umap[nx,:]   = umap[nx,:]   | U.XLFOPEN
+	umap[1:nx,:] = umap[1:nx,:] | U.XCENTER
 	
+	umap[:, 0] = umap[:, 0]     | U.YRTOPEN
+	umap[:,ny] = umap[:,ny]     | U.YLFOPEN
+	umap[:,:] = umap[:,:]       | U.YCENTER
+	
+	r = 0.5**2
+	mask = xs**2 + ys**2 < r**2
+	umap[mask] = U.VAL
+	_vmap[mask] = 0
+	
+		
+	show_umap(umap)
+	# ~ exit()
 	
 	# create and fill array with charge-densities
 	_cmap = laplace(_vmap, step)
@@ -68,19 +126,14 @@ def main(args):
 	eq.vmap[...] = _vmap
 	
 	#reset values
-	if ytype:
-		eq.vmap[1:nx, :] = 0
-	else:
-		eq.vmap[1:nx, 1:ny] = 0
-		
-
+	eq.vmap[eq.umap!=U.VAL] = 0
 	
 	for k in range(25):
 		# SOR-iterations
-		if ytype:
-			eq.cmap[1:nx, :] += np.random.normal(size=[nx-1,ny+1], scale=0)
-		else:
-			eq.cmap[1:nx, 1:ny] += np.random.normal(size=[nx-1,ny-1], scale=0)
+		# ~ if ytype:
+			# ~ eq.cmap[1:nx, :] += np.random.normal(size=[nx-1,ny+1], scale=0)
+		# ~ else:
+			# ~ eq.cmap[1:nx, 1:ny] += np.random.normal(size=[nx-1,ny-1], scale=0)
 		
 		
 		nmax = np.prod(eq.vmap.shape*2)
