@@ -340,21 +340,32 @@ This class implements universal data-driven solver for Poisson equation:
 ```math
 \nabla^2_{\vec{r}} \phi\left(\vec{r}\right) = q\left(\vec{r}\right),
 ```
-where $phi$ is scalar potential, $q$ is charge density.
+where $\phi$ is scalar potential, $q$ is charge density.
 The solver is based on iterative SOR-method (Succesive Over-Relaxation)[^mittal2014]:
 ```math
 \phi_{\rm new} = w\phi_{\rm iter} - \left(1-w\right)\phi_{\rm old},
 ```
 where $w\in\left(0,\ 2\right)$ is a relaxation factor,
-$\varphi_{\rm iter}$ is a result of Gauss-Siedel (GS) iteration.
+$\phi_{\rm iter}$ is a result of Gauss-Siedel (GS) iteration.
 The class constructor accepts two arguments:
-- *umap: numpy.ndarray[numpy.uint8]* --- <ins>u</ins>nit <ins>map</ins> is an array to encode type of each unit;
+- *umap: numpy.ndarray[numpy.uint8]* --- <ins>u</ins>nit <ins>map</ins> is an array to encode type of each unit (see below);
 - *step: list[float]* --- grid step along each axis.
 
 The following properties are acessible:
-- *poisson_eq.umap* --- just a read-only copy of the input argument;
-- *poisson_eq.cmap* --- <ins>c</ins>charge <ins>map</ins>, $q$;
-- *poisson_eq.vmap* --- <ins>c</ins>charge <ins>map</ins>, $\phi$;
+- `poisson_eq.umap` --- just a read-only copy of *umap*-argument;
+- `poisson_eq.cmap` --- <ins>c</ins>charge <ins>map</ins>, $q$;
+- `poisson_eq.vmap` --- <ins>v</ins>oltage <ins>map</ins>, $\phi$.
+
+Here *cmap* acts as a problem's input,
+and *vmap* should contain appropriate initial approximation for $\phi_{\rm old}$.
+
+### Unit types
+
+### Iteration
+The method `poisson_eq.iter(w_relax: float) -> float` performs one SOR iteration.
+It accepts relaxation factor $w$,
+updates `poisson_eq.vmap`,
+and returns residual $\max\left|\phi_{\rm new}-\phi_{\rm old}\right|$.
 
 [^mittal2014]: Mittal, S. (2014). _A study of successive over-relaxation method parallelisation over modern HPC languages._ In International Journal of High Performance Computing and Networking, (Vol. 7, Issue 4, p. 292).
 [DOI:10.1504/ijhpcn.2014.062731](https://doi.org/10.1504/ijhpcn.2014.062731)
