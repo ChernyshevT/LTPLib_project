@@ -13,17 +13,12 @@
 template<u8 nd>
 f32 run_SOR_iter (poisson_eq_t<nd> & eq, f32 w) {
 	
-	f32 *vcache = eq.vdata + eq.offst[0];
+	f32 verr{0.0f}, vold, vnew;
 	
-	/* cache old values */
-	#pragma omp parallel for
-	for (u64 uid=0; uid<eq.offst[0]; ++uid) {
-		vcache[uid] = eq.vdata[uid];
-	}
-	
-	/* loop over red/black-units */
+	/* loop over red/black-units & perform SOR-step */
 	for (u8 nseq : {0,1}) {
-		#pragma omp parallel for
+		
+		#pragma omp parallel for private(vold, vnew) reduction(max:verr)
 		for (u64 uid=0; uid<eq.offst[0]; ++uid) {
 			u32 pos[nd];
 			u32 sum{0};
@@ -34,22 +29,15 @@ f32 run_SOR_iter (poisson_eq_t<nd> & eq, f32 w) {
 				sum += pos[i];
 			}
 			if ( (u8)(sum%2) == nseq) {
-				vcache[uid] = eq.get_vnew(pos, vcache);
+				vold = eq.vdata[uid];
+				vnew = eq.get_vnew(pos, eq.vdata);
+				vnew = w*vnew + (1.0f-w)*vold;
+				if (isfinite(vnew)) {
+					verr = std::max(fabsf(vnew - vold), verr);
+				}
+				eq.vdata[uid] = vnew;
 			}
 		}
-	}
-	
-	/* perform SOR-step */
-	f32 verr{0.0f}, vold, vnew;
-	#pragma omp parallel for reduction(max:verr) private(vold, vnew)
-	for (u64 uid=0; uid<eq.offst[0]; ++uid) {
-		vold = eq.vdata[uid];
-		vnew = vcache[uid];
-		vnew = w*vnew + (1.0f-w)*vold;
-		if (isfinite(vnew)) {
-			verr = std::max(fabsf(vnew - vold), verr);
-		}
-		eq.vdata[uid] = vnew;
 	}
 	
 	return verr;

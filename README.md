@@ -286,7 +286,7 @@ From energy and impulse conservation
 	& \beta_1+\pi & = & \beta_2,
 \end{align}
 ```
-where $\beta_{1}$ & $\beta_{2}$ are polar scattering angles.
+where $\beta_{1}$ & $\beta_{2}$ are polar scattering angles for incident and secondary electrons.
 As a result, ionization collisions are always considered anisotropic.
 
 The energy-spectrum for secondary electrons uses Opal-Peterson-Beaty approximation (OPB-approximation, [^opal1971][^opal1972]).
@@ -294,7 +294,7 @@ The spectrum is defined by a single parameter
 $\varepsilon_{\rm OPB}\sim\varepsilon_{\rm th}$ (field `"OPBPARAM"`).
 If it is not given, $\varepsilon_{\rm th}$ will be used instead.
 > [!NOTE] 
-> The current implementation is unfinished and doesn't allow to spawn multiple electrons or ions.
+> The current implementation is unfinished and doesn't allow to spawn ions or multiple electrons.
 > This functionality will be added in further versions.
 
 [^opal1971]: Opal, C. B., Peterson, W. K., & Beaty, E. C. (1971). _Measurements of Secondary-Electron Spectra Produced by Electron Impact Ionization of a Number of Simple Gases._ In The Journal of Chemical Physics (Vol. 55, Issue 8, pp. 4100–4106). AIP Publishing.
@@ -334,6 +334,26 @@ If it is not given, $\varepsilon_{\rm th}$ will be used instead.
  , {"search":"PARAM.:  E = 12.61 eV, complete set")),
 },
 ```
+
+## `_ltplib.poisson_eq` (solver for Poisson equation)
+This class implements universal data-driven solver for Poisson equation:
+```math
+\nabla^2_{\vec{r}} \varphi \left(\vec{r}\right) = q\left(\vec{r}\right),
+```
+where $\varphi$ is scalar potential, $q$ is charge density.
+The solver is based on iterative SOR-method (Succesive Over-Relaxation)[^mittal2014]:
+```math
+\varphi_{\rm new} = w\varphi_{\rm iter} - \left(1-w\right)\varphi_{\rm old},
+```
+where $w\in\left(0,\ 2\right)$ is a relaxation factor,
+$\varphi_{\rm iter}$ is a result of Gauss-Siedel (GS) iteration.
+The class constructor accepts two parameter:
+- *umap* --- numpy.ndarray[numpy.uint8], <ins>u</ins>nit <ins>map</ins>;
+- *step* --- list[float], grid step along each axis.
+$\varphi_{\rm iter}\left(\vec{r}_0\right) = \sum_{\forall k} C_k $\varphi\left(\vec{r}_k\right) -q\left(\vec{r}_0\right)$
+
+[^mittal2014]: Mittal, S. (2014). _A study of successive over-relaxation method parallelisation over modern HPC languages._ In International Journal of High Performance Computing and Networking, (Vol. 7, Issue 4, p. 292).
+[DOI:10.1504/ijhpcn.2014.062731](https://doi.org/10.1504/ijhpcn.2014.062731)
 
 ## Function bindings
 

@@ -77,9 +77,9 @@ def main(args):
 	ltp.load_backend("default")
 	
 	lx,ly = 1.5,1.5
-	nx,ny = 240,231
+	nx,ny = 23,23
 	
-	ytype = 1
+	noise_lvl = 0.
 	
 	shape = (nx+1,ny+1)
 	step  = [l/(k-1) for k,l in zip(shape,[lx,ly])]
@@ -88,7 +88,7 @@ def main(args):
 	_vmap = np.zeros(shape, dtype=np.float32)
 	# set-up test distribution
 	xs,ys = np.meshgrid(*[np.linspace(-l/2,l/2,n) for n,l in zip(shape,[lx,ly])], indexing='ij')
-	_vmap[...] =  np.cos(xs*np.pi*2) * np.cos(ys/ly*np.pi*4) + xs/lx
+	_vmap[...] =  np.cos(xs*np.pi*4) * np.cos(ys/ly*np.pi*4) #+ xs/lx
 	
 	U = ltp.poisson_eq.uTYPE
 	# create array to encode finite differences:
@@ -102,10 +102,12 @@ def main(args):
 	umap[0, :]   = umap[0, :]   | U.XRTOPEN 
 	umap[nx,:]   = umap[nx,:]   | U.XLFOPEN
 	umap[1:nx,:] = umap[1:nx,:] | U.XCENTER
+	umap[:, 0]   = umap[:, 0]   | U.YRTOPEN
+	umap[:,ny]   = umap[:,ny]   | U.YLFOPEN
+	umap[:,1:ny] = umap[:,1:ny] | U.YCENTER
 	
-	umap[:, 0] = umap[:, 0]     | U.YRTOPEN
-	umap[:,ny] = umap[:,ny]     | U.YLFOPEN
-	umap[:,:] = umap[:,:]       | U.YCENTER
+	# ~ umap[:,:] = umap[:,:] | U.XCENTER
+	# ~ umap[:,:] = umap[:,:] | U.YCENTER
 	
 	r = 0.5**2
 	mask = xs**2 + ys**2 < r**2
@@ -126,19 +128,18 @@ def main(args):
 	eq.vmap[...] = _vmap
 	
 	#reset values
-	eq.vmap[eq.umap!=U.VAL] = 0
+	mask = eq.umap!=U.VAL
+	eq.vmap[mask] = 0
 	
 	for k in range(25):
 		# SOR-iterations
-		# ~ if ytype:
-			# ~ eq.cmap[1:nx, :] += np.random.normal(size=[nx-1,ny+1], scale=0)
-		# ~ else:
-			# ~ eq.cmap[1:nx, 1:ny] += np.random.normal(size=[nx-1,ny-1], scale=0)
-		
+		if noise_lvl>0:
+			noise = np.random.normal(size=eq.vmap.shape, scale=noise_lvl)
+			eq.cmap[mask] += noise[mask]
 		
 		nmax = np.prod(eq.vmap.shape*2)
 		for j in count(1): 
-			verr = eq.iter(1.5)
+			verr = eq.iter(1.95)
 			if verr <= 1e-5 or verr != verr:
 				print(f"#{j:06d}: {verr:e}, {np.sum(eq.cmap):e}")
 				break

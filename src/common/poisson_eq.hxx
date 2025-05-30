@@ -27,7 +27,7 @@ struct poisson_eq_t {
 		
 		// mid-point, left, right indexes
 		u64 idpt{0}, idlf, idrt;
-		u32 shlf, shrt;
+		i32 shlf, shrt, nlen;
 		for (u8 i{0u}; i<nd; ++i) {
 			idpt += offst[i+1] * pos[i];
 		}
@@ -35,10 +35,6 @@ struct poisson_eq_t {
 		/* check the unit to perfornm the action **********************************/
 		u8 ucode{umap[idpt]};
 		switch CHECK_UNIT(ucode) {
-			
-			default:
-				vnew = NAN;
-				break;
 			
 			case SETVALUE:
 				vnew = vdata[idpt];
@@ -49,14 +45,12 @@ struct poisson_eq_t {
 				for (u8 j{0u}; j<nd; ++j) {
 					idlf = 0; idrt = 0;
 					for (u8 i{0u}; i<nd; ++i) {
+						nlen = shape[i];
 						shlf = pos[i] - (i==j)*(CHECK_AXIS(ucode,j)&LFDIFF? 1 : -1);
 						shrt = pos[i] + (i==j)*(CHECK_AXIS(ucode,j)&RTDIFF? 1 : -1);
 						
-						shlf = (shlf < shape[i])? shlf: shape[i]-1;
-						shrt = (shrt < shape[i])? shrt: 0;
-						
-						idlf += offst[i+1]*(shlf);
-						idrt += offst[i+1]*(shrt);
+						idlf += offst[i+1] * ((shlf%nlen + nlen) % nlen);
+						idrt += offst[i+1] * ((shrt%nlen + nlen) % nlen);
 					}
 					vnew += (vcached[idlf]+vcached[idrt])*dstep[j];
 					cfft += 2*dstep[j];
@@ -64,45 +58,9 @@ struct poisson_eq_t {
 				vnew = (vnew-cdata[idpt])/cfft;
 				break;
 				
-			/*
-			// loop over each axis & update vnew
-			case SETAXIS:
-				for (u8 j{0u}; j<nd; ++j) switch CHECK_AXIS(ucode, j) {
-					//0
-					default:
-						continue;
-					//1
-					case LFDIFF: // ([0]-[b])/(dx*dx)
-						idlf = 0;
-						for (u8 i{0u}; i<nd; ++i) {
-							idlf += offst[i+1] * (pos[i]-(i==j));
-						}
-						vnew += 2*dstep[j]*vdata[idlf];
-						cfft += 2*dstep[j];
-						continue;
-					//2
-					case RTDIFF: // ([a]-[0])/(dx*dx)
-						idrt = 0;
-						for (u8 i{0u}; i<nd; ++i) {
-							idrt += offst[i+1] * (pos[i]+(i==j));
-						}
-						vnew += 2*dstep[j]*vdata[idrt];
-						cfft += 2*dstep[j];
-						continue;
-					//3
-					case CNDIFF: // ([a]-[b])/(2*dx*dx)
-						idlf = 0; idrt = 0;
-						for (u8 i{0u}; i<nd; ++i) {
-							idlf += offst[i+1] * (pos[i]-(i==j));
-							idrt += offst[i+1] * (pos[i]+(i==j));
-						}
-						vnew += (vdata[idlf]+vdata[idrt])*dstep[j];
-						cfft += 2*dstep[j];
-						continue;
-				}
-				vnew = (vnew-cdata[idpt])/cfft;
+			default:
+				vnew = NAN;
 				break;
-			*/
 		}
 		return vnew;
 	} 

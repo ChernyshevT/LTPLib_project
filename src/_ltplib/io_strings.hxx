@@ -36,7 +36,6 @@ constexpr auto _type_name() noexcept {
 }
 #define TYPE_STR(X) (_type_name<decltype(X)>())
 
-
 #define CHECK_BIT(var,pos) (((var)>>(pos))&1)
 #define SET_BIT(var,pos,x)   ((var)|(x<<pos))
 
@@ -216,7 +215,12 @@ namespace logger {
 
 template <typename... ts>
 std::invalid_argument bad_arg (fmt::format_string<ts...> fmt_str, ts&&... args) {
-	return std::invalid_argument(fmt::format(fmt_str, std::forward<ts>(args)...));
+	return std::invalid_argument (fmt::format(fmt_str, std::forward<ts>(args)...));
+};
+
+template <typename... ts>
+py::import_error bad_import (fmt::format_string<ts...> fmt_str, ts&&... args) {
+	return py::import_error (fmt::format(fmt_str, std::forward<ts>(args)...));
 };
 
 template<typename tp>

@@ -45,7 +45,6 @@ struct poisson_eq_holder {
 	py::array cmap;
 	py::array vmap;
 	
-	
 	/* ctor */
 	 poisson_eq_holder (umap_a _umap, step_a _step) {
 		

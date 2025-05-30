@@ -43,24 +43,32 @@ https://www.researchgate.net/profile/Timofey-Chernyshev
 #include "api_backend.hxx"
 #pragma message ("using " API_V)
 
+#include <filesystem>
 #include "io_strings.hxx"
 #include "io_dylibs.hxx"
 
 const dylib & dylibs_t::operator [] (std::string key) {
+	namespace fs = std::filesystem;
+	
 	static std::map<std::string, dylib> cache;
 	char                               *descr, *build, *api_v;
 	
-	if (not cache.contains(key)) {
-		cache.emplace(key, dylib("./", key));
+	auto path = std::filesystem::path(py::module::import("_ltplib").attr("__file__").cast<std::string>()).parent_path();
+	
+	if (not cache.contains(key)) try {
+		cache.emplace(key, dylib(path, key));
 		descr = cache.at(key).get_variable<char *>("descr");
 		build = cache.at(key).get_variable<char *>("build");
 		api_v = cache.at(key).get_variable<char *>("api_v");
-		
-		if (0 != strcmp(API_V, api_v)) throw py::import_error \
-		(fmt::format("Incompatable APIs: {} != {} ({})", API_V, api_v, key));
-		
-		logger::debug("load \"_{}\" backend: {}, {}, build: {}"
+
+		logger::info("load \"_{}\" backend: {}, {}, build: {}"
 		, key, descr, api_v, build);
+
+		if (0 != strcmp(API_V, api_v)) {
+			throw bad_import("Incompatable APIs: {} != {} ({})", API_V, api_v, key);
+		}
+	} catch (std::exception &e) {
+		throw bad_import("Failed to load backend: {}!", e.what());
 	}
 
 	return cache.at(key);
@@ -76,10 +84,6 @@ PYBIND11_MODULE (_ltplib, m) {
 	m.attr("__version__") = "build: " __DATE__ " " __TIME__;
 	
 	m.def("load_backend", [&](std::string backend) {
-		std::string out;
-		out = py::module::import("_ltplib").attr("__file__").cast<std::string>();
-		fmt::print("{}\n", out);
-		
 		libs[backend];
 	});
 
@@ -95,27 +99,17 @@ PYBIND11_MODULE (_ltplib, m) {
 	
 	// define base functions:
 	void def_remap_funcs(py::module &);
-	// void def_pspawn_funcs(py::module &);
 	void def_ppost_funcs(py::module &);
 	void def_ppush_funcs(py::module &);
-	// void def_order_funcs(py::module &);
-	// void def_pcheck_funcs(py::module &);
-	// void def_psort_funcs(py::module &);
 	void def_mcsim_funcs(py::module &);
-	void def_err_codes(py::module &);
 	def_remap_funcs(m);
-	// [TBD] def_pspawn_funcs(m);
 	def_ppost_funcs(m);
 	def_ppush_funcs(m);
-	// def_order_funcs(m);
-	
-	//[TBD] def_psort_funcs(m); // required for mcc (maybe)
 	def_mcsim_funcs(m); // monte-carlo simulation
-	def_err_codes(m);
-	
-	// define utils module (poisson eq, fft, etc..):
 	
 	void def_poisson_eq(py::module &);
 	def_poisson_eq(m);
-	
+
+	void def_err_codes(py::module &);
+	def_err_codes(m);
 }
