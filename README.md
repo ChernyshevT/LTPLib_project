@@ -7,7 +7,8 @@ Features:
 - one-, two-, and three-dimensional problems with periodic or absorptive boundary conditions;
 - high-order form factors (up to 3);
 - explicit or semi-implicit particle movers;
-- fast and flexible Monte Carlo module allowing simulation of arbitrary mixtures of active and background components, taking into account anisotropic scattering.
+- fast and flexible Monte Carlo module allowing simulation of arbitrary mixtures of active and background components, taking into account anisotropic scattering,
+- universal data-driven solver for Poisson equation.
 
 The code is based on the former Θ-Hall [^chernyshev2019][^chernyshev2022], but it has been heavily modified and rewritten from scratch.
 The project is inspired by [eduPIC](https://github.com/donkozoltan/eduPIC),
