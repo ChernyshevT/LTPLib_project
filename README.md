@@ -390,6 +390,7 @@ If both edges along specific axis are marked with central-differences,
 it will define periodic boundary condition along this axis.
 > [!NOTE]
 > In case of periodic boundary, the number of units along the axis should be even (otherwise race-condition will occur).
+
 > [!NOTE]
 > Not all every configurations correspond to valid problem.
 
