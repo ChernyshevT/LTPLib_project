@@ -353,7 +353,7 @@ The class constructor accepts two arguments:
 
 The following properties are acessible:
 - `poisson_eq.umap` --- just a read-only copy of *umap*-argument;
-- `poisson_eq.cmap` --- <ins>c</ins>charge <ins>map</ins>, $q$;
+- `poisson_eq.cmap` --- <ins>c</ins>harge <ins>map</ins>, $q$;
 - `poisson_eq.vmap` --- <ins>v</ins>oltage <ins>map</ins>, $\phi$.
 
 Here *cmap* acts as a problem's input,
