@@ -18,7 +18,7 @@ f32 run_SOR_iter (poisson_eq_t<nd> & eq, f32 w) {
 	/* loop over red/black-units & perform SOR-step */
 	for (u8 nseq : {0,1}) {
 		
-		#pragma omp parallel for private(vold, vnew) reduction(max:verr)
+		#pragma omp parallel for reduction(max:verr) private(vold, vnew)
 		for (u64 uid=0; uid<eq.offst[0]; ++uid) {
 			u32 pos[nd];
 			u32 sum{0};

@@ -124,36 +124,44 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts, const std::vector<std::st
 		
 		fns["DCS"] = \
 		[enth=enth, fn0=fns["CS0"], fn1=fns["CS1"]] (f32 enel) -> f32 {
-			f32 s0{fn0(enel)};
-			f32 s1{fn1(enel)};
-			f32 ef{enth > 0 ? enel/enth : 0.0f};
-			return (enel >= enth ? DCS_from_MTCS(s1, s0, ef) : NAN);
+			if (enel >= enth) {
+				f32 s0{fn0(enel)};
+				f32 s1{fn1(enel)};
+				f32 ef{enth > 0 ? enel/enth : 0.0f};
+				return DCS_from_MTCS(s1, s0, ef);
+			} else return NAN;
 		};
 	}
+	/****************************************************************************/
 	if (FLAGS[CSEC_DEF] and FLAGS[DCSFN_DEF]) {
 		if (FLAGS[MTCS_DEF]) {
 			throw bad_arg("can not use both \"MTCS\" & \"DCSFN\"");
 		}
 		
 		fns["CS1"] = \
-		[enth=enth, fn0=fns["FN0"], fnX=fns["DCS"]] (f32 enel) -> f32 {
-			f32 s0{fn0(enel)};
-			f32 xi{fnX(enel)};
-			f32 ef{enth > 0 ? enel/enth : 0.0f};
-			return (enel >= enth ? s0 * MTCS_from_DCS (xi, ef) : NAN);
+		[enth=enth, fn0=fns["CS0"], fnX=fns["DCS"]] (f32 enel) -> f32 {
+			if (enel >= enth) {
+				f32 s0{fn0(enel)};
+				f32 xi{fnX(enel)};
+				f32 ef{enth > 0 ? enel/enth : 0.0f};
+				return s0*MTCS_from_DCS(xi, ef);
+			} else return NAN;
 		};
 	}
+	/****************************************************************************/
 	if (FLAGS[MTCS_DEF] and FLAGS[DCSFN_DEF]) {
 		if (FLAGS[CSEC_DEF]) {
 			throw bad_arg("can not use all three of \"CS\", \"MTCS\" & \"DCSFN\"");
 		}
 		
 		fns["CS0"] = \
-		[enth=enth, fn1=fns["FN1"], fnX=fns["DCS"]] (f32 enel) -> f32 {
-			f32 s1{fn1(enel)};
-			f32 xi{fnX(enel)};
-			f32 ef{enth > 0 ? enel/enth : 0.0f};
-			return (enel >= enth ? s1 / MTCS_from_DCS (xi, ef) : NAN);
+		[enth=enth, fn1=fns["CS1"], fnX=fns["DCS"]] (f32 enel) -> f32 {
+			if (enel >= enth) {
+				f32 s1{fn1(enel)};
+				f32 xi{fnX(enel)};
+				f32 ef{enth > 0 ? enel/enth : 0.0f};
+				return s1/MTCS_from_DCS(xi, ef);
+			} else return NAN;
 		};
 	}
 }
@@ -433,16 +441,6 @@ csection_set_cfg::csection_set_cfg (
 		pprogs[0][k2].arg = flags.jset;
 	} add_op(0, opcode::END);
 	
-	// second pass
-	//~ for (u16 i{0}, j{0}, k{0}; ++i) {
-		// i : opcode number
-		// j : csection number
-		// k : entry position in current background
-		
-		
-	//~ }
-	
-	//~ exit(1);
 	
 	for (auto k{0}; pprogs[0][k].opc != opcode::END; k++) {
 		if (einfo.contains(k)) {
