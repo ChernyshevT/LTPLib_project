@@ -35,6 +35,7 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 	1. [`_ltplib.bind_mcsim_fn`](#bind_mcsim)
 	1. [`_ltplib.bind_remap_fn`](#bind_remap)
 1. [Code examples](#code_examples)
+	1. [`examples/run_localsim.py`](#run_localsim)
 
 ## Build instructions <a name="build"></a>
 The framework uses [pybind11](https://github.com/pybind/pybind11) to create a transparent interface between Python and C++ code. Dependencies are downloaded automatically by CMake FetchContent.
@@ -628,7 +629,7 @@ Function `util.load_frame(fname: str)` loads frame.
 The saved data can be accessed with dot-operator: `frame.data`.
 In the case of absence of the data `None` will be returned.
 
-## [`examples/run_localsim.py`](./examples/run_localsim.py)
+## [`examples/run_localsim.py`](./examples/run_localsim.py) <a name="run_localsim"></a>
 This problem shows an example of so-called spatial-local approximation.
 This approximation assumes that there are no spatial-gradients, thus spatial coordinate can be ignored
 and eVDF (<ins>e</ins>lectron <ins>V</ins>elocity <ins>D</ins>istribution <ins>F</ins>unction) is global.
