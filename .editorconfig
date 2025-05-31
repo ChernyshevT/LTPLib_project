@@ -1,12 +1,13 @@
 # EditorConfig is awesome: https://editorconfig.org
 
-# top-most EditorConfig file
 root = true
 
 [*]
-end_of_line = lf
+end_of_line          = lf
 insert_final_newline = true
-charset = utf-8
-indent_style = tab
-indent_size = 2
+charset              = utf-8
+indent_size          = 2
+indent_style         = tab
+# Yes, I prefer tabs, see
+# [https://dmitryfrank.com/articles/indent_with_tabs_align_with_spaces]
 
