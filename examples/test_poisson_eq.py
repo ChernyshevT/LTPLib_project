@@ -77,9 +77,9 @@ def main(args):
 	ltp.load_backend("default")
 	
 	lx,ly = 1.5,1.5
-	nx,ny = 23,23
+	nx,ny = 255,255
 	
-	noise_lvl = 0.
+	noise_lvl = 1
 	
 	shape = (nx+1,ny+1)
 	step  = [l/(k-1) for k,l in zip(shape,[lx,ly])]
@@ -105,17 +105,18 @@ def main(args):
 	umap[:, 0]   = umap[:, 0]   | U.YRTOPEN
 	umap[:,ny]   = umap[:,ny]   | U.YLFOPEN
 	umap[:,1:ny] = umap[:,1:ny] | U.YCENTER
+	umap[nx//2,ny//2] = U.VALUE
 	
 	# ~ umap[:,:] = umap[:,:] | U.XCENTER
 	# ~ umap[:,:] = umap[:,:] | U.YCENTER
 	
-	r = 0.5**2
-	mask = xs**2 + ys**2 < r**2
-	umap[mask] = U.VAL
-	_vmap[mask] = 0
+	# ~ r = 0.5**2
+	# ~ mask = xs**2 + ys**2 < r**2
+	# ~ umap[mask] = U.VAL
+	# ~ _vmap[mask] = 0
 	
 		
-	show_umap(umap)
+	# ~ show_umap(umap)
 	# ~ exit()
 	
 	# create and fill array with charge-densities
@@ -128,7 +129,7 @@ def main(args):
 	eq.vmap[...] = _vmap
 	
 	#reset values
-	mask = eq.umap!=U.VAL
+	mask = eq.umap!=U.VALUE
 	eq.vmap[mask] = 0
 	
 	for k in range(25):
@@ -137,9 +138,11 @@ def main(args):
 			noise = np.random.normal(size=eq.vmap.shape, scale=noise_lvl)
 			eq.cmap[mask] += noise[mask]
 		
+		#https://crunchingnumbers.live/2017/07/09/iterative-methods-part-2/
+		
 		nmax = np.prod(eq.vmap.shape*2)
 		for j in count(1): 
-			verr = eq.iter(1.95)
+			verr = eq.iter(1.25)
 			if verr <= 1e-5 or verr != verr:
 				print(f"#{j:06d}: {verr:e}, {np.sum(eq.cmap):e}")
 				break

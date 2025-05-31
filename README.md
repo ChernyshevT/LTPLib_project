@@ -359,13 +359,45 @@ The following properties are acessible:
 Here *cmap* acts as a problem's input,
 and *vmap* should contain appropriate initial approximation for $\phi_{\rm old}$.
 
-### Unit types
+### Unit types and boundary conditions
+The helper enum `poisson_eq.uTYPE` should be used to set-up *umap*-configuration.
+There are two special constants:
+- `uTYPE.NONE = 0` is used to mark units that are not considered,
+the marked units will be assigned the NaN (Not a Number) values.
+- `uTYPE.VALUE` is uset to set-up Dirichlet boundary condition,
+these units will keep their original values.
+
+The next two constants are used to define zero-field (Neumann) boundary condition along the $x$-axis:
+- `uTYPE.XLFOPEN` --- backward finite-difference (against $x$-axis),
+- `uTYPE.XRTOPEN` --- forward finite-difference (toward $x$-axis).
+
+These conditions can be used at the open boundaries or to define dielectric surfaces
+(assuming that there is no charge accumulation).
+The binwise or encodes $x$-axis central-difference:
+- `uTYPE.CENTER = uTYPE.XLFOPEN|uTYPE.XRTOPEN` --- this value encodes internal units.
+
+Constants for $y$- and $z$-axes are defined in a similar way:
+- `uTYPE.YLFOPEN`;
+- `uTYPE.YRTOPEN`;
+- `uTYPE.YCENTER`;
+- `uTYPE.ZLFOPEN`;
+- `uTYPE.ZRTOPEN`;
+- `uTYPE.ZCENTER`.
+
+For 2d or 3d problems bit-or should be used, i.e.:
+`uTYPE.XCENTER|uTYPE.YCENTER`, `uTYPE.XCENTER|uTYPE.YCENTER|uTYPE.ZCENTER`.s
+If both edges along specific axis are marked with central-differences,
+it will define periodic boundary condition along this axis.
+> [!NOTE]
+> In case of periodic boundary, the number of units along the axis should be even (otherwise race-condition will occur).
+> [!NOTE]
+> Not all every configurations correspond to valid problem.
 
 ### Iteration
 The method `poisson_eq.iter(w_relax: float) -> float` performs one SOR iteration.
 It accepts relaxation factor $w$,
 updates `poisson_eq.vmap`,
-and returns residual $\max\left|\phi_{\rm new}-\phi_{\rm old}\right|$.
+and returns residual $\delta\phi = \max\left|\phi_{\rm new}-\phi_{\rm old}\right|$.
 
 [^mittal2014]: Mittal, S. (2014). _A study of successive over-relaxation method parallelisation over modern HPC languages._ In International Journal of High Performance Computing and Networking, (Vol. 7, Issue 4, p. 292).
 [DOI:10.1504/ijhpcn.2014.062731](https://doi.org/10.1504/ijhpcn.2014.062731)
