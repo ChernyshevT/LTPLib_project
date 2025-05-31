@@ -414,7 +414,7 @@ it will define periodic boundary condition along this axis.
 The following example shows the umap-configuration for the problem with
 open-boundaries and central body with given $\phi$:
 <br>
-<img src="./docs/imgs/umap_example.png" alt="An example for umap-configuration" width="768"/>
+<img src="./docs/imgs/umap_example.png" alt="An example for umap-configuration" width="512"/>
 <br>
 
 [^mittal2014]: Mittal, S. (2014). _A study of successive over-relaxation method parallelisation over modern HPC languages._ In International Journal of High Performance Computing and Networking, (Vol. 7, Issue 4, p. 292).
