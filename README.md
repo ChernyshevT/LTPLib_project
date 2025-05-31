@@ -23,6 +23,12 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 
 ## Table of contents
 1. [Build instructions](#build)
+1. [Main classes](#classes)
+	1. [`_ltplib.grid`](#grid)
+	1. [`_ltplib.pstore`](#pstore)
+	1. [`_ltplib.vcache`](#vcache)
+	1. [`_ltplib.csection_set`](#csection_set)
+
 
 ## Build instructions <a name="build"></a>
 The framework uses [pybind11](https://github.com/pybind/pybind11) to create a transparent interface between Python and C++ code. Dependencies are downloaded automatically by CMake FetchContent.
