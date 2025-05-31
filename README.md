@@ -338,18 +338,19 @@ If it is not given, $\varepsilon_{\rm th}$ will be used instead.
 ## `_ltplib.poisson_eq` (solver for Poisson equation)
 This class implements universal data-driven solver for Poisson equation:
 ```math
-\nabla^2_{\vec{r}} \phi\left(\vec{r}\right) = q\left(\vec{r}\right),
+\nabla^2 \phi\left(\vec{r}\right) = q\left(\vec{r}\right),
 ```
 where $\phi$ is scalar potential, $q$ is charge density.
-The solver is based on iterative SOR-method (Succesive Over-Relaxation)[^mittal2014]:
+The solver is based on iterative SOR-method (Succesive Over-Relaxation)
+with rad-black decomposition for parallel calculation[^mittal2014]:
 ```math
 \phi_{\rm new} = w\phi_{\rm iter} - \left(1-w\right)\phi_{\rm old},
 ```
 where $w\in\left(0,\ 2\right)$ is a relaxation factor,
 $\phi_{\rm iter}$ is a result of Gauss-Siedel (GS) iteration.
 The class constructor accepts two arguments:
-- *umap: numpy.ndarray[numpy.uint8]* --- <ins>u</ins>nit <ins>map</ins> is an array to encode type of each unit (see below);
-- *step: list[float]* --- grid step along each axis.
+- *umap*: `numpy.ndarray[numpy.uint8]` --- <ins>u</ins>nit <ins>map</ins> is an array to encode type of each unit (see below);
+- *step*: `list[float]` --- grid step along the each axis.
 
 The following properties are acessible:
 - `poisson_eq.umap` --- just a read-only copy of *umap*-argument;
@@ -373,8 +374,8 @@ The next two constants are used to define zero-field (Neumann) boundary conditio
 
 These conditions can be used at the open boundaries or to define dielectric surfaces
 (assuming that there is no charge accumulation).
-The binwise or encodes $x$-axis central-difference:
-- `uTYPE.CENTER = uTYPE.XLFOPEN|uTYPE.XRTOPEN` --- this value encodes internal units.
+The binwise-or encodes $x$-axis central-difference:
+- `uTYPE.CENTER = uTYPE.XLFOPEN|uTYPE.XRTOPEN` --- this value is used for internal units.
 
 Constants for $y$- and $z$-axes are defined in a similar way:
 - `uTYPE.YLFOPEN`;
@@ -384,7 +385,7 @@ Constants for $y$- and $z$-axes are defined in a similar way:
 - `uTYPE.ZRTOPEN`;
 - `uTYPE.ZCENTER`.
 
-For 2d or 3d problems bit-or should be used, i.e.:
+For 2d or 3d problems bitwise-or should be used to mark units, i.e.:
 `uTYPE.XCENTER|uTYPE.YCENTER`, `uTYPE.XCENTER|uTYPE.YCENTER|uTYPE.ZCENTER`.s
 If both edges along specific axis are marked with central-differences,
 it will define periodic boundary condition along this axis.
@@ -392,7 +393,7 @@ it will define periodic boundary condition along this axis.
 > In case of periodic boundary, the number of units along the axis should be even (otherwise race-condition will occur).
 
 > [!NOTE]
-> Not all every configurations correspond to valid problem.
+> Not all every configurations correspond to a valid problem.
 
 ### Iteration
 The method `poisson_eq.iter(w_relax: float) -> float` performs one SOR iteration.
