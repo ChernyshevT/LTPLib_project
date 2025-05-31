@@ -130,7 +130,7 @@ Method accepts no arguments and returns the pair:
 To **reset** (clean) the storage use `pstore.reset()`.
 Also, calling `len(pstore)` will return the total number of samples.
 
-### `_ltplib.vcache` (value cache)
+### [`_ltplib.vcache`](./src/_ltplib/def_vcache.cxx) (value cache)
 This class is used as a universal node-local cache for grid-based values. For example, it can be used to store electromagnetic field, pVDF moments, background densities, collision frequencies.
 Class constructor accepts following arguments:
 1. *grid* --- existing grid.
