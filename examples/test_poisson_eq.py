@@ -143,7 +143,7 @@ def main(args):
 		nmax = np.prod(eq.vmap.shape*2)
 		for j in count(1): 
 			verr = eq.iter(1.15)
-			if verr <= 1e-6 or verr != verr:
+			if verr <= 1e-5 or verr != verr:
 				print(f"#{j:06d}: {verr:e}, {np.sum(eq.cmap):e}")
 				break
 			if j >= nmax:

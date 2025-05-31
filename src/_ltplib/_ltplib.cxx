@@ -61,7 +61,7 @@ const dylib & dylibs_t::operator [] (std::string key) {
 		build = cache.at(key).get_variable<char *>("build");
 		api_v = cache.at(key).get_variable<char *>("api_v");
 
-		logger::info("load \"_{}\" backend: {}, {}, build: {}"
+		logger::info("using \"_{}\" backend: {}, {}, build: {}"
 		, key, descr, api_v, build);
 
 		if (0 != strcmp(API_V, api_v)) {
