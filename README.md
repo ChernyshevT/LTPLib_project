@@ -21,7 +21,10 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 [^chernyshev2022]: Chernyshev, T., & Krivoruchko, D. (2022). _On a force balance and role of cathode plasma in Hall effect thrusters._ In Plasma Sources Science and Technology (Vol. 31, Issue 1, p. 015001). IOP Publishing.
 [DOI:10.1088/1361-6595/ac4179](https://doi.org/10.1088/1361-6595/ac4179)
 
-## Build instructions
+## Table of contents
+1. [Build instructions](#build)
+
+## Build instructions <a name="build"></a>
 The framework uses [pybind11](https://github.com/pybind/pybind11) to create a transparent interface between Python and C++ code. Dependencies are downloaded automatically by CMake FetchContent.
 ```sh
 cmake -S src -B build && cmake --build build --target install
@@ -40,8 +43,8 @@ help(ltp)
 ```
 The following sections provide a brief overview for **\_ltplib** components.
 
-## Main classes
-### [`_ltplib.grid`](./src/_ltplib/def_grid.cxx) (problem's geometry)
+## Main classes <a name="classes"></a>
+### [`_ltplib.grid`](./src/_ltplib/def_grid.cxx) (problem's geometry) <a name="grid"></a>
 The gird is a primary class for every simulation.
 It describes geometry of the problem, boundary conditions, and spatial-decomposition for parallel computation.
 The code uses sightly modified approach of tile-decomposition described before in [^decyk2014][^decyk2015]. The class constructor accepts following arguments:
@@ -130,7 +133,7 @@ Method accepts no arguments and returns the pair:
 To **reset** (clean) the storage use `pstore.reset()`.
 Also, calling `len(pstore)` will return the total number of samples.
 
-### [`_ltplib.vcache`](./src/_ltplib/def_vcache.cxx) (value cache)
+### [`_ltplib.vcache`](./src/_ltplib/def_vcache.cxx) (value cache) <a name="vcache"></a>
 This class is used as a universal node-local cache for grid-based values. For example, it can be used to store electromagnetic field, pVDF moments, background densities, collision frequencies.
 Class constructor accepts following arguments:
 1. *grid* --- existing grid.
@@ -337,7 +340,7 @@ If it is not given, $\varepsilon_{\rm th}$ will be used instead.
 Other examples can be found in
 [`examples/csections_db`](./examples/csections_db)
 
-## [`_ltplib.poisson_eq`](./src/_ltplib/def_poisson_eq.cxx) (solver for Poisson equation)
+## [`_ltplib.poisson_eq`](./src/_ltplib/def_poisson_eq.cxx) (solver for Poisson equation) <a name="poisson_eq"></a>
 This class implements universal data-driven solver for Poisson equation:
 ```math
 \nabla^2 \phi\left(\vec{r}\right) = q\left(\vec{r}\right),
@@ -422,8 +425,8 @@ open-boundaries and central body with given $\phi$:
 [^mittal2014]: Mittal, S. (2014). _A study of successive over-relaxation method parallelisation over modern HPC languages._ In International Journal of High Performance Computing and Networking, (Vol. 7, Issue 4, p. 292).
 [DOI:10.1504/ijhpcn.2014.062731](https://doi.org/10.1504/ijhpcn.2014.062731)
 
-## Function bindings
-### [`_ltplib.bind_ppush_fn`](./src/_ltplib/def_ppush_funcs.cxx) (motion equation solver)
+## Function bindings <a name="bindings"></a>
+### [`_ltplib.bind_ppush_fn`](./src/_ltplib/def_ppush_funcs.cxx) (motion equation solver) <a name="bind_ppush"></a>
 This function binds its' arguments to motion equation solver from the backend.
 The function accepts the following arguments:
 - *pstore* --- pVDF samples;
@@ -491,7 +494,7 @@ Our implementation caches $t$-moment field contribution for the each sample, so 
 [^tajima2018-book]: Tajima, T. (2018). _Computational Plasma Physics._ CRC Press. 
 [DOI:10.1201/9780429501470](https://doi.org/10.1201/9780429501470)
 
-### [`_ltplib.bind_ppost_fn`](./src/_ltplib/def_ppost_funcs.cxx) (obtain pVDF moments)
+### [`_ltplib.bind_ppost_fn`](./src/_ltplib/def_ppost_funcs.cxx) (obtain pVDF moments) <a name="bind_ppost"></a>
 This binding is used to calculate raw pVDF moments [^saint-raymond2009]:
 - concentration
 $n = \int_\vec{ v}f(\vec{ r},\ \vec{ v})\ {\rm d}\vec{ v}$;
@@ -515,7 +518,7 @@ Resulting functional object has following signature
 [^saint-raymond2009]: Saint-Raymond, L. (2009). _Hydrodynamic Limits of the Boltzmann Equation._ In Lecture Notes in Mathematics. Springer Berlin Heidelberg.
 [DOI:10.1007/978-3-540-92847-8](https://doi.org/10.1007/978-3-540-92847-8)
 
-### [`_ltplib.bind_mcsim_fn`](./src/_ltplib/def_mcsim_funcs.cxx) (collision simulation)
+### [`_ltplib.bind_mcsim_fn`](./src/_ltplib/def_mcsim_funcs.cxx) (collision simulation) <a name="bind_mcsim"></a>
 This binding is used to perform Monte-Carlo simulation.
 The arguments are:
 - *pstore* --- pVDF samples;
@@ -591,7 +594,7 @@ The preset with these coss-sections can be found in [`examples/csections_db/CH4.
 
 [^elhafi2021]: El Hafi, M., Blanco, S., Dauchet, J., Fournier, R., Galtier, M., Ibarrart, L., Tregan, J.-M., & Villefranque, N. (2021). _Three viewpoints on null-collision Monte Carlo algorithms._ In Journal of Quantitative Spectroscopy and Radiative Transfer (Vol. 260, p. 107402). Elsevier BV. [DOI:10.1016/j.jqsrt.2020.107402](https://doi.org/10.1016/j.jqsrt.2020.107402)
 
-### [`_ltplib.bind_remap_fn`](./src/_ltplib/def_remap_funcs.cxx)
+### [`_ltplib.bind_remap_fn`](./src/_ltplib/def_remap_funcs.cxx) <a name="bind_remap"></a>
 This binding is used to transfer data between value cache and numpy array.
 The function accepts the following arguments:
 - *vcache* --- value cache (local data);
@@ -603,7 +606,7 @@ _ltplib.bind_remap_fn(vcache, ">", iodata) # to copy from vcache to iodata
 ```
 Functional object's signature is `() -> None`.
 
-# Code examples for **\_ltplib**
+# Code examples for \_ltplib <a name="code_examples"></a>
 
 All our code examples build with the same template and use shared code snippets from `examples/util`.
 One should note our custom format for input/output data described in [`examples/util/frames.py`](./examples/util/frames.py).
