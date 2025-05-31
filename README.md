@@ -345,7 +345,7 @@ This class implements universal data-driven solver for Poisson equation:
 ```
 where $\phi$ is scalar potential, $q$ is charge density.
 The solver is based on iterative SOR-method (Succesive Over-Relaxation)
-with rad-black decomposition for parallel calculation[^mittal2014]:
+with rad-black decomposition for parallel calculation[^CS267][^mittal2014]:
 ```math
 \phi_{\rm new} = w\phi_{\rm iter} - \left(1-w\right)\phi_{\rm old},
 ```
@@ -416,6 +416,9 @@ open-boundaries and central body with given $\phi$:
 <br>
 <img src="./docs/imgs/umap_example.png" alt="An example for umap-configuration" width="512"/>
 <br>
+
+[^CS267]: Solving the Discrete Poisson Equation using Jacobi, SOR, Conjugate Gradients, and the FFT
+[URL:CS267: Lectures 15 and 16, Mar 5 and 7 1996](https://people.eecs.berkeley.edu/~demmel/cs267/lecture24/lecture24.html)
 
 [^mittal2014]: Mittal, S. (2014). _A study of successive over-relaxation method parallelisation over modern HPC languages._ In International Journal of High Performance Computing and Networking, (Vol. 7, Issue 4, p. 292).
 [DOI:10.1504/ijhpcn.2014.062731](https://doi.org/10.1504/ijhpcn.2014.062731)
