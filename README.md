@@ -28,7 +28,13 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 	1. [`_ltplib.pstore`](#pstore)
 	1. [`_ltplib.vcache`](#vcache)
 	1. [`_ltplib.csection_set`](#csection_set)
-
+	1. [`_ltplib.poisson_eq`](#poisson_eq)
+1. [Function bindings](#binding)
+	1. [`_ltplib.bind_ppush_fn`](#bind_ppush)
+	1. [`_ltplib.bind_ppost_fn`](#bind_ppost)
+	1. [`_ltplib.bind_mcsim_fn`](#bind_mcsim)
+	1. [`_ltplib.bind_remap_fn`](#bind_remap)
+1. [Code examples](#code_examples)
 
 ## Build instructions <a name="build"></a>
 The framework uses [pybind11](https://github.com/pybind/pybind11) to create a transparent interface between Python and C++ code. Dependencies are downloaded automatically by CMake FetchContent.
@@ -103,7 +109,7 @@ grid = ltp.grid(**grid_cfg)
 [^decyk2015]: Decyk, V. K. (2015). _Skeleton Particle-in-Cell Codes on Emerging Computer Architectures._ In Computing in Science & Engineering (Vol. 17, Issue 2, pp. 47–52). Institute of Electrical and Electronics Engineers (IEEE).
 [DOI:10.1109/mcse.2014.131](https://doi.org/10.1109/MCSE.2014.131)
 
-### [`_ltplib.pstore`](./src/_ltplib/def_pstore.cxx) (particle storage)
+### [`_ltplib.pstore`](./src/_ltplib/def_pstore.cxx) (particle storage) <a name="pstore"></a>
 This class is used to store pVDF samples (macro-particles). The class constructor accepts following arguments:
 1. *grid* -- existing grid;
 1. *ptinfo* -- description of active components to store;
@@ -153,7 +159,7 @@ There are following useful properties:
 - `vcache.order` -- form-factor's order,
 - `vcache.cfg` -- helper to construct numpy-arrays: `numpy.array(**pstore.cfg)`.
 
-### [`_ltplib.csection_set`](./src/_ltplib/def_csection_set.cxx) (cross-section set)
+### [`_ltplib.csection_set`](./src/_ltplib/def_csection_set.cxx) (cross-section set) <a name="csection_set"></a>
 This class stores cross-section database for Monte-Carlo simulation.
 Input cross-sections can be defined by the function or by the points.
 In both cases they will be recalculated into cumulative rates and cached into the lookup-table on log-scaled energy-grid $\varepsilon = \varepsilon_{\rm th} + 2^{j/2-4}-0.0625,~j\in\mathbb{N}$, where $\varepsilon_{\rm th}$ is reaction's threshold. This allows to store large amount of cross-sections in a very compact way. Constructor parameters for the class are:
