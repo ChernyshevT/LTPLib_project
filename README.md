@@ -1,5 +1,5 @@
-# **\_ltplib**: <ins>L</ins>ow <ins>T</ins>emperature <ins>P</ins>lasma <ins>Lib</ins>rary
-This is a middle-layer framework that provides a simple Python solutions to construct PiC+MCC simulations (Particles-in-Cells + Monte Carlo Collisions).
+# \_ltplib: <ins>L</ins>ow <ins>T</ins>emperature <ins>P</ins>lasma <ins>Lib</ins>rary
+This is middle-layer framework that provides a simple Python solution to construct PiC+MCC simulations (Particles-in-Cells + Monte Carlo Collisions).
 The framework offers a range of functions and primitives to facilitate a broad range of low-temperature plasma kinetic problems.
 By creating a high-level user-friendly API, **\_ltplib** aims to enable researchers and engineers to formulate and solve both simple and complex PiC+MCC problems in a flexible manner with the aid of modern computational techniques.
 
@@ -8,8 +8,6 @@ Features:
 - high-order form factors (up to 3);
 - explicit or semi-implicit particle movers;
 - fast and flexible Monte Carlo module allowing simulation of arbitrary mixtures of active and background components, taking into account anisotropic scattering.
-> [!NOTE]
-> The current version of **\_ltplib** does not provide built-in field solvers. The external ones should be used.
 
 The code is based on the former Θ-Hall [^chernyshev2019][^chernyshev2022], but it has been heavily modified and rewritten from scratch.
 The project is inspired by [eduPIC](https://github.com/donkozoltan/eduPIC),
