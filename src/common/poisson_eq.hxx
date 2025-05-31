@@ -22,7 +22,7 @@ struct poisson_eq_t {
 	f32 *vdata;       // v[oltage] data
 	
 	/* pos: ix,iy,iz; nseq: red (0) -> black (1) */
-	inline f32 get_vnew (u32 pos[nd], f32 vcached[]) {
+	inline f32 get_vnew (u32 pos[nd]) {
 		f32  vnew{0.0f}, cfft{0.0f};
 		
 		// mid-point, left, right indexes
@@ -52,7 +52,7 @@ struct poisson_eq_t {
 						idlf += offst[i+1] * ((shlf%nlen + nlen) % nlen);
 						idrt += offst[i+1] * ((shrt%nlen + nlen) % nlen);
 					}
-					vnew += (vcached[idlf]+vcached[idrt])*dstep[j];
+					vnew += (vdata[idlf]+vdata[idrt])*dstep[j];
 					cfft += 2*dstep[j];
 				}
 				vnew = (vnew-cdata[idpt])/cfft;

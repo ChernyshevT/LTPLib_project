@@ -3,7 +3,7 @@
 import sys
 import numpy as np
 import _ltplib as ltp
-from itertools import count
+from itertools import count, repeat
 from util.plots   import *
 from util.loggers import *
 
@@ -73,6 +73,18 @@ def laplace(vmap, step):
 		cmap[...] += diff
 	
 	return cmap
+	
+def w_chebyshev(umap, w=1.0):
+	"""
+	Generator for Chebyshev-acceleration w_relax
+	"""
+	U = ltp.poisson_eq.uTYPE
+	N = np.sum((umap.flat != 0) & (umap.flat != U.VALUE), dtype=int)
+	p = (1.0 - 0.5*np.pi**2/N**2)**2
+	
+	while 1:
+		yield w
+		w = 1.0/(1.0 - 0.25*p*w)
 
 def main(args):
 	pass
@@ -80,9 +92,9 @@ def main(args):
 	ltp.load_backend("default")
 	
 	lx,ly = 1.5,1.5
-	nx,ny = 16,16
+	nx,ny = 192,192
 	
-	noise_lvl = 1
+	noise_lvl = 0.1
 	
 	shape = (nx+1,ny+1)
 	step  = [l/(k-1) for k,l in zip(shape,[lx,ly])]
@@ -110,15 +122,19 @@ def main(args):
 	umap[:,1:ny] = umap[:,1:ny] | U.YCENTER
 	umap[nx//2,ny//2] = U.VALUE
 	
-	r = 0.75**2
+	r = 0.5**2
 	umap[xs**2 + ys**2 < r**2] = U.VALUE
 	_vmap[xs**2 + ys**2 < r**2] = 0
 	
+	# ~ for j, w in enumerate(w_chebyshev(umap)):
+		# ~ print(j, w)
+		# ~ if j>100:
+			# ~ exit()
 		
-	fig = show_umap(umap)
-	fig.name = "../docs/imgs/umap_example"
-	save_fig(fig, dpi=200, fmt="png")
-	exit()
+	# ~ fig = show_umap(umap)
+	# ~ fig.name = "../docs/imgs/umap_example"
+	# ~ save_fig(fig, dpi=200, fmt="png")
+	# ~ exit()
 	
 	# create and fill array with charge-densities
 	_cmap = laplace(_vmap, step)
@@ -141,15 +157,14 @@ def main(args):
 		
 		#https://crunchingnumbers.live/2017/07/09/iterative-methods-part-2/
 		
-		nmax = np.prod(eq.vmap.shape*2)
-		for j in count(1): 
+		for j, w in enumerate(w_chebyshev(eq.umap), 1): 
 			verr = eq.iter(1.15)
 			if verr <= 1e-5 or verr != verr:
 				print(f"#{j:06d}: {verr:e}, {np.sum(eq.cmap):e}")
 				break
-			if j >= nmax:
-				print(f"#{j:06d}: {verr:e} (fail to converge!)")
-				break
+			# ~ if j >= nmax:
+				# ~ print(f"#{j:06d}: {verr:e} (fail to converge!)")
+				# ~ break
 		pass
 	
 	#calculate corresponding charge-density:

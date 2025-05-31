@@ -30,9 +30,9 @@ f32 run_SOR_iter (poisson_eq_t<nd> & eq, f32 w) {
 			}
 			if ( (u8)(sum%2) == nseq) {
 				vold = eq.vdata[uid];
-				vnew = eq.get_vnew(pos, eq.vdata);
+				vnew = eq.get_vnew(pos);
 				vnew = w*vnew + (1.0f-w)*vold;
-				if (isfinite(vnew)) {
+				if (isfinite(vnew)) [[likely]] {
 					verr = std::max(fabsf(vnew - vold), verr);
 				}
 				eq.vdata[uid] = vnew;

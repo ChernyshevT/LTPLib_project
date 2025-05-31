@@ -609,10 +609,10 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
 	            * py::cast<f32>(opts.attr("get")("rescale", 1.0f));
 	
 		return [scale, enth, fn=py::cast<py::function>(obj)] (f32 x) -> f32 {
-			return py::cast<f32>(fn(x, enth))*scale;
+			return scale*py::cast<f32>(fn(x, enth));
 		};
 	}
-	
+
 	// read from file
 	if (py::isinstance<py::str>(obj)) {
 		std::string line, fname = py::cast<std::string>(obj);
@@ -678,16 +678,18 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
 			}
 
 		} catch (std::exception& e) {
-			throw bad_arg("{} LINE#{}: {}", fname, n, e.what());
+			throw bad_arg("{} LINE#{}: {}"
+			, fname, n, e.what());
 		}
 		
 		if (not foundPattern and not pattern.empty()) {
-			throw bad_arg("didn't find pattern \"{}\" in file \"{}\"", pattern, fname);
+			throw bad_arg("didn't find pattern \"{}\" in file \"{}\""\
+			, pattern, fname);
 		}
 		return from_data(std::move(xys), enth, opts);
 	}
-	
-	// list of pairs, numpy array , etc.
+
+	// read from list of pairs, numpy array , etc.
 	if (py::isinstance<py::iterable>(obj)) {
 		std::vector<std::array<f32, 2>> xys;
 		for (auto xy : obj) {
@@ -696,9 +698,8 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
 		return from_data(std::move(xys), enth, opts);
 	}
 	
-	throw std::invalid_argument(fmt::format(
-	"invalid entry type {}"
-	, py::cast<std::string>(py::type::of(obj).attr("__name__"))));
+	throw bad_arg("invalid entry type {}"\
+	, py::cast<std::string>(py::type::of(obj).attr("__name__")));
 }
 
 /******************************************************************************* 
