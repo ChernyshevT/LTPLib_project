@@ -418,7 +418,8 @@ open-boundaries and central body with given $\phi$:
 <br>
 
 [^CS267]: Solving the Discrete Poisson Equation using Jacobi, SOR, Conjugate Gradients, and the FFT
-[URL:CS267: Lectures 15 and 16, Mar 5 and 7 1996](https://people.eecs.berkeley.edu/~demmel/cs267/lecture24/lecture24.html)
+(CS267: Lectures 15 and 16, Mar 5 and 7 1996)
+[URL:people.eecs.berkeley.edu/~demmel/cs267/lecture24/lecture24.html](https://people.eecs.berkeley.edu/~demmel/cs267/lecture24/lecture24.html)
 
 [^mittal2014]: Mittal, S. (2014). _A study of successive over-relaxation method parallelisation over modern HPC languages._ In International Journal of High Performance Computing and Networking, (Vol. 7, Issue 4, p. 292).
 [DOI:10.1504/ijhpcn.2014.062731](https://doi.org/10.1504/ijhpcn.2014.062731)
