@@ -11,10 +11,10 @@
 	
 	{"TYPE":"ELASTIC",
 	 "CSEC":  lambda en, th: 6e-20,
-	 "REF":"\cite{ness1994}",
+	 "REF":r"\cite{ness1994}",
 	},
 	{"TYPE":"EXCITATION", "THRESHOLD":0.2,
 	 "CSEC":  lambda en, th: 10*(en-th)*1e-20,
-	 "REF":"\cite{ness1994}",
+	 "REF":r"\cite{ness1994}",
 	},
 ]

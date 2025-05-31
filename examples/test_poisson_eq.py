@@ -10,15 +10,18 @@ from util.loggers import *
 def show_umap(umap):
 	U = ltp.poisson_eq.uTYPE
 	
-	fig,ax = mk_subplots([2,10,2],[2,10,2], dpi=200)
+	fig,ax = mk_subplots([0,8,2.75],[0,8,0], dpi=200)
+	
+	ax.set_xlim(-0.5, umap.shape[0]-0.5)
+	ax.set_ylim(-0.5, umap.shape[1]-0.5)
+	ax.axis("off"),
 	
 	xlfs, xrts, xcns, ylfs, yrts, ycns, vals = [],[],[],[],[],[],[]
 	for x in range(umap.shape[0]):
 		for y in range(umap.shape[1]):
 			ucode = umap[x,y]
-			if ucode == U.VAL:
+			if ucode == U.VALUE:
 				vals.append((x,y))
-				#ax.plot(x,y,"sk",markersize=2)
 			else:
 				match ucode & U.XCENTER:
 					case U.XLFOPEN:
@@ -36,13 +39,13 @@ def show_umap(umap):
 						ycns.append((x,y))
 	
 	############################################################
-	ax.plot(*zip(*vals), ls="", c="k", marker="s", markersize=2, label="VAL")
-	ax.plot(*zip(*xlfs), ls="", c="k", marker=0,   markersize=4, label="XLF")
-	ax.plot(*zip(*xrts), ls="", c="k", marker=1,   markersize=4, label="XRT")
-	ax.plot(*zip(*xcns), ls="", c="k", marker="_", markersize=8, label="XCN")
-	ax.plot(*zip(*ylfs), ls="", c="k", marker=3,   markersize=4, label="YLF")
-	ax.plot(*zip(*yrts), ls="", c="k", marker=2,   markersize=4, label="YRT")
-	ax.plot(*zip(*ycns), ls="", c="k", marker="|", markersize=8, label="YCN")
+	ax.plot(*zip(*vals), ls="", c="k", marker="s", markersize=2, label=r"{\tt VALUE}")
+	ax.plot(*zip(*xlfs), ls="", c="k", marker=0,   markersize=4, label=r"{\tt XLFOPEN}")
+	ax.plot(*zip(*xrts), ls="", c="k", marker=1,   markersize=4, label=r"{\tt XRTOPEN}")
+	ax.plot(*zip(*xcns), ls="", c="k", marker="_", markersize=8, label=r"{\tt XCENTER}")
+	ax.plot(*zip(*ylfs), ls="", c="k", marker=3,   markersize=4, label=r"{\tt YLFOPEN}")
+	ax.plot(*zip(*yrts), ls="", c="k", marker=2,   markersize=4, label=r"{\tt YRTOPEN}")
+	ax.plot(*zip(*ycns), ls="", c="k", marker="|", markersize=8, label=r"{\tt YCENTER}")
 	
 	legend_conf = {
 		"bbox_to_anchor":(1,0,1,1),
@@ -50,14 +53,14 @@ def show_umap(umap):
 		"borderaxespad":0,
 		"columnspacing":0.25,
 		"labelspacing" :1,
-		"frameon":1,
+		"frameon":0,
 		"handlelength":.75,
 		"loc":"center left",
 		"ncol":1,
 	}
 	ax.legend(**legend_conf)
 	
-	plt.show()
+	return fig;
 
 
 def laplace(vmap, step):
@@ -77,7 +80,7 @@ def main(args):
 	ltp.load_backend("default")
 	
 	lx,ly = 1.5,1.5
-	nx,ny = 255,255
+	nx,ny = 16,16
 	
 	noise_lvl = 1
 	
@@ -107,17 +110,15 @@ def main(args):
 	umap[:,1:ny] = umap[:,1:ny] | U.YCENTER
 	umap[nx//2,ny//2] = U.VALUE
 	
-	# ~ umap[:,:] = umap[:,:] | U.XCENTER
-	# ~ umap[:,:] = umap[:,:] | U.YCENTER
-	
-	# ~ r = 0.5**2
-	# ~ mask = xs**2 + ys**2 < r**2
-	# ~ umap[mask] = U.VAL
-	# ~ _vmap[mask] = 0
+	r = 0.75**2
+	umap[xs**2 + ys**2 < r**2] = U.VALUE
+	_vmap[xs**2 + ys**2 < r**2] = 0
 	
 		
-	# ~ show_umap(umap)
-	# ~ exit()
+	fig = show_umap(umap)
+	fig.name = "../docs/imgs/umap_example"
+	save_fig(fig, dpi=200, fmt="png")
+	exit()
 	
 	# create and fill array with charge-densities
 	_cmap = laplace(_vmap, step)

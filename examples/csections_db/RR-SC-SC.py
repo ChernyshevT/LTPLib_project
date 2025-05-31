@@ -12,11 +12,11 @@
 	{"TYPE":"ELASTIC",
 	 "MTCS":  lambda en, th: 6e-20,
 	 "DCSFN": lambda en, es=27.21: (4*en/es)/(1+4*en/es),
-	 "REF":"\cite{flynn2024}",
+	 "REF":r"\cite{flynn2024}",
 	},
 	{"TYPE":"EXCITATION", "THRESHOLD":0.2,
 	 "MTCS":  lambda en, th: 10*(en-th)*1e-20,
 	 "DCSFN": lambda en, es=27.21: (4*en/es)/(1+4*en/es),
-	 "REF":"\cite{flynn2024}",
+	 "REF":r"\cite{flynn2024}",
 	},
 ]

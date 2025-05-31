@@ -411,6 +411,12 @@ it will define periodic boundary condition along this axis.
 > has infinite number of solutions and can not be resolved.
 > In this case one arbitary unit should be marked with `uTYPE.VALUE`.
 
+The following example shows the umap-configuration for the problem with
+open-boundaries and central body with given $\phi$:
+<br>
+<img src="./docs/imgs/umap_example.png" alt="An example for umap-configuration" width="768"/>
+<br>
+
 [^mittal2014]: Mittal, S. (2014). _A study of successive over-relaxation method parallelisation over modern HPC languages._ In International Journal of High Performance Computing and Networking, (Vol. 7, Issue 4, p. 292).
 [DOI:10.1504/ijhpcn.2014.062731](https://doi.org/10.1504/ijhpcn.2014.062731)
 
