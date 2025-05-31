@@ -335,6 +335,9 @@ If it is not given, $\varepsilon_{\rm th}$ will be used instead.
 },
 ```
 
+Other examples can be found in
+[`examples/csections_db`](./examples/csections_db)
+
 ## `_ltplib.poisson_eq` (solver for Poisson equation)
 This class implements universal data-driven solver for Poisson equation:
 ```math
