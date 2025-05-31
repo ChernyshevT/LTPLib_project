@@ -40,7 +40,7 @@ help(ltp)
 The following sections provide a brief overview for **\_ltplib** components.
 
 ## Main classes
-### `_ltplib.grid` (problem's geometry)
+### [`_ltplib.grid`](./src/_ltplib/def_grid.cxx) (problem's geometry)
 The gird is a primary class for every simulation.
 It describes geometry of the problem, boundary conditions, and spatial-decomposition for parallel computation.
 The code uses sightly modified approach of tile-decomposition described before in [^decyk2014][^decyk2015]. The class constructor accepts following arguments:
@@ -93,7 +93,7 @@ grid = ltp.grid(**grid_cfg)
 [^decyk2015]: Decyk, V. K. (2015). _Skeleton Particle-in-Cell Codes on Emerging Computer Architectures._ In Computing in Science & Engineering (Vol. 17, Issue 2, pp. 47–52). Institute of Electrical and Electronics Engineers (IEEE).
 [DOI:10.1109/mcse.2014.131](https://doi.org/10.1109/MCSE.2014.131)
 
-### `_ltplib.pstore` (particle storage)
+### [`_ltplib.pstore`](./src/_ltplib/def_pstore.cxx) (particle storage)
 This class is used to store pVDF samples (macro-particles). The class constructor accepts following arguments:
 1. *grid* -- existing grid;
 1. *ptinfo* -- description of active components to store;
@@ -143,7 +143,7 @@ There are following useful properties:
 - `vcache.order` -- form-factor's order,
 - `vcache.cfg` -- helper to construct numpy-arrays: `numpy.array(**pstore.cfg)`.
 
-### `_ltplib.csection_set` (cross-section set)
+### [`_ltplib.csection_set`](./src/_ltplib/def_csection_set.cxx) (cross-section set)
 This class stores cross-section database for Monte-Carlo simulation.
 Input cross-sections can be defined by the function or by the points.
 In both cases they will be recalculated into cumulative rates and cached into the lookup-table on log-scaled energy-grid $\varepsilon = \varepsilon_{\rm th} + 2^{j/2-4}-0.0625,~j\in\mathbb{N}$, where $\varepsilon_{\rm th}$ is reaction's threshold. This allows to store large amount of cross-sections in a very compact way. Constructor parameters for the class are:
@@ -336,7 +336,7 @@ If it is not given, $\varepsilon_{\rm th}$ will be used instead.
 Other examples can be found in
 [`examples/csections_db`](./examples/csections_db)
 
-## `_ltplib.poisson_eq` (solver for Poisson equation)
+## [`_ltplib.poisson_eq`](./src/_ltplib/def_poisson_eq.cxx) (solver for Poisson equation)
 This class implements universal data-driven solver for Poisson equation:
 ```math
 \nabla^2 \phi\left(\vec{r}\right) = q\left(\vec{r}\right),
@@ -422,8 +422,7 @@ open-boundaries and central body with given $\phi$:
 [DOI:10.1504/ijhpcn.2014.062731](https://doi.org/10.1504/ijhpcn.2014.062731)
 
 ## Function bindings
-
-### `_ltplib.bind_ppush_fn` (motion equation solver)
+### [`_ltplib.bind_ppush_fn`](./src/_ltplib/def_ppush_funcs.cxx) (motion equation solver)
 This function binds its' arguments to motion equation solver from the backend.
 The function accepts the following arguments:
 - *pstore* --- pVDF samples;
@@ -491,7 +490,7 @@ Our implementation caches $t$-moment field contribution for the each sample, so 
 [^tajima2018-book]: Tajima, T. (2018). _Computational Plasma Physics._ CRC Press. 
 [DOI:10.1201/9780429501470](https://doi.org/10.1201/9780429501470)
 
-### `_ltplib.bind_ppost_fn` (obtain pVDF moments)
+### [`_ltplib.bind_ppost_fn`](./src/_ltplib/def_ppost_funcs.cxx) (obtain pVDF moments)
 This binding is used to calculate raw pVDF moments [^saint-raymond2009]:
 - concentration
 $n = \int_\vec{ v}f(\vec{ r},\ \vec{ v})\ {\rm d}\vec{ v}$;
@@ -515,7 +514,7 @@ Resulting functional object has following signature
 [^saint-raymond2009]: Saint-Raymond, L. (2009). _Hydrodynamic Limits of the Boltzmann Equation._ In Lecture Notes in Mathematics. Springer Berlin Heidelberg.
 [DOI:10.1007/978-3-540-92847-8](https://doi.org/10.1007/978-3-540-92847-8)
 
-### `_ltplib.bind_mcsim_fn` (collision simulation)
+### [`_ltplib.bind_mcsim_fn`](./src/_ltplib/def_mcsim_funcs.cxx) (collision simulation)
 This binding is used to perform Monte-Carlo simulation.
 The arguments are:
 - *pstore* --- pVDF samples;
