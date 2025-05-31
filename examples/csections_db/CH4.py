@@ -25,7 +25,6 @@
 	 "CSEC":(f"{fpath}/CH4/INELASTIC.txt",
 	  dict(search="CH4 -> H2+CH2^-", exterp=0)),
 	},
-
 	{"TYPE":"ROTATIONAL",   "THRESHOLD":0.0078,
 	 "CSEC":(f"{fpath}/CH4/INELASTIC.txt",
 	  dict(search="0.0078 / threshold energy", exterp=0)),
