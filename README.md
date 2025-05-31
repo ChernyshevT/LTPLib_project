@@ -40,7 +40,7 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 ## Build instructions <a name="build"></a>
 The framework uses [pybind11](https://github.com/pybind/pybind11) to create a transparent interface between Python and C++ code. Dependencies are downloaded automatically by CMake FetchContent.
 Make shure that you have python3 development files installed
-([python3-dev](https://packages.debian.org/bullseye/python3-dev) package on deb-based distros)
+([python3-dev](https://packages.debian.org/stable/python3-dev) package on deb-based distros)
 ```sh
 cmake -S src -B build && cmake --build build --target install
 ```
