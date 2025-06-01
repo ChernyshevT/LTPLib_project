@@ -1,3 +1,4 @@
+<!-- {𝐯} {𝐫} {𝐟} {𝐚} {𝐄} {𝐁} {𝐮} {𝐟} -->
 # \_ltplib: <ins>L</ins>ow <ins>T</ins>emperature <ins>P</ins>lasma <ins>Lib</ins>rary
 This is middle-layer framework that provides a simple Python solution to construct PiC+MCC simulations (Particles-in-Cells + Monte Carlo Collisions).
 The framework offers a range of functions and primitives to facilitate a broad range of low-temperature plasma kinetic problems.
@@ -358,7 +359,7 @@ Other examples can be found in
 ## [`_ltplib.poisson_eq`](./src/_ltplib/def_poisson_eq.cxx) (solver for Poisson equation) <a name="poisson_eq"></a>
 This class implements universal data-driven solver for Poisson equation:
 ```math
-\nabla^2 \phi\left(\vec{r}\right) = q\left(\vec{r}\right),
+\nabla^2 \phi\left({𝐫}\right) = q\left({𝐫}\right),
 ```
 where $\phi$ is scalar potential, $q$ is charge density.
 The solver is based on iterative SOR-method (Succesive Over-Relaxation)
@@ -459,13 +460,13 @@ This scheme is is widely known and it is *de-facto standard* in context of plasm
 In this scheme samples' coordinates and velocities are shifted by $\delta t/2$:
 ```math
 	\left\{\begin{align}
-	& \vec{ v}(t+{\delta t/2})
+	& {𝐯}(t+{\delta t/2})
 	& =
-	& \vec{ v}(t-{\delta t/2}) + \delta t\ \vec{ a}(t)
+	& {𝐯}(t-{\delta t/2}) + \delta t\ {𝐚}(t)
 	\\
-	& \vec{ r}(t+\delta t)
+	& {𝐫}(t+\delta t)
 	& =
-	& \vec{ r}(t) + \delta t\ \vec{ v}(t+{\delta t/2}).
+	& {𝐫}(t) + \delta t\ {𝐯}(t+{\delta t/2}).
 	\end{align}\right.
 ```
 The scheme is encoded by `"LEAPF"`-keyword.
@@ -480,21 +481,21 @@ This 2nd-order scheme was introduced by Borodachev and Kolomiets [^borodachev201
 Samples' coordinates and velocities are synchronous in this scheme:
 ```math
 	\left\{\begin{align}
-	& \vec{ v}(t+\delta t)
+	& {𝐯}(t+\delta t)
 	& =
-	& \vec{ v}(t)
-	+ {\delta t/2}\ \left[\vec{ a}(t) + \vec{ a}(t+\delta t)\right]
+	& {𝐯}(t)
+	+ {\delta t/2}\ \left[{𝐚}(t) + {𝐚}(t+\delta t)\right]
 	\\
-	& \vec{ r}(t+\delta t)
+	& {𝐫}(t+\delta t)
 	& =
-	& \vec{ r}(t)
-	+ {\delta t/2}\ \left[\vec{ v}(t)+\vec{ v}(t+\delta t)\right].
+	& {𝐫}(t)
+	+ {\delta t/2}\ \left[{𝐯}(t)+{𝐯}(t+\delta t)\right].
 	\end{align}\right.
 ```
-The scheme is solvable for $\vec{ v}(t+\delta t)$-term [^tajima2018-book].
-As a result, only $\vec{ E}$ & $\vec{ B}$ fields at time moment $t+\delta t$ are unknown.
+The scheme is solvable for ${𝐯}(t+\delta t)$-term [^tajima2018-book].
+As a result, only ${𝐄}$ & ${𝐁}$ fields at time moment $t+\delta t$ are unknown.
 The system can be solved as iterative predictor-corrector process.
-- Initial rough approximation (predictor step) assumes $\vec{ a}(t+\delta t) = \vec{ a}(t)$.
+- Initial rough approximation (predictor step) assumes ${𝐚}(t+\delta t) = {𝐚}(t)$.
 - Following corrector step adjusts approximation using updated field values.
 The scheme is encoded by `"IMPL0"` & `"IMPLR"` keywords.
 
@@ -512,20 +513,20 @@ Our implementation caches $t$-moment field contribution for the each sample, so 
 ### [`_ltplib.bind_ppost_fn`](./src/_ltplib/def_ppost_funcs.cxx) (obtain pVDF moments) <a name="bind_ppost"></a>
 This binding is used to calculate raw pVDF moments [^saint-raymond2009]:
 - concentration
-$n = \int_\vec{ v}f(\vec{ r},\ \vec{ v})\ {\rm d}\vec{ v}$;
+$n = \int_{𝐯}f({𝐫},\ {𝐯})\ {\rm d}{𝐯}$;
 - flux vector
-$\vec{f} = n\vec{u} =\int_\vec{ v}\vec{ v}\ f(\vec{ r},\ \vec{ v})\ {\rm d}\vec{ v}$, where $\vec{u}$ is flux velocity;
+${𝐟} = n{𝐮} =\int_{𝐯}{𝐯}\ f({𝐫},\ {𝐯})\ {\rm d}{𝐯}$, where ${𝐮}$ is flux velocity;
 - pressure/stress tensor
-${\rm p} = \int_\vec{ v}\vec{ v}\otimes\vec{ v}\ f(\vec{ r},\ \vec{v})\ {\rm d}\vec{v}$.
+${\rm p} = \int_{𝐯}{𝐯}\otimes{𝐯}\ f({𝐫},\ {𝐯})\ {\rm d}{𝐯}$.
 
 The function accepts the following arguments:
 - *pstore* --- pVDF samples;
 - *ptfluid* --- value cache for the result (`dtype="f32"`);
 - *mode* --- string describing moments to calculate:
 	- `"C"` --- concentration ($n$);
-	- `"CF"` --- concentration, flux ($\vec{f}$);
+	- `"CF"` --- concentration, flux (${𝐟}$);
 	- `"CFP"` --- concentration, flux, pressure (${\rm Tr}({\rm p})$);
-	- `"CFPS"` --- concentration, flux, pressure, stress (${\rm p}$).
+	- `"CFPS"` --- concentration, flux, pressure+stress tensor (${\rm p}$).
 
 Resulting functional object has following signature
 `() -> _ltplib.RET_ERRC`.
@@ -553,8 +554,8 @@ P = 1 - \exp\left(-n_0\vartheta\delta t\right)
 \simeq n_0\vartheta \delta t \ll 1,
 ```
 where $n_0$ is background's component concentration,
-$\vartheta = \sigma\left|\vec{v}\right|$ (differential reaction rate),
-$\sigma$ & $\left|\vec{v}\right|$ are reaction's cross-section and relative velocity.
+$\vartheta = \sigma\left|{𝐯}\right|$ (differential reaction rate),
+$\sigma$ & $\left|{𝐯}\right|$ are reaction's cross-section and relative velocity.
 The search procedure is based on null-collision (rejection-sampling) technique[^brennan1991][^elhafi2021].
 Each k-th differential reaction rate is supplemented with counter-term $\tilde{\vartheta}$ such that
 ```math
