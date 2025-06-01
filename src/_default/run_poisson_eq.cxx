@@ -61,6 +61,7 @@ f32 run_SOR_iter (poisson_eq_t<nd> & eq, f32 w) {
 			vnew = eq.get_vnew(pos);
 			vnew = w*vnew + (1.0f-w)*vold;
 			diff = fabsf(vnew - vold);
+			
 			if (isfinite(vnew)) [[likely]] {
 				verr = diff > verr ? diff : verr;
 			}
