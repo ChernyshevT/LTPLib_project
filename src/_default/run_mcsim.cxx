@@ -38,7 +38,7 @@ u32 run_mcsim
 			u32 flag{0};
 			for (u8 i{0u}; i<nd; ++i) {
 				idx[i] = u32((p0.pos[i]-node.edgel[i])/grid.step[i]);
-				flag |= ERR_CODE::OUTOFRANGE*(idx[i] >= node.shape[i]);
+				flag |= ERR_CODE::PTOUTOFRANGE*(idx[i] >= node.shape[i]);
 			}
 			if (flag) {
 				#pragma omp atomic
@@ -58,13 +58,13 @@ u32 run_mcsim
 				
 				case cltype::ERROR_ENLIMIT:
 					#pragma omp atomic
-					flags |= ERR_CODE::ENERGYMAX;
+					flags |= ERR_CODE::PTMAXENERGY;
 					
 				goto skip;
 				
-				case cltype::ERROR_PROBMAX:
+				case cltype::ERROR_PTMAXPROBABILITY:
 					#pragma omp atomic
-					flags |= ERR_CODE::PROBMAX;
+					flags |= ERR_CODE::PTMAXPROBABILITY;
 					
 				goto skip;
 				
@@ -83,7 +83,7 @@ u32 run_mcsim
 				case cltype::IONIZATIONRUN: // swapn same secondary particles
 					if (j1 == pool.npmax) {
 						#pragma omp atomic
-						flags |= ERR_CODE::OVERFLOW;
+						flags |= ERR_CODE::PTOVERFLOW;
 						
 						goto skip;
 					}

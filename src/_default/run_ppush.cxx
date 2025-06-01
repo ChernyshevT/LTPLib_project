@@ -139,7 +139,7 @@ u32 run_ppush
 			}
 		} else {
 			#pragma omp atomic
-			flags |= ERR_CODE::OVERFLOW;
+			flags |= ERR_CODE::PTOVERFLOW;
 		}
 	}
 	// end omp parallel for

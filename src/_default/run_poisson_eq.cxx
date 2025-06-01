@@ -26,8 +26,6 @@ consteval u32 red_black_seq(u32 nd) {
 
 	return seq;
 }
-//~ #define NEXT_SEQ(seq, nd)               ((seq) >> ((nd) + 1) )
-//~ #define GET_SHIFT(seq, nd, i)           (((seq) >> ((nd) - (i))) & 1)
 
 /*******************************************************************************
  * An implementation for SOR+GS method, see [Mittal(2014) S Mittal.

@@ -158,8 +158,8 @@ def main(args):
 		
 		#https://crunchingnumbers.live/2017/07/09/iterative-methods-part-2/
 		
-		for j, w in enumerate(w_chebyshev(eq.umap), 1): 
-			verr = eq.iter(1.95)
+		for j, w in enumerate(repeat(1.95), 1): 
+			verr = eq.iter(w)
 			print(f"\r#{j:06d}: {verr:e}..", end="")
 			if verr <= 1e-5 or verr != verr:
 				print(" done!")

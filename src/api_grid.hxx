@@ -213,7 +213,7 @@ public:
 				form->idx[i] \
 				= calc_form<order>(form->vals+i*(order+1), (pos[i]-edgel[i])/step[i]);
 				
-				flag |= (form->idx[i] >= shape[i])*ERR_CODE::OUTOFRANGE;
+				flag |= (form->idx[i] >= shape[i])*ERR_CODE::PTOUTOFRANGE;
 			}
 			return flag;
 		}

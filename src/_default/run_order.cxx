@@ -28,7 +28,7 @@ u32 run_order
 					dst.parts[j_dst][i] = src.parts[j_src][i];
 				} else {
 					#pragma omp atomic
-					flags |= ERR_CODE::OVERFLOW;
+					flags |= ERR_CODE::PTOVERFLOW;
 				}
 			}
 		}

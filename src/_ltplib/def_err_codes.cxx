@@ -45,20 +45,20 @@ std::string __repr__(const RET_ERRC & e) {
 		msg = fmt::format("{}{}MCSIM"
 		, msg, !msg.empty()?"|":"");
 	}
-	if (e.flags & ERR_CODE::OVERFLOW) {
-		msg = fmt::format("{}{}OVERFLOW"
+	if (e.flags & ERR_CODE::PTOVERFLOW) {
+		msg = fmt::format("{}{}PTOVERFLOW"
 		, msg, !msg.empty()?"|":"");
 	}
-	if (e.flags & ERR_CODE::OUTOFRANGE) {
-		msg = fmt::format("{}{}OUTOFRANGE"
+	if (e.flags & ERR_CODE::PTOUTOFRANGE) {
+		msg = fmt::format("{}{}PTOUTOFRANGE"
 		, msg, !msg.empty()?"|":"");
 	}
-	if (e.flags & ERR_CODE::ENERGYMAX) {
-		msg = fmt::format("{}{}ENERGYMAX"
+	if (e.flags & ERR_CODE::PTMAXENERGY) {
+		msg = fmt::format("{}{}PTMAXENERGY"
 		, msg, !msg.empty()?"|":"");
 	}
-	if (e.flags & ERR_CODE::PROBMAX) {
-		msg = fmt::format("{}{}PROBMAX"
+	if (e.flags & ERR_CODE::PTMAXPROBABILITY) {
+		msg = fmt::format("{}{}PTMAXPROBABILITY"
 		, msg, !msg.empty()?"|":"");
 	}
 	return msg;
