@@ -92,9 +92,9 @@ def main(args):
 	ltp.load_backend("default")
 	
 	lx,ly = 1.5,1.5
-	nx,ny = 192,192
+	nx,ny = 191,191
 	
-	noise_lvl = 0.1
+	noise_lvl = 1.
 	
 	shape = (nx+1,ny+1)
 	step  = [l/(k-1) for k,l in zip(shape,[lx,ly])]
@@ -114,17 +114,18 @@ def main(args):
 	# ~ umap[0, :] = U.VAL
 	# ~ umap[nx,:] = U.VAL
 	
-	umap[0, :]   = umap[0, :]   | U.XRTOPEN 
-	umap[nx,:]   = umap[nx,:]   | U.XLFOPEN
-	umap[1:nx,:] = umap[1:nx,:] | U.XCENTER
-	umap[:, 0]   = umap[:, 0]   | U.YRTOPEN
-	umap[:,ny]   = umap[:,ny]   | U.YLFOPEN
-	umap[:,1:ny] = umap[:,1:ny] | U.YCENTER
+	# ~ umap[0, :]   = umap[0, :]   | U.XRTOPEN 
+	# ~ umap[nx,:]   = umap[nx,:]   | U.XLFOPEN
+	# ~ umap[1:nx,:] = umap[1:nx,:] | U.XCENTER
+	# ~ umap[:, 0]   = umap[:, 0]   | U.YRTOPEN
+	# ~ umap[:,ny]   = umap[:,ny]   | U.YLFOPEN
+	# ~ umap[:,1:ny] = umap[:,1:ny] | U.YCENTER
+	umap[...] = U.XCENTER|U.YCENTER
 	umap[nx//2,ny//2] = U.VALUE
 	
-	r = 0.5**2
-	umap[xs**2 + ys**2 < r**2] = U.VALUE
-	_vmap[xs**2 + ys**2 < r**2] = 0
+	# ~ r = 0.5**2
+	# ~ umap[xs**2 + ys**2 < r**2] = U.VALUE
+	# ~ _vmap[xs**2 + ys**2 < r**2] = 0
 	
 	# ~ for j, w in enumerate(w_chebyshev(umap)):
 		# ~ print(j, w)
@@ -149,7 +150,7 @@ def main(args):
 	mask = eq.umap!=U.VALUE
 	eq.vmap[mask] = 0
 	
-	for k in range(25):
+	for k in range(10):
 		# SOR-iterations
 		if noise_lvl>0:
 			noise = np.random.normal(size=eq.vmap.shape, scale=noise_lvl)
@@ -158,9 +159,10 @@ def main(args):
 		#https://crunchingnumbers.live/2017/07/09/iterative-methods-part-2/
 		
 		for j, w in enumerate(w_chebyshev(eq.umap), 1): 
-			verr = eq.iter(1.15)
+			verr = eq.iter(1.95)
+			print(f"\r#{j:06d}: {verr:e}..", end="")
 			if verr <= 1e-5 or verr != verr:
-				print(f"#{j:06d}: {verr:e}, {np.sum(eq.cmap):e}")
+				print(" done!")
 				break
 			# ~ if j >= nmax:
 				# ~ print(f"#{j:06d}: {verr:e} (fail to converge!)")
@@ -193,7 +195,7 @@ def main(args):
 	
 	axs[3].set_title(r"$q_{\rm orig}=\nabla^2\psi_{\rm orig}$", loc="left")
 	show_field(axs[3], (_cmap, ext), **copts)
-	axs[4].set_title(r"$q_{\rm orig}\pm\delta q$", loc="left")
+	axs[4].set_title(r"$q_{\rm orig}\pm\delta q_{\rm noise}$", loc="left")
 	show_field(axs[4], (eq.cmap, ext), **copts)
 	axs[5].set_title(r"$\nabla^2\psi_{\rm calc}-\left(q_{\rm orig}\pm\delta q_{\rm noise}\right)$", loc="left")
 	

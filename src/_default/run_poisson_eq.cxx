@@ -6,6 +6,30 @@
 #include <math.h>
 
 /*******************************************************************************
+ * (2^nd * (nd+1))-length bit-mask to loop over the array in a red/black order
+ ******************************************************************************/
+consteval u32 red_black_seq(u32 nd) {
+	u32 seq{0u};
+
+	for (u8 i{0u}; i < (1u<<nd); i++) {
+		u32 is_odd = 0;
+		for (u8 j{0u}; j < nd; j++) {
+			is_odd += (i >> j) & 1u;
+		}
+		is_odd = is_odd%2;
+
+		u32 shift = (nd+1)*(i/2) + is_odd*(nd+1)*(1u<<(nd-1));
+		u32 value = (1u<<nd) | i;
+
+		seq = seq | (value << shift);
+	}
+
+	return seq;
+}
+//~ #define NEXT_SEQ(seq, nd)               ((seq) >> ((nd) + 1) )
+//~ #define GET_SHIFT(seq, nd, i)           (((seq) >> ((nd) - (i))) & 1)
+
+/*******************************************************************************
  * An implementation for SOR+GS method, see [Mittal(2014) S Mittal.
  * A study of successive over-relaxation method parallelisation over modern
  * HPC languages. IJHPCN. 7(4):292, 2014. doi: 10.1504/ijhpcn.2014.062731].
@@ -13,34 +37,45 @@
 template<u8 nd>
 f32 run_SOR_iter (poisson_eq_t<nd> & eq, f32 w) {
 	
-	f32 verr{0.0f}, vold, vnew;
+	f32 verr{0.0f}, verr_max{0.0f}, vold, vnew, diff;
 	
 	/* loop over red/black-units & perform SOR-step */
-	for (u8 nseq : {0,1}) {
+	for (u32 seq{red_black_seq(nd)}; seq; seq >>= nd+1) {
+		u64 _offst[nd+1];
 		
-		#pragma omp parallel for reduction(max:verr) private(vold, vnew)
-		for (u64 uid=0; uid<eq.offst[0]; ++uid) {
+		_offst[nd] = 1;
+		for (u8 i{1u}; i<=nd; ++i) {
+			_offst[nd-i] = (eq.shape[nd-i] - (1&(seq>>(nd-i))) + 1)/2;
+			_offst[nd-i] = _offst[nd-i]*_offst[nd-i+1];
+		}
+		
+		#pragma omp parallel for reduction(max:verr) private(vold, vnew, diff)
+		for (u64 _uid=0; _uid<_offst[0]; ++_uid) {
 			u32 pos[nd];
-			u32 sum{0};
-			u64 remain{uid};
+			u64 rem{_uid}, sum=0, uid=0;
 			for (u8 i{0u}; i<nd; ++i) {
-				pos[i] = (u32)(remain / eq.offst[i+1]);
-				remain = remain % eq.offst[i+1];
-				sum += pos[i];
+				pos[i] = 2*(rem/_offst[i+1]) + (1&(seq>>i));
+				rem = rem%_offst[i+1];
+				uid = uid + pos[i]*eq.offst[i+1];
+				sum = sum+pos[i];
 			}
-			if ( (u8)(sum%2) == nseq) {
-				vold = eq.vdata[uid];
-				vnew = eq.get_vnew(pos);
-				vnew = w*vnew + (1.0f-w)*vold;
-				if (isfinite(vnew)) [[likely]] {
-					verr = std::max(fabsf(vnew - vold), verr);
-				}
-				eq.vdata[uid] = vnew;
+
+			vold = eq.vdata[uid];
+			vnew = eq.get_vnew(pos);
+			vnew = w*vnew + (1.0f-w)*vold;
+			diff = fabsf(vnew - vold);
+			if (isfinite(vnew)) [[likely]] {
+				verr = std::max(diff, verr);
 			}
+			eq.vdata[uid] = vnew;
+		} /* end parallel loop */ 
+		
+		if (verr > verr_max) {
+			verr_max = verr;
 		}
 	}
 	
-	return verr;
+	return verr_max;
 }
 
 #include "run_poisson_eq_fns.cxx"

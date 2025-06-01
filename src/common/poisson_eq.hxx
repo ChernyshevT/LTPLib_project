@@ -35,7 +35,11 @@ struct poisson_eq_t {
 		/* check the unit to perfornm the action **********************************/
 		u8 ucode{umap[idpt]};
 		switch CHECK_UNIT(ucode) {
-			
+
+			default:
+				vnew = NAN;
+				break;
+
 			case SETVALUE:
 				vnew = vdata[idpt];
 				break;
@@ -56,10 +60,6 @@ struct poisson_eq_t {
 					cfft += 2*dstep[j];
 				}
 				vnew = (vnew-cdata[idpt])/cfft;
-				break;
-				
-			default:
-				vnew = NAN;
 				break;
 		}
 		return vnew;

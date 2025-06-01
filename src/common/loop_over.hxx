@@ -1,5 +1,4 @@
-#ifndef _LOOP_OVER_HEADER
-#define _LOOP_OVER_HEADER
+#pragma once
 
 //@LISTING{start:loop_over_form}
 template<u8 len, u8 nd, u8 md=0, typename func>
@@ -61,6 +60,3 @@ void loop_over_bound
 	size_t idx[nd];
 	loop_over_edges<nd>(fn, ax, ng, offst, shape, idx);
 }
-
-
-#endif

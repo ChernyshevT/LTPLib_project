@@ -245,7 +245,8 @@ void def_csections(py::module &m) {
 			}
 		}
 		return progs_repr;
-	}, "configuration sequence")
+	}, "configuration sequence"
+	, py::keep_alive<0, 1>())
 	
 	.def("__len__", [] (const csection_set_holder& self) {
 		return self.cfg->ncsect;
@@ -291,11 +292,13 @@ void def_csections(py::module &m) {
 	
 	.def_property_readonly("rate_fn", [] (const db_entry_t& self) -> csfunc_t {
 		return self.fns.at("C_RATE");
-	}, "function for energy-depended cumulative rate")
+	}, "function for energy-depended cumulative rate"
+	, py::keep_alive<0, 1>())
 	
 	.def_property_readonly("csec_fn", [] (const db_entry_t& self) -> csfunc_t {
 		return self.fns.at("CS0");
-	}, "function for cross-section")
+	}, "function for cross-section"
+	, py::keep_alive<0, 1>())
 	
 	.def_property_readonly("mtcs_fn",
 	[] (const db_entry_t& self) -> std::optional<csfunc_t> {
@@ -304,7 +307,8 @@ void def_csections(py::module &m) {
 		} else {
 			return std::nullopt;
 		}
-	}, "function for momentum-transfer cross-section (or None)")
+	}, "function for momentum-transfer cross-section (or None)"
+	, py::keep_alive<0, 1>())
 	
 	.def ("__getattr__",
 	[] (const db_entry_t& self, py::str key) -> std::optional<py::object> {
@@ -313,7 +317,7 @@ void def_csections(py::module &m) {
 		} else {
 			return std::nullopt;
 		}
-	})
+	}, py::keep_alive<0, 1>())
 	
 	/* end database entry class */;
 }
