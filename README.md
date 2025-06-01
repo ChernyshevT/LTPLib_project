@@ -1,4 +1,4 @@
-_[dodument version: 20250601]_
+_[document version: 20250601a]_
 <!-- {𝐯} {𝐫} {𝐟} {𝐚} {𝐄} {𝐁} {𝐮} -->
 # \_ltplib: <ins>L</ins>ow <ins>T</ins>emperature <ins>P</ins>lasma <ins>Lib</ins>rary
 This is middle-layer framework that provides a simple Python solution to construct PiC+MCC simulations (Particles-in-Cells + Monte Carlo Collisions).
