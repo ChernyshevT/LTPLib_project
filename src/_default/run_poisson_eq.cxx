@@ -50,14 +50,13 @@ f32 run_SOR_iter (poisson_eq_t<nd> & eq, f32 w) {
 		}
 		
 		#pragma omp parallel for reduction(max:verr) private(vold, vnew, diff)
-		for (u64 _uid=0; _uid<_offst[0]; ++_uid) {
+		for (u64 k=0; k<_offst[0]; ++k) {
 			u32 pos[nd];
-			u64 rem{_uid}, sum=0, uid=0;
+			u64 rem{k}, uid{0};
 			for (u8 i{0u}; i<nd; ++i) {
 				pos[i] = 2*(rem/_offst[i+1]) + (1&(seq>>i));
-				rem = rem%_offst[i+1];
 				uid = uid + pos[i]*eq.offst[i+1];
-				sum = sum+pos[i];
+				rem = rem%_offst[i+1];
 			}
 
 			vold = eq.vdata[uid];

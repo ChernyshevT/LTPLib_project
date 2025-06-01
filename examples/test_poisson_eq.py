@@ -114,18 +114,18 @@ def main(args):
 	# ~ umap[0, :] = U.VAL
 	# ~ umap[nx,:] = U.VAL
 	
-	# ~ umap[0, :]   = umap[0, :]   | U.XRTOPEN 
-	# ~ umap[nx,:]   = umap[nx,:]   | U.XLFOPEN
-	# ~ umap[1:nx,:] = umap[1:nx,:] | U.XCENTER
-	# ~ umap[:, 0]   = umap[:, 0]   | U.YRTOPEN
-	# ~ umap[:,ny]   = umap[:,ny]   | U.YLFOPEN
-	# ~ umap[:,1:ny] = umap[:,1:ny] | U.YCENTER
-	umap[...] = U.XCENTER|U.YCENTER
-	umap[nx//2,ny//2] = U.VALUE
+	umap[0, :]   = umap[0, :]   | U.XRTOPEN 
+	umap[nx,:]   = umap[nx,:]   | U.XLFOPEN
+	umap[1:nx,:] = umap[1:nx,:] | U.XCENTER
+	umap[:, 0]   = umap[:, 0]   | U.YRTOPEN
+	umap[:,ny]   = umap[:,ny]   | U.YLFOPEN
+	umap[:,1:ny] = umap[:,1:ny] | U.YCENTER
+	# ~ umap[...] = U.XCENTER|U.YCENTER
+	# ~ umap[nx//2,ny//2] = U.VALUE
 	
-	# ~ r = 0.5**2
-	# ~ umap[xs**2 + ys**2 < r**2] = U.VALUE
-	# ~ _vmap[xs**2 + ys**2 < r**2] = 0
+	r = 0.5**2
+	umap[xs**2 + ys**2 < r**2] = U.VALUE
+	_vmap[xs**2 + ys**2 < r**2] = 0
 	
 	# ~ for j, w in enumerate(w_chebyshev(umap)):
 		# ~ print(j, w)
