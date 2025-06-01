@@ -35,7 +35,7 @@ consteval u32 red_black_seq(u32 nd) {
 template<u8 nd>
 f32 run_SOR_iter (poisson_eq_t<nd> & eq, f32 w) {
 	
-	f32 verr{0.0f}, verr_max{0.0f}, vold, vnew, diff;
+	f32 verr{0.0f}, vold, vnew, diff;
 	
 	/* loop over red/black-units & perform SOR-step */
 	for (u32 seq{red_black_seq(nd)}; seq; seq >>= nd+1) {
@@ -62,17 +62,14 @@ f32 run_SOR_iter (poisson_eq_t<nd> & eq, f32 w) {
 			vnew = w*vnew + (1.0f-w)*vold;
 			diff = fabsf(vnew - vold);
 			if (isfinite(vnew)) [[likely]] {
-				verr = std::max(diff, verr);
+				verr = diff > verr ? diff : verr;
 			}
 			eq.vdata[uid] = vnew;
 		} /* end parallel loop */ 
 		
-		if (verr > verr_max) {
-			verr_max = verr;
-		}
 	}
 	
-	return verr_max;
+	return verr;
 }
 
 #include "run_poisson_eq_fns.cxx"
