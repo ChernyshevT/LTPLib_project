@@ -1,5 +1,9 @@
 _[document version: 20250615]_
 <!-- {𝐯} {𝐫} {𝐟} {𝐚} {𝐄} {𝐁} {𝐮} -->
+> [!NOTE]
+> The project is still under active development, so changes and midifications are possible.
+> Some features are missing, some features are not tested properly, yet.
+
 # \_ltplib: <ins>L</ins>ow <ins>T</ins>emperature <ins>P</ins>lasma <ins>Lib</ins>rary
 This is middle-layer framework that provides a simple Python solution to construct PiC+MCC simulations (Particles-in-Cells + Monte Carlo Collisions).
 The framework offers a range of functions and primitives to facilitate a broad range of low-temperature plasma kinetic problems.

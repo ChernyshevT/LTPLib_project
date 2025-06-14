@@ -61,21 +61,19 @@ def gen_distro(grid, npunit, **conf):
 def main(args, logger):
 	ltp.load_backend("default");
 	
-	# Ke=250 eV, Ti=Te=0.25 eV (H+)
-	
+	# problem's presets:
+	ME, MP   = 9.109383e-28, 1.6605402e-24
 	ECHARGE  = 4.803204e-10
 	M_4PI_E  = 6.035884e-09
-	VEPSILON = 1e-5
 	
-	ME = 9.109383e-28
-	MP = 1.6605402e-24
+
 	E0 = 250
 	T0 = 0.25
 	
 	V0 = np.sqrt(E0 *ECHARGE/150./ME)
 	VE = np.sqrt(T0 *ECHARGE/150./ME)
 	VI = np.sqrt(T0 *ECHARGE/150./MP)
-	print(f"{V0=:e}")
+
 
 	# the problem's base geometry:
 	# ~ nx,mx = 96,  8
@@ -99,6 +97,8 @@ def main(args, logger):
 			logger.info(msg)
 		else:
 			logger.warning(msg)
+	tframe = args.dt*args.nsub*1e9
+	logger.info(f"tframe = {tframe:07.3f} ns")
 	
 	##############################################################################
 	# declare grid
@@ -112,8 +112,8 @@ def main(args, logger):
 	# declare particle storage
 	pstore = ltp.pstore(grid
 	, ptinfo = [
-	 {"KEY":"e-", "CHARGE/MASS": -5.272810e+17},
-	 {"KEY":"H+", "CHARGE/MASS": +2.892555e+14},
+	 {"KEY":"e-", "CHARGE/MASS": -ECHARGE/ME},
+	 {"KEY":"H+", "CHARGE/MASS": +ECHARGE/MP},
 	]
 	, npmax = int(mx*my*args.npunit*(2+args.extra))
 	, nargs = 1 + (grid.ndim+3)*2) # extra memory for implicit solver
@@ -125,7 +125,7 @@ def main(args, logger):
 	emfield = ltp.vcache (grid
 	, dtype = "f32"
 	, order = args.order
-	, vsize = 2) #ExEy
+	, vsize = 2) # Ex Ey
 	g_emfield = np.zeros (**emfield.cfg)
 	
 	##############################################################################
@@ -190,63 +190,70 @@ def main(args, logger):
 		
 	##############################################################################
 	# now, let's generate samples to inject
-	if not fpath := args.load:
+	if not (fpath := args.load):
 		nppin = nx*ny*args.npunit 
 		pdata = np.empty([nppin, 2+3], dtype=np.float32)
-		# positions
+		# generate positions
 		pdata[:,0] = np.random.uniform(0, nx*dx, size=nppin)
 		pdata[:,1] = np.random.uniform(0, ny*dy, size=nppin)
 		
-		# moving electrons
+		#  generate electron velocities
 		pdata[:,2:] = np.random.normal(0, VE, size=[nppin,3])
 		pdata[:nppin//2,2] += V0
 		pdata[nppin//2:,2] -= V0
+		# inject electrons
 		pstore.inject({"e-": pdata})
 		
 		if args.wions: # cold ion background
+			# generate ion velocities
 			pdata[:,2:] = np.random.normal(0, VI, size=[nppin,3])
+			# inject ions
 			pstore.inject({"H+": pdata})
+		
 		logger.info(f"{len(pstore)} samples created")
 		
 		if fpath := args.save:
-			fname = f"{fpath}/init-pdata.zip"
-			pdata, pindex, = pstore.extract()
-			save_frame(fname, "w"
-			, **{"pdata":pdata, "pindex":pindex, "pdescr":pstore.ptlist})
+			fname = f"{fpath}/pdata-init.zip"
+			data, index, = pstore.extract()
+			save_frame(fname, "w", **{
+			 "data"  : data,
+			 "index" : index,
+			 "descr" : pstore.ptlist,
+			})
 	
-	else: # inject the result of previous calculation
-		f = load_frame(fpath)
-		for key,a,b in zip(f.pdescr, f.pindex, f.pindex[1:]):
-			pstore.inject({key: f.pdata[a:b]})
+	else: # inject existing distro
+		pdata = load_frame(fpath)
+		for key,a,b in zip(f.descr, f.index, f.index[1:]):
+			pstore.inject({key: f.data[a:b]})
 		logger.info(f"loaded \"{fpath}\" ({len(pstore)} samples injected)")
 
 	##############################################################################
 	# run initial step
 	run_ppost_step()
 	run_field_step()
-	
-	# arrays to collect frame-data
-	f_ptfluid = np.zeros_like(g_ptfluid)
-	f_vmap = np.zeros_like(eq.vmap)
-	verrs = np.zeros([args.nsub, args.nrep+1], dtype=np.float32)
-	
+
 	##############################################################################
+	# define arrays to collect frame-data
+	frame_ptfluid = np.zeros_like(g_ptfluid)
+	frame_vplasma = np.zeros_like(eq.vmap)
+	frame_verrs   = np.zeros([args.nsub, args.nrep+1], dtype=np.float32)
+	
 	if args.run == False or not (args.run or input(f"run? [y] ") == "y"):
 		exit(0)
-	
+	else:
+		logger.info("start calculation")
 	# now, run main cycle
-	logger.info("start calculation")
 	for irun in range(1, args.nrun+1):
 		#iclc, tclc = 0, time.time()
 		# start new frame [t --> t + args.dt*args.nsub] & clear data
-		tframe = args.dt*args.nsub*1e9
+		
 		
 		# refresh arrays to save
-		f_ptfluid[...] = g_ptfluid
-		f_vmap[...] = eq.vmap
-		verrs[...] = np.nan
+		frame_ptfluid[...] = g_ptfluid
+		frame_vplasma[...] = eq.vmap
+		frame_verrs  [...] = np.nan
 		
-		logger.info(f"start frame#{irun:06d} ({tframe*(irun-1):07.3f} -> {tframe*irun:07.3f}ns)..")
+		logger.info(f"start frame#{irun:06d} ({tframe*(irun-1):07.3f} -> {tframe*irun:07.3f} ns)..")
 		for isub in range(1, args.nsub+1):
 			
 			# run sub-cycle for implicit solver
@@ -256,47 +263,41 @@ def main(args, logger):
 				# obtain density & flows
 				run_ppost_step()
 				# recalculate field
-				verr = run_field_step(); verrs[isub-1, irep] = verr
+				verr = run_field_step(); frame_verrs[isub-1, irep] = verr
 				
 				logger.debug\
-				(f"{' 'if irep else '*'}{irun:06d}/{isub:04d}/{irep:02d} verr={verr*300:6.3e} V")
+				(f"{' 'if irep else ':'}{irun:06d}/{isub:04d}/{irep:02d} verr={verr*300:6.3e} V")
+				
 				if irep and verr < VEPSILON:
 					break
 			
 			#end implicit run, collect avg. data
-			f_ptfluid[...] += g_ptfluid
-			f_vmap[...]    += eq.vmap
+			frame_ptfluid[...] += g_ptfluid
+			frame_vplasma[...] += eq.vmap
 		
 		logger.info(f"end frame ({len(pstore):} samples)")
 		
-		# write frame
-		if fpath := args.save:
+		# save frame
+		if (fpath := args.save):
+			save_frame(f"{fpath}/frame{irun:06d}.zip", "w", **{
+			 "args"   : vars(args),
+			 "step"   : [dx, dy],
+			 "units"  : [nx, ny],
+			 "tindex" : [(irun-1)*args.nsub, irun*args.nsub],
+			 "vmap"   : frame_vplasma/(args.nsub+1),
+			 "ne"     : frame_ptfluid[..., 0]/(args.nsub+1),
+			 **({"ni" : frame_ptfluid[..., 1]/(args.nsub+1)} if args.wions else {}),
+			 **({"verrs" : fame_verrs} if args.nrep else {}),
+			})
 		
-			fname = f"{fpath}/frame{irun:06d}.zip"
-			frame = {
-				"args"
-				"order" : args.order,
-				"tstep" : args.dt,
-				"step"  : [dx, dy],
-				"units" : [nx, ny],
-				"tindex": [(irun-1)*args.nsub, irun*args.nsub],
-				"vmap"  : np.pad(f_vmap, [(args.order,0), (args.order,0)], mode="wrap")/(args.nsub+1),
-				"ne"    : f_ptfluid[..., 0]/(args.nsub+1),
-			}
-			if args.wions:
-				frame = frame | {"ni" : f_ptfluid[..., 1]/(args.nsub+1)}
-			if args.nrep > 0:
-				frame = frame | {"verrs" : verrs}
-			save_frame(fname, "a", **frame)
-			
-			if args.dump and args.dump[1] == irun:
-				args.dump[1] = next(args.dump[0], None)
-				
-				pdata, pindex, = pstore.extract()
-				
-				fname = f"{fpath}/frame{irun:06d}.zip"
-				save_frame(fname, "a"
-				, **{"pdata":pdata, "pindex":pindex, "pdescr":pstore.ptlist})
+		# save samples' dump
+		if (fpath := args.save) and irun in args.dump:
+			data, index, = pstore.extract()
+			save_frame(f"{fpath}/pdata{irun:06d}.zip", "w", **{
+			 "data"  : data,
+			 "index" : index,
+			 "descr" : pstore.ptlist,
+			})
 			
 			
 
@@ -323,7 +324,8 @@ args = {
 	},
 	"--dump"     : {
 		"required" : False,
-		"type"     : lambda arg: [it:=map(int, arg.split(",")), next(it, None)],
+		"default"  : [],
+		"type"     : lambda arg: [*map(int, arg.split(","))],
 		"help"     : "frame no. to start writing pVDF dumps and"
 	},
 	"--load"     : {
@@ -334,7 +336,7 @@ args = {
 	"--order"    : {
 		"type"     : int,
 		"default"  : 1,
-		"help"     : "order of form-factor (1=LINEAR/2=QUAD/3=CUBE)"
+		"help"     : "form-factor's order (1=LINEAR/2=QUAD/3=CUBE)"
 	},
 	"--npunit"   : {
 		"help"     : "number of samples per cell",
@@ -363,13 +365,13 @@ args = {
 	},
 	"--nsub": {
 		"type": int,
-		"default": 10, #2
+		"default": 20, #2
 		"help": "number of sub-steps per frame (t->t+dt)"
 	},
 	"--nrep": {
 		"type": int,
 		"default": 0,
-		"help": "0: explicit, >=1: implicit (number of corrector runs)"
+		"help": "number of corrector runs (0 for explicit, >=1 for implicit)"
 	},
 }
 ################################################################################
