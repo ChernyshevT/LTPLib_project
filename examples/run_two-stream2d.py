@@ -341,7 +341,7 @@ args = {
 	"--npunit"   : {
 		"help"     : "number of samples per cell",
 		"type"     : int,
-		"default"  : 250, #1
+		"default"  : 256, #1
 	},
 	"--wions"    : {
 		"action"   : argparse.BooleanOptionalAction,
@@ -360,12 +360,12 @@ args = {
 	},
 	"--nrun": {
 		"type": int,
-		"default": 100, # 1
+		"default": 500, # 1
 		"help": "number of frames to calculate (t->t+dt*nsub)"
 	},
 	"--nsub": {
 		"type": int,
-		"default": 20, #2
+		"default": 10, #2
 		"help": "number of sub-steps per frame (t->t+dt)"
 	},
 	"--nrep": {
