@@ -189,14 +189,8 @@ def main(args, logger):
 	
 		
 	##############################################################################
-	# now, we will inject the result of previous calculation
-	if fpath := args.load:
-		f = load_frame(fpath)
-		for key,a,b in zip(f.pdescr, f.pindex, f.pindex[1:]):
-			pstore.inject({key: f.pdata[a:b]})
-		logger.info(f"loaded \"{fpath}\" ({len(pstore)} samples injected)")
-
-	else: # or let's generate samples to inject
+	# now, let's generate samples to inject
+	if not fpath := args.load:
 		nppin = nx*ny*args.npunit 
 		pdata = np.empty([nppin, 2+3], dtype=np.float32)
 		# positions
@@ -219,14 +213,17 @@ def main(args, logger):
 			pdata, pindex, = pstore.extract()
 			save_frame(fname, "w"
 			, **{"pdata":pdata, "pindex":pindex, "pdescr":pstore.ptlist})
-			
 	
+	else: # inject the result of previous calculation
+		f = load_frame(fpath)
+		for key,a,b in zip(f.pdescr, f.pindex, f.pindex[1:]):
+			pstore.inject({key: f.pdata[a:b]})
+		logger.info(f"loaded \"{fpath}\" ({len(pstore)} samples injected)")
+
 	##############################################################################
 	# run initial step
 	run_ppost_step()
 	run_field_step()
-	
-	print(f"{np.mean(g_ptfluid[...,0]):e}")
 	
 	# arrays to collect frame-data
 	f_ptfluid = np.zeros_like(g_ptfluid)
@@ -277,6 +274,7 @@ def main(args, logger):
 		
 			fname = f"{fpath}/frame{irun:06d}.zip"
 			frame = {
+				"args"
 				"order" : args.order,
 				"tstep" : args.dt,
 				"step"  : [dx, dy],
@@ -287,18 +285,20 @@ def main(args, logger):
 			}
 			if args.wions:
 				frame = frame | {"ni" : f_ptfluid[..., 1]/(args.nsub+1)}
-				
 			if args.nrep > 0:
 				frame = frame | {"verrs" : verrs}
-				
+			save_frame(fname, "a", **frame)
+			
 			if args.dump and args.dump[1] == irun:
 				args.dump[1] = next(args.dump[0], None)
 				
 				pdata, pindex, = pstore.extract()
-				frame = \
-				frame | {"pdata":pdata, "pindex":pindex, "pdescr":pstore.ptlist}
+				
+				fname = f"{fpath}/frame{irun:06d}.zip"
+				save_frame(fname, "a"
+				, **{"pdata":pdata, "pindex":pindex, "pdescr":pstore.ptlist})
 			
-			save_frame(fname, "a", **frame)
+			
 
 ################################################################################
 args = {

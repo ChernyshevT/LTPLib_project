@@ -1,4 +1,4 @@
-_[document version: 20250606]_
+_[document version: 20250615]_
 <!-- {𝐯} {𝐫} {𝐟} {𝐚} {𝐄} {𝐁} {𝐮} -->
 # \_ltplib: <ins>L</ins>ow <ins>T</ins>emperature <ins>P</ins>lasma <ins>Lib</ins>rary
 This is middle-layer framework that provides a simple Python solution to construct PiC+MCC simulations (Particles-in-Cells + Monte Carlo Collisions).
@@ -24,8 +24,8 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 [DOI:10.1088/1361-6595/ac4179](https://doi.org/10.1088/1361-6595/ac4179)
 
 ## Table of contents
-1. [Brief introduction into PiC+MCC](#intro)
 1. [Build instructions](#build)
+1. [Brief introduction into PiC+MCC](#intro)
 1. [Main classes](#classes)
 	1. [`_ltplib.grid`](#grid)
 	1. [`_ltplib.pstore`](#pstore)
@@ -39,9 +39,6 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 	1. [`_ltplib.bind_remap_fn`](#bind_remap)
 1. [Code examples](#code_examples)
 	1. [`examples/run_localsim.py`](#run_localsim)
-	
-## Brief introduction into PiC+MCC <a name="intro"></a>
-(To be done...)
 
 ## Build instructions <a name="build"></a>
 The framework uses [pybind11](https://github.com/pybind/pybind11) to create a transparent interface between Python and C++ code. Dependencies are downloaded automatically by CMake FetchContent.
@@ -62,6 +59,9 @@ Build-in documentation is available as follows:
 import _ltplib as ltp
 help(ltp)
 ```
+## Brief introduction into PiC+MCC <a name="intro"></a>
+(To be done...)
+
 The following sections provide a brief overview for **\_ltplib** components.
 
 ## Main classes <a name="classes"></a>
@@ -72,7 +72,7 @@ The code uses sightly modified approach of tile-decomposition described before i
 1. *nd* -- number of spatial dimensions;
 1. *step* -- list containing spatial steps along the each axis;
 1. *axes* -- list describing spatial decomposition along the each axis;
-1. *nodes* -- list containing mapping for computing nodes.
+1. *nodes* -- list containing tuples to map for computing nodes.
 
 The next example shows how `_ltplib.grid` can be constructed:
 ```python
