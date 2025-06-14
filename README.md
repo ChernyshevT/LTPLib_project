@@ -24,6 +24,7 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 [DOI:10.1088/1361-6595/ac4179](https://doi.org/10.1088/1361-6595/ac4179)
 
 ## Table of contents
+1. [Brief introduction into PiC+MCC](#intro)
 1. [Build instructions](#build)
 1. [Main classes](#classes)
 	1. [`_ltplib.grid`](#grid)
@@ -40,6 +41,7 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 	1. [`examples/run_localsim.py`](#run_localsim)
 	
 ## Brief introduction into PiC+MCC <a name="intro"></a>
+(To be done...)
 
 ## Build instructions <a name="build"></a>
 The framework uses [pybind11](https://github.com/pybind/pybind11) to create a transparent interface between Python and C++ code. Dependencies are downloaded automatically by CMake FetchContent.
