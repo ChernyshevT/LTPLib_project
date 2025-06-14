@@ -50,10 +50,10 @@ u32 run_ppush
 
 		////////////////////////////////////////////////////////////////////////////
 		// loop over particles
-		for (size_t j{0}; j<pool.index[0]; ++j) {
+		for (u32 j{0}; j<pool.index[0]; ++j) {
 
 			struct {
-				part_t data[1 + (nd+3)*2];
+				part_t data[nbuff];
 				u8  *tag =  data[0].tag;
 				f32 *pos = &data[1].vec;
 			} p;
@@ -74,7 +74,7 @@ u32 run_ppush
 			
 			/* check for absorbers (if present) */
 			if constexpr (mode < PUSH_MODE::IMPLR) {
-				if (node.check_mask(form.idx)) {
+				if (node.check_mask(form.idx)) [[unlikely]] {
 					pool.flags[nh*2+1] = j;
 					pool.flags[nh*2+2] = 0;
 					++nh;
@@ -93,7 +93,13 @@ u32 run_ppush
 
 			// push particle (t -> t+dt)
 			push_pt<nd, mode, cylcrd>(p.pos, fpt, dt);
-
+			
+			//HACK HACK HACK!!!
+			//~ if (p.pos[0] < 0.0f) {
+				//~ p.pos[0]  = -p.pos[0];  //x
+				//~ p.pos[nd] = -p.pos[nd]; //vx
+			//~ }
+			
 			// find the direction
 			if (u8 idir{node.find_idir(p.pos, mode>0 ? p.pos+nd+3 : nullptr)}) {
 				pool.flags[nh*2+1] = j;

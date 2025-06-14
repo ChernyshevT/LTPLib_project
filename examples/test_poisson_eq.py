@@ -91,10 +91,10 @@ def main(args):
 	
 	ltp.load_backend("default")
 	
-	lx,ly = 1.5,1.5
-	nx,ny = 191,191
+	lx,ly = 1.5,3
+	nx,ny = 191,383
 	
-	noise_lvl = 1.
+	# ~ noise_lvl = 0.25
 	
 	shape = (nx+1,ny+1)
 	step  = [l/(k-1) for k,l in zip(shape,[lx,ly])]
@@ -114,18 +114,18 @@ def main(args):
 	# ~ umap[0, :] = U.VAL
 	# ~ umap[nx,:] = U.VAL
 	
-	umap[0, :]   = umap[0, :]   | U.XRTOPEN 
-	umap[nx,:]   = umap[nx,:]   | U.XLFOPEN
-	umap[1:nx,:] = umap[1:nx,:] | U.XCENTER
-	umap[:, 0]   = umap[:, 0]   | U.YRTOPEN
-	umap[:,ny]   = umap[:,ny]   | U.YLFOPEN
-	umap[:,1:ny] = umap[:,1:ny] | U.YCENTER
-	# ~ umap[...] = U.XCENTER|U.YCENTER
-	# ~ umap[nx//2,ny//2] = U.VALUE
+	# ~ umap[0, :]   = umap[0, :]   | U.XRTOPEN 
+	# ~ umap[nx,:]   = umap[nx,:]   | U.XLFOPEN
+	# ~ umap[1:nx,:] = umap[1:nx,:] | U.XCENTER
+	# ~ umap[:, 0]   = umap[:, 0]   | U.YRTOPEN
+	# ~ umap[:,ny]   = umap[:,ny]   | U.YLFOPEN
+	# ~ umap[:,1:ny] = umap[:,1:ny] | U.YCENTER
+	umap.flat[1:] = U.XCENTER|U.YCENTER
+	umap.flat[0 ] = U.VALUE
 	
-	r = 0.5**2
-	umap[xs**2 + ys**2 < r**2] = U.VALUE
-	_vmap[xs**2 + ys**2 < r**2] = 0
+	# ~ r = 0.5**2
+	# ~ umap[xs**2 + ys**2 < r**2] = U.VALUE
+	# ~ _vmap[xs**2 + ys**2 < r**2] = 0
 	
 	# ~ for j, w in enumerate(w_chebyshev(umap)):
 		# ~ print(j, w)
@@ -160,14 +160,9 @@ def main(args):
 		
 		for j, w in enumerate(repeat(1.975), 1): 
 			verr = eq.iter(w)
-			print(f"\r#{j:06d}: {verr:e}..", end="")
 			if verr <= 1e-5 or verr != verr:
-				print(" done!")
+				print(f"#{j:06d}: {verr:e}")
 				break
-			# ~ if j >= nmax:
-				# ~ print(f"#{j:06d}: {verr:e} (fail to converge!)")
-				# ~ break
-		pass
 	
 	#calculate corresponding charge-density:
 	cmap = laplace(eq.vmap, step)
@@ -183,7 +178,6 @@ def main(args):
 	vopts = {"vmin":-vlim,"vmax":+vlim,"cmap":"jet"} 
 	copts = {"vmin":-clim,"vmax":+clim,"cmap":"seismic"}
 	
-	
 	ext = (-lx/2,lx/2,-ly/2,ly/2)
 	axs[0].set_title(r"$\psi_{\rm orig}$", loc="left")
 	show_field(axs[0], (_vmap, ext), **vopts)
@@ -191,7 +185,6 @@ def main(args):
 	show_field(axs[1], (eq.vmap, ext), **vopts)
 	axs[2].set_title(r"$\psi_{\rm calc}-\psi_{\rm orig}$", loc="left")
 	show_field(axs[2], (eq.vmap-_vmap, ext), **vopts)
-	
 	
 	axs[3].set_title(r"$q_{\rm orig}=\nabla^2\psi_{\rm orig}$", loc="left")
 	show_field(axs[3], (_cmap, ext), **copts)

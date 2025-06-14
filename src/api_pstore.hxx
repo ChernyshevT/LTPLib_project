@@ -52,19 +52,20 @@ struct pool_t {
 };
 ////////////////////////////////////////////////////////////////////////////////
 struct pstore_t {
-	part_t *ppdata;
-	u32 *pindex;
-	u32 *pflags;
-	f32 *cffts;
+	part_t *ppdata; /* particle data [{tag[4], x,y,z,vx,vy,vz,extra}...] */
+	u32    *pindex; /* [num parts, {num leaving}...] */
+	u32    *pflags; /* [num holes, {p-ids}...] */
+	u32    *queue;  /* load balance */
+	f32    *cffts;  /* charge-to-mass ratios */
 
 	size_t npmax, nargs;
-	//~ u32 nsamples;
 
 	struct {
 		u8 ongpu :1;
 		u8 fcache:3;
 		u8 ntypes:4;
 		u8 idshift;
+		u8 mode;
 	} opts;
 	
 	//~ size_t count_samples (void) {

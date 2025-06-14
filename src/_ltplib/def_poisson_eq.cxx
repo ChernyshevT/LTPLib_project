@@ -69,6 +69,7 @@ struct poisson_eq_holder {
 			logger::debug("construct poisson_eq{} ({})", nd, (void*)(&eq));
 			
 			eq.offst[nd] = 1;
+			//~ u64 nnodes{1};
 			for (u8 i{0u}; i<nd; ++i) {
 				eq.shape[nd-i-1] = _umap.request().shape[nd-i-1];
 				eq.offst[nd-i-1] = eq.offst[nd-i]*eq.shape[nd-i-1];

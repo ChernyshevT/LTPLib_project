@@ -45,12 +45,12 @@ template<u8 nd> inject_fn_t construct_inject_fn
 	};
 }
 
-	template<u8 nd> extract_fn_t construct_extract_fn
+template<u8 nd> extract_fn_t construct_extract_fn
 (const pstore_holder& self, const grid_t<nd>& grid) {
 	
 	return [&] (void) -> std::tuple<parts_output_t, std::vector<size_t>> {
 		
-		// run #1 count particles
+		// run #1 count particles [TODO: into separate fn!]
 		std::vector<size_t> counter(self.opts.ntypes+2, 0);
 		
 		for (u32 k{0}; k<grid.size; ++k) {
@@ -62,13 +62,18 @@ template<u8 nd> inject_fn_t construct_inject_fn
 			}
 		}
 		for (u32 i{0}; i<self.opts.ntypes; ++i) {
-			counter[2+i] += counter[i];
+			counter[2+i] += counter[1+i];
 		}
 		
-		std::vector<py::size_t> shape(2);
+		
+		std::vector<py::ssize_t> shape(2);
 		shape[0] = counter[self.opts.ntypes+1];
 		shape[1] = nd+3;
-		// run #2 copy  particles
+		
+		//~ py::print("counter", counter);
+		//~ py::print("shape", shape);
+		
+		// run #2 copy  particles [TODO: into separate fn!]
 		parts_output_t output(std::move(shape));
 		auto pts{output.mutable_unchecked<2>()};
 		
@@ -85,6 +90,11 @@ template<u8 nd> inject_fn_t construct_inject_fn
 			}
 		}
 		counter.resize(self.opts.ntypes+1);
+		
+		//~ py::print("counter", counter);
+		//~ py::print("output", output);
+		
+		//~ exit(1);
 		
 		return {std::move(output), std::move(counter)};
 	};
@@ -110,8 +120,8 @@ template<u8 nd> reset_fn_t construct_reset_fn
 pstore_cfg::pstore_cfg
 ( const grid_holder       *gridp
 , std::vector<py::dict>    ptinfo_i
-, u32                 npmax_i
-, u8                  nargs_i
+, u32                      npmax_i
+, u8                       nargs_i
 , py::dict
 ) {
 
@@ -161,6 +171,7 @@ struct pstore_ctor {
 		
 		holder.m.pindex_h
 		.req(&pstore.pindex, holder.cfg->pindex_sz)
+		.req(&pstore.queue,  holder.cfg->npools)
 		.alloc();
 
 		holder.m.pflags_h
@@ -172,7 +183,7 @@ struct pstore_ctor {
 		pstore.opts.ntypes  = holder.cfg->ntype;
 		pstore.opts.idshift = holder.cfg->idxsh;
 		pstore.opts.ongpu   = 0;
-	
+		pstore.opts.mode    = 0;
 	}
 
 	template <u8 nd, u8 md=1 + (nd==1? 3 : nd==2? 9 : 27)>
@@ -186,6 +197,10 @@ struct pstore_ctor {
 		for (auto i{0u}; i<holder.cfg->ntype; ++i) {
 			pstore.cffts[i] = holder.cfg->cffts[i];
 		}
+		for (auto i{0u}; i<holder.cfg->npools; ++i) {
+			pstore.queue[i] = i;
+		}
+		
 
 		holder.inject_fn  = construct_inject_fn  (holder, grid);
 		holder.extract_fn = construct_extract_fn (holder, grid);
@@ -200,16 +215,6 @@ struct pstore_ctor {
 		};
 		
 		holder.reset_fn();
-		
-		//~ holder.reset_fn = [&] (void) -> void {
-			//~ //corrupted size vs. prev_size
-			//~ for (u32 k{0u}; k < grid.size; ++k) {
-				//~ auto pool{pstore[k]};
-				//~ for (auto i{0u}; i<holder.cfg->idxsh; ++i) {
-					//~ pool.index[i] = pool.npmax*(i>0);
-				//~ }
-			//~ }
-		//~ };
 	}
 };
 

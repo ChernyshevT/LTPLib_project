@@ -7,8 +7,9 @@
 grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 	u8 md=1; for (auto i{0}; i<nd; ++i) md*=3;
 	
-	if (py::len(cfg["step"]) != nd) throw std::invalid_argument("step");
-	for (auto ds : cfg["step"]) {
+	if (py::len(cfg["step"]) != nd) {
+		throw bad_arg("len(step) = {} != {}", py::len(cfg["step"]), nd);
+	} for (auto ds : cfg["step"]) {
 		step.push_back(py::cast<f32>(ds));
 	}
 	
@@ -19,14 +20,14 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 	size_t lctr_size{1};
 	for (auto axis : cfg["axes"]) {
 		if (py::len(axis) <= 1) {
-			throw bad_arg("len(axix) = {} <= {}", py::len(axis), 1);
+			throw bad_arg("len(axix) = {} <= 1", py::len(axis));
 		}
 		
 		std::vector<u32> axpts;
 		std::vector<f32> edpts;
 		for (auto pt : axis) {
 			axpts.push_back(py::cast<u32>(pt));
-			edpts.push_back(py::cast<f32   >(pt) * step[shape.size()]);
+			edpts.push_back(py::cast<f32>(pt) * step[shape.size()]);
 		}
 		
 		lctr_size *= axpts.size()+1;
@@ -55,7 +56,11 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 	}
 	
 	// setup nodes
-	for (auto node : cfg["nodes"]) {
+	if (0 == py::len(cfg["nodes"])) {
+		throw bad_arg("empty nodes list");
+	}
+	for (auto node : cfg["nodes"]) try {
+		
 		std::vector<u32> map; map.reserve(nd);
 		std::vector<u32> lnk; lnk.reserve(md);
 		std::vector<u8 > mcache;
@@ -65,11 +70,12 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 			map.push_back(py::cast<u32>(x));
 		}
 		*/
-		for (auto m : node) {
+		if (py::len(node) != nd) {
+			throw bad_arg("invalid numer of indexes {} != {}", py::len(node), nd);
+		} for (auto m : node) {
 			map.push_back(py::cast<u32>(m));
 		}
-		
-		
+
 		size_t k{0}, sh{1};
 		for (int i{nd-1}; i >= 0; --i) {
 			if (map[i] >= shape[i]) throw bad_arg("node is out of domain");
@@ -98,6 +104,9 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 			}
 		}
 		nodes.push_back({std::move(map), std::move(lnk), mshift});
+	
+	} catch (std::exception &e) {
+		throw bad_arg("node[{}]: {}", nodes.size(), e.what());
 	}
 	
 	// build links

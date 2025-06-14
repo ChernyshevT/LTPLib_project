@@ -4,6 +4,14 @@ u32 ppush1_LEAPF_LINE_fn
 (const grid_t<1> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
+	if constexpr (PUSH_MODE::LEAPF > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::LEAPF >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::LEAPF;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
+	
 	flags = run_ppush<1, PUSH_MODE::LEAPF, FORM_ORDER::LINE, 0>
 	(grid, pstore, field, dt, fcode);
 	if (flags) {
@@ -23,6 +31,14 @@ extern "C" LIB_EXPORT
 u32 ppush1_LEAPF_QUAD_fn
 (const grid_t<1> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
+	
+	if constexpr (PUSH_MODE::LEAPF > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::LEAPF >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::LEAPF;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
 	
 	flags = run_ppush<1, PUSH_MODE::LEAPF, FORM_ORDER::QUAD, 0>
 	(grid, pstore, field, dt, fcode);
@@ -44,6 +60,14 @@ u32 ppush1_LEAPF_CUBE_fn
 (const grid_t<1> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
+	if constexpr (PUSH_MODE::LEAPF > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::LEAPF >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::LEAPF;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
+	
 	flags = run_ppush<1, PUSH_MODE::LEAPF, FORM_ORDER::CUBE, 0>
 	(grid, pstore, field, dt, fcode);
 	if (flags) {
@@ -63,6 +87,14 @@ extern "C" LIB_EXPORT
 u32 ppush1_IMPL0_LINE_fn
 (const grid_t<1> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
+	
+	if constexpr (PUSH_MODE::IMPL0 > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::IMPL0 >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::IMPL0;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
 	
 	flags = run_ppush<1, PUSH_MODE::IMPL0, FORM_ORDER::LINE, 0>
 	(grid, pstore, field, dt, fcode);
@@ -84,6 +116,14 @@ u32 ppush1_IMPL0_QUAD_fn
 (const grid_t<1> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
+	if constexpr (PUSH_MODE::IMPL0 > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::IMPL0 >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::IMPL0;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
+	
 	flags = run_ppush<1, PUSH_MODE::IMPL0, FORM_ORDER::QUAD, 0>
 	(grid, pstore, field, dt, fcode);
 	if (flags) {
@@ -103,6 +143,14 @@ extern "C" LIB_EXPORT
 u32 ppush1_IMPL0_CUBE_fn
 (const grid_t<1> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
+	
+	if constexpr (PUSH_MODE::IMPL0 > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::IMPL0 >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::IMPL0;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
 	
 	flags = run_ppush<1, PUSH_MODE::IMPL0, FORM_ORDER::CUBE, 0>
 	(grid, pstore, field, dt, fcode);
@@ -124,6 +172,14 @@ u32 ppush1_IMPLR_LINE_fn
 (const grid_t<1> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
+	if constexpr (PUSH_MODE::IMPLR > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::IMPLR >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::IMPLR;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
+	
 	flags = run_ppush<1, PUSH_MODE::IMPLR, FORM_ORDER::LINE, 0>
 	(grid, pstore, field, dt, fcode);
 	if (flags) {
@@ -143,6 +199,14 @@ extern "C" LIB_EXPORT
 u32 ppush1_IMPLR_QUAD_fn
 (const grid_t<1> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
+	
+	if constexpr (PUSH_MODE::IMPLR > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::IMPLR >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::IMPLR;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
 	
 	flags = run_ppush<1, PUSH_MODE::IMPLR, FORM_ORDER::QUAD, 0>
 	(grid, pstore, field, dt, fcode);
@@ -164,6 +228,14 @@ u32 ppush1_IMPLR_CUBE_fn
 (const grid_t<1> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
+	if constexpr (PUSH_MODE::IMPLR > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::IMPLR >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::IMPLR;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
+	
 	flags = run_ppush<1, PUSH_MODE::IMPLR, FORM_ORDER::CUBE, 0>
 	(grid, pstore, field, dt, fcode);
 	if (flags) {
@@ -183,6 +255,14 @@ extern "C" LIB_EXPORT
 u32 ppush2_LEAPF_LINE_fn
 (const grid_t<2> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
+	
+	if constexpr (PUSH_MODE::LEAPF > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::LEAPF >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::LEAPF;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
 	
 	flags = run_ppush<2, PUSH_MODE::LEAPF, FORM_ORDER::LINE, 0>
 	(grid, pstore, field, dt, fcode);
@@ -204,6 +284,14 @@ u32 ppush2_LEAPF_QUAD_fn
 (const grid_t<2> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
+	if constexpr (PUSH_MODE::LEAPF > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::LEAPF >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::LEAPF;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
+	
 	flags = run_ppush<2, PUSH_MODE::LEAPF, FORM_ORDER::QUAD, 0>
 	(grid, pstore, field, dt, fcode);
 	if (flags) {
@@ -223,6 +311,14 @@ extern "C" LIB_EXPORT
 u32 ppush2_LEAPF_CUBE_fn
 (const grid_t<2> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
+	
+	if constexpr (PUSH_MODE::LEAPF > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::LEAPF >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::LEAPF;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
 	
 	flags = run_ppush<2, PUSH_MODE::LEAPF, FORM_ORDER::CUBE, 0>
 	(grid, pstore, field, dt, fcode);
@@ -244,6 +340,14 @@ u32 ppush2_IMPL0_LINE_fn
 (const grid_t<2> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
+	if constexpr (PUSH_MODE::IMPL0 > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::IMPL0 >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::IMPL0;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
+	
 	flags = run_ppush<2, PUSH_MODE::IMPL0, FORM_ORDER::LINE, 0>
 	(grid, pstore, field, dt, fcode);
 	if (flags) {
@@ -263,6 +367,14 @@ extern "C" LIB_EXPORT
 u32 ppush2_IMPL0_QUAD_fn
 (const grid_t<2> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
+	
+	if constexpr (PUSH_MODE::IMPL0 > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::IMPL0 >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::IMPL0;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
 	
 	flags = run_ppush<2, PUSH_MODE::IMPL0, FORM_ORDER::QUAD, 0>
 	(grid, pstore, field, dt, fcode);
@@ -284,6 +396,14 @@ u32 ppush2_IMPL0_CUBE_fn
 (const grid_t<2> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
+	if constexpr (PUSH_MODE::IMPL0 > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::IMPL0 >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::IMPL0;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
+	
 	flags = run_ppush<2, PUSH_MODE::IMPL0, FORM_ORDER::CUBE, 0>
 	(grid, pstore, field, dt, fcode);
 	if (flags) {
@@ -303,6 +423,14 @@ extern "C" LIB_EXPORT
 u32 ppush2_IMPLR_LINE_fn
 (const grid_t<2> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
+	
+	if constexpr (PUSH_MODE::IMPLR > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::IMPLR >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::IMPLR;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
 	
 	flags = run_ppush<2, PUSH_MODE::IMPLR, FORM_ORDER::LINE, 0>
 	(grid, pstore, field, dt, fcode);
@@ -324,6 +452,14 @@ u32 ppush2_IMPLR_QUAD_fn
 (const grid_t<2> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
+	if constexpr (PUSH_MODE::IMPLR > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::IMPLR >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::IMPLR;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
+	
 	flags = run_ppush<2, PUSH_MODE::IMPLR, FORM_ORDER::QUAD, 0>
 	(grid, pstore, field, dt, fcode);
 	if (flags) {
@@ -343,6 +479,14 @@ extern "C" LIB_EXPORT
 u32 ppush2_IMPLR_CUBE_fn
 (const grid_t<2> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
+	
+	if constexpr (PUSH_MODE::IMPLR > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::IMPLR >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::IMPLR;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
 	
 	flags = run_ppush<2, PUSH_MODE::IMPLR, FORM_ORDER::CUBE, 0>
 	(grid, pstore, field, dt, fcode);
@@ -364,6 +508,14 @@ u32 ppush2c_LEAPF_LINE_fn
 (const grid_t<2> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
+	if constexpr (PUSH_MODE::LEAPF > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::LEAPF >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::LEAPF;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
+	
 	flags = run_ppush<2, PUSH_MODE::LEAPF, FORM_ORDER::LINE, 1>
 	(grid, pstore, field, dt, fcode);
 	if (flags) {
@@ -383,6 +535,14 @@ extern "C" LIB_EXPORT
 u32 ppush2c_LEAPF_QUAD_fn
 (const grid_t<2> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
+	
+	if constexpr (PUSH_MODE::LEAPF > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::LEAPF >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::LEAPF;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
 	
 	flags = run_ppush<2, PUSH_MODE::LEAPF, FORM_ORDER::QUAD, 1>
 	(grid, pstore, field, dt, fcode);
@@ -404,6 +564,14 @@ u32 ppush2c_LEAPF_CUBE_fn
 (const grid_t<2> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
+	if constexpr (PUSH_MODE::LEAPF > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::LEAPF >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::LEAPF;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
+	
 	flags = run_ppush<2, PUSH_MODE::LEAPF, FORM_ORDER::CUBE, 1>
 	(grid, pstore, field, dt, fcode);
 	if (flags) {
@@ -423,6 +591,14 @@ extern "C" LIB_EXPORT
 u32 ppush3_LEAPF_LINE_fn
 (const grid_t<3> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
+	
+	if constexpr (PUSH_MODE::LEAPF > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::LEAPF >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::LEAPF;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
 	
 	flags = run_ppush<3, PUSH_MODE::LEAPF, FORM_ORDER::LINE, 0>
 	(grid, pstore, field, dt, fcode);
@@ -444,6 +620,14 @@ u32 ppush3_LEAPF_QUAD_fn
 (const grid_t<3> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
+	if constexpr (PUSH_MODE::LEAPF > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::LEAPF >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::LEAPF;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
+	
 	flags = run_ppush<3, PUSH_MODE::LEAPF, FORM_ORDER::QUAD, 0>
 	(grid, pstore, field, dt, fcode);
 	if (flags) {
@@ -463,6 +647,14 @@ extern "C" LIB_EXPORT
 u32 ppush3_LEAPF_CUBE_fn
 (const grid_t<3> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
+	
+	if constexpr (PUSH_MODE::LEAPF > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::LEAPF >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::LEAPF;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
 	
 	flags = run_ppush<3, PUSH_MODE::LEAPF, FORM_ORDER::CUBE, 0>
 	(grid, pstore, field, dt, fcode);
@@ -484,6 +676,14 @@ u32 ppush3_IMPL0_LINE_fn
 (const grid_t<3> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
+	if constexpr (PUSH_MODE::IMPL0 > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::IMPL0 >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::IMPL0;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
+	
 	flags = run_ppush<3, PUSH_MODE::IMPL0, FORM_ORDER::LINE, 0>
 	(grid, pstore, field, dt, fcode);
 	if (flags) {
@@ -503,6 +703,14 @@ extern "C" LIB_EXPORT
 u32 ppush3_IMPL0_QUAD_fn
 (const grid_t<3> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
+	
+	if constexpr (PUSH_MODE::IMPL0 > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::IMPL0 >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::IMPL0;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
 	
 	flags = run_ppush<3, PUSH_MODE::IMPL0, FORM_ORDER::QUAD, 0>
 	(grid, pstore, field, dt, fcode);
@@ -524,6 +732,14 @@ u32 ppush3_IMPL0_CUBE_fn
 (const grid_t<3> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
+	if constexpr (PUSH_MODE::IMPL0 > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::IMPL0 >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::IMPL0;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
+	
 	flags = run_ppush<3, PUSH_MODE::IMPL0, FORM_ORDER::CUBE, 0>
 	(grid, pstore, field, dt, fcode);
 	if (flags) {
@@ -543,6 +759,14 @@ extern "C" LIB_EXPORT
 u32 ppush3_IMPLR_LINE_fn
 (const grid_t<3> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
+	
+	if constexpr (PUSH_MODE::IMPLR > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::IMPLR >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::IMPLR;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
 	
 	flags = run_ppush<3, PUSH_MODE::IMPLR, FORM_ORDER::LINE, 0>
 	(grid, pstore, field, dt, fcode);
@@ -564,6 +788,14 @@ u32 ppush3_IMPLR_QUAD_fn
 (const grid_t<3> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
+	if constexpr (PUSH_MODE::IMPLR > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::IMPLR >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::IMPLR;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
+	
 	flags = run_ppush<3, PUSH_MODE::IMPLR, FORM_ORDER::QUAD, 0>
 	(grid, pstore, field, dt, fcode);
 	if (flags) {
@@ -583,6 +815,14 @@ extern "C" LIB_EXPORT
 u32 ppush3_IMPLR_CUBE_fn
 (const grid_t<3> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
+	
+	if constexpr (PUSH_MODE::IMPLR > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::IMPLR >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::IMPLR;
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
 	
 	flags = run_ppush<3, PUSH_MODE::IMPLR, FORM_ORDER::CUBE, 0>
 	(grid, pstore, field, dt, fcode);

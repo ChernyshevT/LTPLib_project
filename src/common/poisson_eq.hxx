@@ -28,8 +28,9 @@ struct poisson_eq_t {
 		// mid-point, left, right indexes
 		u64 idpt{0}, idlf, idrt;
 		i32 shlf, shrt, nlen;
-		for (u8 i{0u}; i<nd; ++i) {
-			idpt += offst[i+1] * pos[i];
+		
+		for (u64 i{1u}, sh{1u}; i<=nd; sh *= shape[nd-i], ++i) {
+			idpt += sh * pos[nd-i];
 		}
 
 		/* check the unit to perfornm the action **********************************/
@@ -48,13 +49,13 @@ struct poisson_eq_t {
 			case SETAXIS: [[likely]]
 				for (u8 j{0u}; j<nd; ++j) {
 					idlf = 0; idrt = 0;
-					for (u8 i{0u}; i<nd; ++i) {
-						nlen = shape[i];
-						shlf = pos[i] - (i==j)*(CHECK_AXIS(ucode,j)&LFDIFF? 1 : -1);
-						shrt = pos[i] + (i==j)*(CHECK_AXIS(ucode,j)&RTDIFF? 1 : -1);
+					for (u64 i{1u}, sh{1u}; i<=nd; sh *= shape[nd-i], ++i) {
+						nlen = shape[nd-i];
+						shlf = pos[nd-i] - (nd-i==j)*(CHECK_AXIS(ucode,j)&LFDIFF? 1 : -1);
+						shrt = pos[nd-i] + (nd-i==j)*(CHECK_AXIS(ucode,j)&RTDIFF? 1 : -1);
 						
-						idlf += offst[i+1] * ((shlf%nlen + nlen) % nlen);
-						idrt += offst[i+1] * ((shrt%nlen + nlen) % nlen);
+						idlf += sh * ((shlf%nlen + nlen) % nlen);
+						idrt += sh * ((shrt%nlen + nlen) % nlen);
 					}
 					vnew += (vdata[idlf]+vdata[idrt])*dstep[j];
 					cfft += 2*dstep[j];

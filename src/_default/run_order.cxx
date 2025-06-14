@@ -1,4 +1,10 @@
 #include "api_backend.hxx"
+#include <cstdlib>
+
+inline
+void run_sort_queue (pstore_t & pstore, u32 nsize) {
+
+};
 
 template<u8 nd, u8 md=(nd>1? nd>2? 27: 9: 3)>
 u32 run_order
@@ -47,6 +53,16 @@ u32 run_order
 	}
 	// end omp parallel for
 	
+	//~ auto &&cmp = [&] (const void *a, const void *b) -> int {
+		//~ u32 k1 = *(u32*)a;
+		//~ u32 k2 = *(u32*)b;
+		
+		//~ return (int)pstore[k1].index[0] - (int)pstore[k2].index[k2];
+	//~ };
+	//~ std::qsort(pstore.queue, grid.size, sizeof(pstore.queue[0])
+	//~ , cmp);
+	
 	return flags;
 }
+
 

@@ -97,10 +97,11 @@ def show_field(ax, *fs, idx=None, bins=None, **kw):
 	}
 	if "scale" in kw and kw["scale"]=="log":
 		opts["norm"]=LogNorm(kw["vmin"], kw["vmax"])
+		
 		# ~ print(kw.keys())
-		# ~ del kw["scale"]
-		# ~ del kw["vmin"]
-		# ~ del kw["vmin"]
+		del kw["scale"]
+		del kw["vmin"]
+		del kw["vmax"]
 	opts.update(kw);
 	# ~ if "norm" in opts:
 		# ~ del opts["vmin"]
@@ -145,20 +146,25 @@ def mk_rtax(ax, **kwargs):
 	xpos, ypos, xlen, ylen = make_axes_locatable(ax).get_position()
 	return fig.add_axes([xpos+xlen+0.05/2.54/width, ypos, 0.2/2.54/width,ylen], **kwargs)
 
-def mk_cax(ax):
+def mk_cax(ax, **kwargs):
 	from mpl_toolkits.axes_grid1 import make_axes_locatable
 	# ~ print(im)
 	
-	fig = ax.get_figure()
-	xpos, ypos, xlen, ylen =\
-		make_axes_locatable(ax).get_position()
+	# ~ fig = ax.get_figure()
+	# ~ xpos, ypos, xlen, ylen =\
+		# ~ make_axes_locatable(ax).get_position()
 		
-	dx = 0.25/2.54 /fig.get_figwidth()
-	dy = 0.125/2.54/fig.get_figheight()
-	y_ = 1.5/2.54  /fig.get_figheight()*2/3
-	#xy = [xpos+xlen/2+dx,ypos+ylen+y_,xlen/2-dx*2,dy]
-	xy = [xpos+xlen/2+dx,ypos+ylen+y_, xlen/2-dx*2, dy]
-	return fig.add_axes(xy, clip_box={"fc":"w","pad":0.5,"lw":0.5}, frame_on=1)
+	# ~ dx = 0.25/2.54 /fig.get_figwidth()
+	# ~ dy = 0.125/2.54/fig.get_figheight()
+	# ~ y_ = 1.5/2.54  /fig.get_figheight()*2/3
+	# ~ #xy = [xpos+xlen/2+dx,ypos+ylen+y_,xlen/2-dx*2,dy]
+	# ~ xy = [xpos+xlen/2+dx,ypos+ylen+y_, xlen/2-dx*2, dy]
+	# ~ return fig.add_axes(xy, clip_box={"fc":"w","pad":0.5,"lw":0.5}, frame_on=1)
+	
+	fig = ax.get_figure()
+	width, height          = fig.get_figwidth(), fig.get_figheight()
+	xpos, ypos, xlen, ylen = make_axes_locatable(ax).get_position()
+	return fig.add_axes([xpos+xlen+0.05/2.54/width, ypos, 0.2/2.54/width,ylen], **kwargs)
 
 def show_cbar(im, ax, **kwargs):
 	

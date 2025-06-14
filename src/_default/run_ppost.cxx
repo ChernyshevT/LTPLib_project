@@ -47,11 +47,15 @@ u32 run_ppost
 				p.data[i] = pool.parts[j][i];
 			}
 
-			// find local position & form-factor, check out of range
+			/* find local position & form-factor, check out of range */
 			if (auto flag{node.get_form(&form, p.pos)}; flag) {
 				#pragma omp atomic
 				flags |= flag;
 				
+				continue;
+			}
+			/* skip if particle is adsorbed (in case of implicit solver) */
+			if (node.check_mask(form.idx)) [[unlikely]] {
 				continue;
 			}
 			

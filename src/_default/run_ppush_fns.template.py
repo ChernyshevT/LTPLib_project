@@ -4,6 +4,14 @@ u32 ppush{{nd}}{%if CLCRD %}c{% endif %}_{{MODE}}_{{ORDER}}_fn
 (const grid_t<{{nd}}> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
+	if constexpr (PUSH_MODE::{{MODE}} > PUSH_MODE::IMPL0) {
+		if (PUSH_MODE::{{MODE}} >= pstore.opts.mode) {
+			pstore.opts.mode = PUSH_MODE::{{MODE}};
+		} else {
+			return ERR_CODE::INVALID_SEQ;
+		}
+	}
+	
 	flags = run_ppush<{{nd}}, PUSH_MODE::{{MODE}}, FORM_ORDER::{{ORDER}}, {{CLCRD}}>
 	(grid, pstore, field, dt, fcode);
 	if (flags) {

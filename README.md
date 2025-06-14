@@ -1,4 +1,4 @@
-_[document version: 20250601a]_
+_[document version: 20250606]_
 <!-- {𝐯} {𝐫} {𝐟} {𝐚} {𝐄} {𝐁} {𝐮} -->
 # \_ltplib: <ins>L</ins>ow <ins>T</ins>emperature <ins>P</ins>lasma <ins>Lib</ins>rary
 This is middle-layer framework that provides a simple Python solution to construct PiC+MCC simulations (Particles-in-Cells + Monte Carlo Collisions).
@@ -38,6 +38,8 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 	1. [`_ltplib.bind_remap_fn`](#bind_remap)
 1. [Code examples](#code_examples)
 	1. [`examples/run_localsim.py`](#run_localsim)
+	
+## Brief introduction into PiC+MCC <a name="intro"></a>
 
 ## Build instructions <a name="build"></a>
 The framework uses [pybind11](https://github.com/pybind/pybind11) to create a transparent interface between Python and C++ code. Dependencies are downloaded automatically by CMake FetchContent.

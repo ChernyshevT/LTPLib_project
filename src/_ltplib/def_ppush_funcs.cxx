@@ -128,6 +128,10 @@ void def_ppush_funcs (py::module &m) {
 				emfield.order == 3? "CUBE" :
 				throw std::invalid_argument(fmt::format("emfield.order={}", emfield.order))
 			);
+			// check argument
+			if (mode != "LEAPF" and pstore.cfg->nargs< 1+(nd+3)*2) throw bad_arg(
+				"pstore.nargs = {} <= {}",pstore.cfg->nargs, (nd+3)*2
+			);
 			
 			logger::debug\
 			("bind {}->{} &grid={}, &pstore={}, &emfield={}, fcode={}",

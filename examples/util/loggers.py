@@ -55,7 +55,7 @@ class _ColourFormatter(logging.Formatter):
 	# 1 means bold, 2 means dim, 0 means reset, and 4 means underline.
 
 	LEVEL_COLOURS = [
-		(logging.DEBUG, '\x1b[40;1m'),
+		(logging.DEBUG, '\x1b[37m'),
 		(logging.INFO, '\x1b[34;1m'),
 		(logging.WARNING, '\x1b[33;1m'),
 		(logging.ERROR, '\x1b[31m'),

@@ -95,6 +95,7 @@ def save_frame(fname, mode="w", **kwargs):
 		with zipfile.ZipFile(fname, mode, compression=zipfile.ZIP_STORED) as zipf:
 			#
 			def save_entry(k, arg):
+				
 				if   isinstance(arg, np.ndarray):
 					dump = io.BytesIO(); np.save(dump, arg)
 					zipf.writestr(f"{k}.npy",

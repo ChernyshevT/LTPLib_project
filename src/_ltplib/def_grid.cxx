@@ -144,8 +144,8 @@ void def_grids (py::module &m) {
 	]
 	)pbdoc")
 	
-	.def_property_readonly("size",  [] (const grid_holder& self) {
-		return self.cfg->nodes.size();
+	.def_property_readonly("ndim", [] (const grid_holder& self) {
+		return self.cfg->shape.size();
 	})
 	.def_property_readonly("shape", [] (const grid_holder& self) {
 		return self.cfg->shape;
