@@ -1,4 +1,4 @@
-_[document version: 20250615]_
+_[document version: 20250615a]_
 <!-- {𝐯} {𝐫} {𝐟} {𝐚} {𝐄} {𝐁} {𝐮} -->
 > [!NOTE]
 > The project is still under active development, so changes and midifications are possible.
@@ -43,6 +43,7 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 	1. [`_ltplib.bind_remap_fn`](#bind_remap)
 1. [Code examples](#code_examples)
 	1. [`examples/run_localsim.py`](#run_localsim)
+	1. [`examples/run_two-stream2d.py`](#run_two-stream2d)
 
 ## Build instructions <a name="build"></a>
 The framework uses [pybind11](https://github.com/pybind/pybind11) to create a transparent interface between Python and C++ code. Dependencies are downloaded automatically by CMake FetchContent.
@@ -674,6 +675,12 @@ The syntax as follows `--bginfo KEY1:FRACTION1 KEY2:FRACTION2`.
 [^dias2023]: Dias, T. C., Tejero-del-Caz, A., Alves, L. L., & Guerra, V. (2023). _The LisbOn KInetics Monte Carlo solver._ In Computer Physics Communications (Vol. 282, p. 108554). Elsevier BV. 
 [DOI:10.1016/j.cpc.2022.108554](https://doi.org/10.1016/j.cpc.2022.108554)
 
+(To be done...)
 
+## [`examples/run_two-stream2d.py`](./examples/run_two-stream2d.py) <a name="examples/run_two-stream"></a>
+Two-stream instability (under development)
 
 (To be done...)
+
+<br>
+<img src="./docs/imgs/two-stream.png" alt="Two-Stream-Instability" width="768"/>

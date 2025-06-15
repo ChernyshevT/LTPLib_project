@@ -41,6 +41,12 @@ def main(args):
 		}
 		if verrs := frame.verrs:
 			dset[key].update({"verrs" : verrs})
+		
+		if frame.args.ions:
+			vx = pdata.data[j1:j2, 2]
+			vy = pdata.data[j1:j2, 3]
+			en_ixx = np.mean(vx*vx)*2.842815e-16
+			en_iyy = np.mean(vy*vy)*2.842815e-16
 	
 	fpath = os.path.dirname(os.path.abspath(arg))
 	save_frame(f"{fpath}/dset.zip", "w", **dset)

@@ -63,6 +63,9 @@ def save_fig(fig, **kwargs):
 	
 	import logging; logger = logging.getLogger();
 	
+	if name := kwargs.get("name"):
+		fig.name = name
+	
 	if fpath := kwargs.get("fpath"):
 		fname = f"{fpath}/{fig.name}.{kwargs.get('fmt', 'pdf')}"
 	else:
