@@ -683,4 +683,4 @@ Two-stream instability (under development)
 (To be done...)
 
 <br>
-<img src="./docs/imgs/two-stream.png" alt="Two-Stream-Instability" width="768"/>
+<img src="./docs/imgs/two-stream.gif" alt="Two-Stream-Instability" width="768"/>
