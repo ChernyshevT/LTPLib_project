@@ -220,9 +220,7 @@ def main(args, logger):
 		logger.info("start calculation")
 	# now, run main cycle
 	for irun in range(1, args.nrun+1):
-		#iclc, tclc = 0, time.time()
 		# start new frame [t --> t + args.dt*args.nsub] & clear data
-		
 		
 		# refresh arrays to save
 		frame_ptfluid[...] = g_ptfluid
@@ -244,7 +242,7 @@ def main(args, logger):
 				logger.debug\
 				(f"{' 'if irep else ':'}{irun:06d}/{isub:04d}/{irep:02d} verr={verr*300:6.3e} V")
 				
-				if irep and verr < VEPSILON:
+				if irep and verr < args.vepsilon:
 					break
 			
 			#end implicit run, collect avg. data
@@ -334,12 +332,12 @@ args = {
 	"--dt": {
 		"type"     : float,
 		"default"  : 2.5e-12,
-		"help"     : "simulation's time-step (t->t+dt)",
+		"help"     : "simulation's time-step (t->t+dt, s)",
 	},
 	"--n_base"   : {
 		"type"     : float,
 		"default"  : 1e12,
-		"help"     : "base concentration",
+		"help"     : "base concentration (cm^-3)",
 	},
 	"--nrun": {
 		"type": int,
@@ -351,11 +349,16 @@ args = {
 		"default": 10, #2
 		"help": "number of sub-steps per frame (t->t+dt)"
 	},
-	"--nrep": {
-		"type": int,
-		"default": 0,
-		"help": "number of corrector runs (0 for explicit, >=1 for implicit)"
+	"--nrep"    : {
+		"type"    : int,
+		"default" : 0,
+		"help"    : "number of corrector runs (0 for explicit, >=1 for implicit)"
 	},
+	"--epsilon" : {
+		"type"    : float,
+		"default" : 0,
+		"help"    : "epsilon to stop implicit solver earlier (V)"
+	}
 }
 ################################################################################
 def handle_sigterm(n, frame):
