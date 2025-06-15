@@ -255,9 +255,11 @@ def main(args, logger):
 		if (fpath := args.save):
 			save_frame(f"{fpath}/frame{irun:06d}.zip", "w", **{
 			 "args"   : vars(args),
-			 "step"   : [dx, dy],
-			 "units"  : [nx, ny],
-			 "tindex" : [(irun-1)*args.nsub, irun*args.nsub],
+			 "cfg"    : {  
+			  "step"   : [dx, dy],
+			  "units"  : [nx, ny],
+			  "tindex" : [(irun-1)*args.nsub, irun*args.nsub],
+			 },
 			 "vmap"   : frame_vplasma/(args.nsub+1),
 			 "ne"     : frame_ptfluid[..., 0]/(args.nsub+1),
 			 **({"ni" : frame_ptfluid[..., 1]/(args.nsub+1)} if args.ions else {}),
