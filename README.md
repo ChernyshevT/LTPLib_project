@@ -266,7 +266,7 @@ $\sigma(\varepsilon,\ \alpha)$, where
 $\sigma(\varepsilon)
 =2\pi\int_0^\pi \sin\alpha\ \sigma(\varepsilon,\ \alpha)\ {\rm d}\alpha$,
 $\alpha$ -- azimuthal scattering angle (relative to the incident direction).
-Framework **\_ltplib** includes first-order approximation for $\sigma(\varepsilon,\ \alpha)$ uning momentum-transfer cross-section:
+Framework **\_ltplib** includes first-order approximation for $\sigma(\varepsilon,\ \alpha)$ using momentum-transfer cross-section:
 ```math
 	\sigma_{\rm m} = 2\pi\int_{0}^{\pi}
 	\left[1-\cos\alpha\sqrt{1-\frac{\varepsilon_{\rm th}}{\varepsilon}}\right]
