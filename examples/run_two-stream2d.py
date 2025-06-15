@@ -268,10 +268,20 @@ def main(args, logger):
 			  "units"  : [nx, ny],
 			  "tindex" : [(irun-1)*args.nsub, irun*args.nsub],
 			 },
-			 "vplasma" : frame_vplasma/(args.nsub+1),
+			 # plasma potential (avg & current)
+			 "vplasma"   : frame_vplasma/(args.nsub+1),
+			 "vplasma_m" : eq.vmap,
+			 # electron concentration (avg & current)
 			 "ne"      : frame_ptfluid[..., 0]/(args.nsub+1),
-			 **({"ni"  : frame_ptfluid[..., 1]/(args.nsub+1)} if args.ions else {}),
-			 **({"verrs" : frame_verrs} if args.nrep else {}),
+			 "ne_m"    : g_ptfluid[..., 0],
+			**({
+			 # ion concentration (avg & current)
+			 "ni"   : frame_ptfluid[..., 1]/(args.nsub+1),
+			 "ni_m" : g_ptfluid[..., 1],
+			} if args.ions else {}),
+			**({
+			 "verrs" : frame_verrs
+			} if args.nrep else {}),
 			})
 		
 		# save samples' dump
