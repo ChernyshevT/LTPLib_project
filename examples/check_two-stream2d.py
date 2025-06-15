@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import sys
+import os, sys
 import numpy as np
 
 from util.loggers import *
@@ -8,6 +8,7 @@ from util.frames  import *
 def main(args):
 	setup_logging()
 	
+	dset  = {}
 	for arg in args:
 		
 		pdata, frame = load_frame(arg), load_frame(arg.replace("pdata", "frame"))
@@ -17,19 +18,36 @@ def main(args):
 		t0,t1 = [frame.args.dt*k for k in frame.cfg.tindex]
 		ng    = frame.args.order
 		
-		nskip = 10
-		xs = pdata.data[::nskip, 0]
-		ys = pdata.data[::nskip, 1]
-		vx = pdata.data[::nskip, 2]
-		vy = pdata.data[::nskip, 3]
-		pxx = np.mean(vx*vx)*2.842815e-16
-		pyy = np.mean(vy*vy)*2.842815e-16
+		Ex,Ey = np.gradient(frame.vplasma, dx, dy, edge_order=2)
+		en_field = np.mean((Ex*Ex + Ey*Ey)/8/np.pi)*300
+		vp_range = np.max(np.abs(frame.vplasma))*300
 		
-		ex,ey  = np.gradient(frame.vplasma, dx, dy, edge_order=2)
-		venrgy = np.mean((ex*ex + ey*ey)/8/np.pi)*300
-		vrange = np.max(np.abs(frame.vplasma))*300
-
-		print(f"{t1*1e9:07.3f}ns: pe_xx, p_yy: {pxx:e} {pyy:e}, fen = {venrgy:e} eV, {vrange:e} V")
+		j0,j1,j2 = pdata.index
+		xs = pdata.data[j0:j1, 0]
+		ys = pdata.data[j0:j1, 1]
+		vx = pdata.data[j0:j1, 2]
+		vy = pdata.data[j0:j1, 3]
+		en_exx = np.mean(vx*vx)*2.842815e-16
+		en_eyy = np.mean(vy*vy)*2.842815e-16
+		
+		dset[arg.replace("pdata","fstat").replace(".zip","")] = {
+		 "tindex"   : frame.tindex,
+		 "en_exx"   : en_exx,
+		 "en_eyy"   : en_eyy,
+		 "en_field" : en_field,
+		 "vp_range" : vp_range,
+		}
+		if verrs := frame.verrs:
+			dset[arg.replace("pdata", "verrs").replace(".zip","")] = {
+			 "verrs" : verrs,
+			}
+		
+	
+	fpath = os.path.dirname(os.path.abspath(arg))
+	save_frame(f"{fpath}/dset.zip", "w", tstep=frame.args.dt
+	, **dset)
+	
+	
 	return 0
 
 
