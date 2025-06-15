@@ -263,7 +263,7 @@ def main(args, logger):
 			 "vmap"   : frame_vplasma/(args.nsub+1),
 			 "ne"     : frame_ptfluid[..., 0]/(args.nsub+1),
 			 **({"ni" : frame_ptfluid[..., 1]/(args.nsub+1)} if args.ions else {}),
-			 **({"verrs" : fame_verrs} if args.nrep else {}),
+			 **({"verrs" : frame_verrs} if args.nrep else {}),
 			})
 		
 		# save samples' dump
