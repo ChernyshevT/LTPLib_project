@@ -677,7 +677,7 @@ The syntax as follows `--bginfo KEY1:FRACTION1 KEY2:FRACTION2`.
 
 (To be done...)
 
-## [`examples/run_two-stream2d.py`](./examples/run_two-stream2d.py) <a name="run_two-stream"></a>
+## [`examples/run_two-stream2d.py`](./examples/run_two-stream2d.py) <a name="run_two-stream2d"></a>
 Two-stream instability (under development)
 
 (To be done...)
