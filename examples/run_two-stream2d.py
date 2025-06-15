@@ -53,9 +53,17 @@ def main(args, logger):
 	WPE = np.sqrt(M_4PI_E*args.n_base * ECHARGE/ME)
 
 	# the problem's base geometry:
-	nx,mx = 192, 16
-	ny,my = 192, 16
-	dx,dy = 0.00625, 0.00625
+	match args.preset:
+		case "default":
+			nx, mx = 192, 16
+			ny, my = 192, 16
+			dx, dy = 0.00625, 0.00625
+		case "lowres":
+			nx, mx = 48, 4
+			ny, my = 48, 4
+			dx, dy = 0.025, 0.025
+		case _:
+			raise ValueError(f"invalid preset \"{args.preset}\"")
 	
 	stats = {
 		"v_max*dt/dx": max(V0, VE)*args.dt/dx,
@@ -358,7 +366,12 @@ args = {
 		"type"    : float,
 		"default" : 0,
 		"help"    : "epsilon to stop implicit solver earlier (V)"
-	}
+	},
+	"--preset"  : {
+		"type"    : str,
+		"default" : "default",
+		"help"    : "select preset: \"default\" or \"lowres\""
+	},
 }
 ################################################################################
 def handle_sigterm(n, frame):
