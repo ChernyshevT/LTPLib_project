@@ -32,20 +32,20 @@ def main(args):
 		
 		dset[arg.replace("pdata","fstat").replace(".zip","")] = {
 		 "tindex"   : frame.cfg.tindex,
+		 "tsetp"    : frame.args.dt,
 		 "en_exx"   : en_exx,
 		 "en_eyy"   : en_eyy,
 		 "en_field" : en_field,
 		 "vp_range" : vp_range,
 		}
-		if verrs := frame.verrs:
-			dset[arg.replace("pdata", "verrs").replace(".zip","")] = {
-			 "verrs" : verrs,
-			}
+		# ~ if verrs := frame.verrs:
+			# ~ dset[arg.replace("pdata", "verrs").replace(".zip","")] = {
+			 # ~ "verrs" : verrs,
+			# ~ }
 		
 	
 	fpath = os.path.dirname(os.path.abspath(arg))
-	save_frame(f"{fpath}/dset.zip", "w", tstep=frame.args.dt
-	, **dset)
+	save_frame(f"{fpath}/dset.zip", "w", **dset)
 	
 	
 	return 0
