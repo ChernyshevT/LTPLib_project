@@ -32,7 +32,7 @@ def main(args):
 		
 		dset[arg.replace("pdata","fstat").replace(".zip","")] = {
 		 "tindex"   : frame.cfg.tindex,
-		 "tsetp"    : frame.args.dt,
+		 "tstep"    : frame.args.dt,
 		 "en_exx"   : en_exx,
 		 "en_eyy"   : en_eyy,
 		 "en_field" : en_field,

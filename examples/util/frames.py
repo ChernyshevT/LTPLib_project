@@ -81,6 +81,9 @@ class frame_cls:
 	def __iter__(self):
 		for key in self._list:
 			yield key, self[key]
+	
+	def __len__(self):
+		return len(self._list)
 
 def load_frame(fname: str):
 	return frame_cls(fname)
