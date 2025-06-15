@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-#@LISTING:start:probe2d
+#@LISTING:start:two-stream2d
 import sys, os, timeit, shutil, logging, signal
 import numpy   as np
-import _ltplib as ltp
 
 from datetime     import datetime
 from time         import time
@@ -11,11 +10,9 @@ from itertools    import repeat, count
 from util.frames  import *
 from util.loggers import *
 from util.args    import *
-from util.plots   import *
+#from util.plots   import *
 
-from numba import jit
-
-from calcs import rde, wpe, v, me, mp
+import _ltplib as ltp
 
 class poisson_eq_sp():
 	__slots__ = "cmap", "vmap", "cwave", "data",
@@ -38,57 +35,32 @@ class poisson_eq_sp():
 		self.vmap[...] = self.data.real
 		return err
 
-def gen_distro(grid, npunit, **conf):
-	nd  = len(grid.step)
-	npp = npunit*np.prod(grid.units)
-	
-	pdata = np.empty([npp, nd+3], dtype=np.float32)
-	
-	for j in range(0, nd):
-		ns,ds = grid.step[j],grid.units[j]
-		pdata[:,j] = np.random.uniform(0, ns*ds, size=npp)
-	
-	for j in range(nd, nd+3):
-		# stream velocity
-		v0 = conf.get(f"u{chr(ord('x')+j)}", 0)
-		# thermal speed
-		vt = conf.get(f"vt", 0)
-		pdata[:,j] = np.random.normal(v0, vt, size=npp)
-	
-	return pdata
-
 ################################################################################
 def main(args, logger):
-	ltp.load_backend("default");
-	
-	# problem's presets:
-	ME, MP   = 9.109383e-28, 1.6605402e-24
-	ECHARGE  = 4.803204e-10
+
+	ME, MP   = 9.109383e-28, 1.6605402e-24 # gram
+	ECHARGE  = 4.803204e-10 # statC
 	M_4PI_E  = 6.035884e-09
+	##############################################################################
+	# problem's presets:
+	N_BASE   = 1e12 # cm^-3
+	E0       = 250  # eV
+	T0       = 0.25 # eV
 	
-
-	E0 = 250
-	T0 = 0.25
-	
-	V0 = np.sqrt(E0 *ECHARGE/150./ME)
-	VE = np.sqrt(T0 *ECHARGE/150./ME)
-	VI = np.sqrt(T0 *ECHARGE/150./MP)
-
+	V0  = np.sqrt(E0 * ECHARGE/150./ME)
+	VE  = np.sqrt(T0 * ECHARGE/150./ME)
+	VI  = np.sqrt(T0 * ECHARGE/150./MP)
+	WPE = np.sqrt(M_4PI_E*args.n_base * ECHARGE/ME)
 
 	# the problem's base geometry:
-	# ~ nx,mx = 96,  8
-	# ~ ny,my = 192, 8
 	nx,mx = 192, 16
 	ny,my = 192, 16
 	dx,dy = 0.0125, 0.0125
 	
-	
-	n_base = 1e12 #cm^-3
-	# ~ print(wpe(n0))
 	stats = {
 		"v_max*dt/dx": max(V0, VE)*args.dt/dx,
-		"dt*wce": args.dt*wpe(n_base),
-		"dx/rde": dx*wpe(n_base)/max(V0, VE),
+		"dt*wce": args.dt * WPE,
+		"dx/rde": dx*WPE/max(V0, VE),
 		"vte/v0" : VE/V0,
 	}
 	for k,v in stats.items():
@@ -100,6 +72,8 @@ def main(args, logger):
 	tframe = args.dt*args.nsub*1e9
 	logger.info(f"tframe = {tframe:07.3f} ns")
 	
+	##############################################################################
+	ltp.load_backend("default");
 	##############################################################################
 	# declare grid
 	grid = ltp.grid(2
@@ -118,7 +92,7 @@ def main(args, logger):
 	, npmax = int(mx*my*args.npunit*(2+args.extra))
 	, nargs = 1 + (grid.ndim+3)*2) # extra memory for implicit solver
 	# weight coefficient
-	wcfft = n_base/args.npunit
+	wcfft = args.n_base/args.npunit
 
 	##############################################################################
 	# declare electric field vcache & gobal array
@@ -167,7 +141,7 @@ def main(args, logger):
 		# collect charge density
 		eq.cmap[...] = 0
 		eq.cmap[...] += g_ptfluid[ng:, ng:, 0]*M_4PI_E
-		if args.wions:
+		if args.ions:
 			eq.cmap[...] -= g_ptfluid[ng:, ng:, 1]*M_4PI_E
 		else:
 			eq.cmap[...] -= np.mean(eq.cmap)
@@ -204,7 +178,7 @@ def main(args, logger):
 		# inject electrons
 		pstore.inject({"e-": pdata})
 		
-		if args.wions: # cold ion background
+		if args.ions: # cold ion background
 			# generate ion velocities
 			pdata[:,2:] = np.random.normal(0, VI, size=[nppin,3])
 			# inject ions
@@ -286,7 +260,7 @@ def main(args, logger):
 			 "tindex" : [(irun-1)*args.nsub, irun*args.nsub],
 			 "vmap"   : frame_vplasma/(args.nsub+1),
 			 "ne"     : frame_ptfluid[..., 0]/(args.nsub+1),
-			 **({"ni" : frame_ptfluid[..., 1]/(args.nsub+1)} if args.wions else {}),
+			 **({"ni" : frame_ptfluid[..., 1]/(args.nsub+1)} if args.ions else {}),
 			 **({"verrs" : fame_verrs} if args.nrep else {}),
 			})
 		
@@ -343,7 +317,7 @@ args = {
 		"type"     : int,
 		"default"  : 256, #1
 	},
-	"--wions"    : {
+	"--ions"    : {
 		"action"   : argparse.BooleanOptionalAction,
 		"help"     : "include ions as an active background charge",
 	},
@@ -357,6 +331,11 @@ args = {
 		"type"     : float,
 		"default"  : 2.5e-12,
 		"help"     : "simulation's time-step (t->t+dt)",
+	},
+	"--n_base"   : {
+		"type"     : float,
+		"default"  : 1e12,
+		"help"     : "base concentration",
 	},
 	"--nrun": {
 		"type": int,
@@ -424,4 +403,4 @@ if __name__ == '__main__':
 		msg = f"{colorama.Fore.RED+colorama.Style.BRIGHT+colorama.Back.BLACK}{err}{colorama.Style.RESET_ALL}"
 		logger.exception(msg)
 		sys.exit(1)
-#@LISTING:end:probe2d
+#@LISTING:end:two-stream-2d
