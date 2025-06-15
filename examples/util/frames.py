@@ -77,6 +77,10 @@ class frame_cls:
 		if f"{key}.txt"  in self.files:
 			return 1
 		return 0
+	
+	def __iter__(self):
+		for key in self._list:
+			yield key, self[key]
 
 def load_frame(fname: str):
 	return frame_cls(fname)

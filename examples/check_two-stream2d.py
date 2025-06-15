@@ -31,7 +31,7 @@ def main(args):
 		en_eyy = np.mean(vy*vy)*2.842815e-16
 		
 		dset[arg.replace("pdata","fstat").replace(".zip","")] = {
-		 "tindex"   : frame.tindex,
+		 "tindex"   : frame.cfg.tindex,
 		 "en_exx"   : en_exx,
 		 "en_eyy"   : en_eyy,
 		 "en_field" : en_field,
