@@ -242,7 +242,7 @@ def main(args, logger):
 				logger.debug\
 				(f"{' 'if irep else ':'}{irun:06d}/{isub:04d}/{irep:02d} verr={verr*300:6.3e} V")
 				
-				if irep and verr < args.vepsilon:
+				if irep and verr < args.epsilon:
 					break
 			
 			#end implicit run, collect avg. data
