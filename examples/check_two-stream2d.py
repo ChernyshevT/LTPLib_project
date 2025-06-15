@@ -30,7 +30,8 @@ def main(args):
 		en_exx = np.mean(vx*vx)*2.842815e-16
 		en_eyy = np.mean(vy*vy)*2.842815e-16
 		
-		dset[arg.replace("pdata","fstat").replace(".zip","")] = {
+		key = arg.replace("pdata","fstat").replace(".zip","") 
+		dset[key] = {
 		 "tindex"   : frame.cfg.tindex,
 		 "tstep"    : frame.args.dt,
 		 "en_exx"   : en_exx,
@@ -38,11 +39,8 @@ def main(args):
 		 "en_field" : en_field,
 		 "vp_range" : vp_range,
 		}
-		# ~ if verrs := frame.verrs:
-			# ~ dset[arg.replace("pdata", "verrs").replace(".zip","")] = {
-			 # ~ "verrs" : verrs,
-			# ~ }
-		
+		if verrs := frame.verrs:
+			dset[key].update({"verrs" : verrs})
 	
 	fpath = os.path.dirname(os.path.abspath(arg))
 	save_frame(f"{fpath}/dset.zip", "w", **dset)
