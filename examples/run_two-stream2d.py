@@ -55,7 +55,7 @@ def main(args, logger):
 	# the problem's base geometry:
 	nx,mx = 192, 16
 	ny,my = 192, 16
-	dx,dy = 0.0125, 0.0125
+	dx,dy = 0.00625, 0.00625
 	
 	stats = {
 		"v_max*dt/dx": max(V0, VE)*args.dt/dx,
