@@ -283,7 +283,7 @@ Internally, fitting-parameter $\xi(\varepsilon)$ [^janssen2016][^flynn2024] is u
 By default, scattering considered to be isotropic, i.e.
 $\xi\equiv 0$ and $\sigma_{\rm m}=\sigma$.
 For $\xi \rightarrow +1$ small-angle collisions dominate (forward-scattering),
-$\xi \rightarrow -1$ correspond to large-angle collisions (back-scattering).
+and $\xi \rightarrow -1$ correspond to large-angle collisions (back-scattering).
 > [!NOTE] 
 > $\sigma_{\rm m}/\sigma \leq 2$.
 
