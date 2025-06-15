@@ -71,6 +71,8 @@ def main(args, logger):
 			logger.warning(msg)
 	tframe = args.dt*args.nsub*1e9
 	logger.info(f"tframe = {tframe:07.3f} ns")
+	logger.info(f"order  = {args.order}")
+	logger.info(f"npunit = {args.npunit}")
 	
 	##############################################################################
 	ltp.load_backend("default");
