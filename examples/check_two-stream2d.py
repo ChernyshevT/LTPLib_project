@@ -19,23 +19,21 @@ def main(args):
 		ng    = frame.args.order
 		
 		Ex,Ey = np.gradient(frame.vplasma, dx, dy, edge_order=2)
-		en_field = np.mean((Ex*Ex + Ey*Ey)/8/np.pi)*300
-		vp_range = np.max(np.abs(frame.vplasma))*300
+		en_field = np.mean((Ex*Ex + Ey*Ey)/8/np.pi)*2.99792458e2
+		vp_range = np.max(np.abs(frame.vplasma))*2.99792458e2
 		
 		j0,j1,j2 = pdata.index
 		xs = pdata.data[j0:j1, 0]
 		ys = pdata.data[j0:j1, 1]
 		vx = pdata.data[j0:j1, 2]
 		vy = pdata.data[j0:j1, 3]
-		en_exx = np.mean(vx*vx)*2.842815e-16
-		en_eyy = np.mean(vy*vy)*2.842815e-16
 		
 		key = arg.replace("pdata","fstat").replace(".zip","") 
 		dset[key] = {
 		 "tindex"   : frame.cfg.tindex,
 		 "tstep"    : frame.args.dt,
-		 "en_exx"   : en_exx,
-		 "en_eyy"   : en_eyy,
+		 "en_exx"   : np.mean(vx*vx)*2.842815e-16,
+		 "en_eyy"   : np.mean(vy*vy)*2.842815e-16,
 		 "en_field" : en_field,
 		 "vp_range" : vp_range,
 		}
@@ -44,9 +42,11 @@ def main(args):
 		
 		if frame.args.ions:
 			vx = pdata.data[j1:j2, 2]
-			vy = pdata.data[j1:j2, 3]
-			en_ixx = np.mean(vx*vx)*2.842815e-16
-			en_iyy = np.mean(vy*vy)*2.842815e-16
+			vy = pdata.data[j1:j2, 3] 
+			dset[key].update({
+			 "en_ixx" : np.mean(vx*vx)*5.182139e-13,
+			 "en_iyy" : np.mean(vy*vy)*5.182139e-13,
+			})
 	
 	fpath = os.path.dirname(os.path.abspath(arg))
 	save_frame(f"{fpath}/dset.zip", "w", **dset)
