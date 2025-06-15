@@ -240,7 +240,7 @@ def main(args, logger):
 				verr = run_field_step(); frame_verrs[isub-1, irep] = verr
 				
 				logger.debug\
-				(f"{' 'if irep else '*'}{irun:06d}/{isub:04d}/{irep:02d} verr={verr*300:6.3e} V")
+				(f"{' 'if irep else '*'}{irun:06d}/{isub:04d}/{irep:02d} verr={verr:6.3e}")
 				
 				if irep and verr < args.epsilon:
 					break
