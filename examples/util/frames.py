@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, io, zipfile, json
+import os, io, zipfile, json, mmap, struct
 import numpy as np
 
 from types import SimpleNamespace
@@ -38,11 +38,12 @@ class npEncoder(json.JSONEncoder):
 logger = get_logger()
 
 class frame_cls:
-	__slots__ = ("_zipf", "_list", "files")
+	__slots__ = ("_zipf", "_list", "_noex", "files")
 
-	def __init__(self, fname: str):
+	def __init__(self, fname: str, noexcept: bool):
 		self._zipf = zipfile.ZipFile(fname, "r")
 		self._list = [os.path.splitext(f)[0] for f in self._zipf.namelist()]
+		self._noex = noexcept
 		self.files = self._zipf.namelist()
 		logger.info(f"open {fname}")
 	
@@ -63,9 +64,11 @@ class frame_cls:
 		if f"{key}.txt"  in self.files:
 			return self._zipf.read(f"{key}.txt").decode("utf-8")
 		###############################
-		return None
-		#raise ValueError(f"invalid key: \"{key}\"")
-
+		if self._noex:
+			return None
+		else:
+			raise ValueError(f"invalid key: \"{key}\"")
+		
 	def __getattr__(self, key: str):
 		return self[key]
 
@@ -85,12 +88,12 @@ class frame_cls:
 	def __len__(self):
 		return len(self._list)
 
-def load_frame(fname: str):
-	return frame_cls(fname)
+def load_frame(fname: str, noexcept: bool=True) -> frame_cls:
+	return frame_cls(fname, noexcept)
 
 ################################################################################
 
-def save_frame(fname, mode="w", **kwargs):
+def save_frame(fname: str, mode:str ="w", **kwargs):
 	msg   = f"save \"{fname}\".."
 	try:
 		

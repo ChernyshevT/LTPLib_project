@@ -37,7 +37,7 @@ def main(args):
 		 "en_field" : en_field,
 		 "vp_range" : vp_range,
 		}
-		if verrs := frame.verrs:
+		if frame.args.nrep:
 			dset[key].update({"verrs" : verrs})
 		
 		if frame.args.ions:

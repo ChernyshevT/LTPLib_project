@@ -6,14 +6,14 @@ _[document version: 20250615a]_
 
 # \_ltplib: <ins>L</ins>ow <ins>T</ins>emperature <ins>P</ins>lasma <ins>Lib</ins>rary
 This is middle-layer framework that provides a simple Python solution to construct PiC+MCC simulations (Particles-in-Cells + Monte Carlo Collisions).
-The framework offers a range of functions and primitives to facilitate a broad range of low-temperature plasma kinetic problems.
-By creating a high-level user-friendly API, **\_ltplib** aims to enable researchers and engineers to formulate and solve both simple and complex PiC+MCC problems in a flexible manner with the aid of modern computational techniques.
+The framework offers a range of functions and primitives to facilitate a broad range of low-temperature (non-relativistic) plasma kinetic problems.
+By creating a high-level user-friendly python-API, **\_ltplib** aims to enable researchers and engineers to formulate and solve both simple and complex PiC+MCC problems in a flexible manner with the aid of modern computational techniques.
 
 Features:
 - one-, two-, and three-dimensional problems with periodic or absorptive boundary conditions;
 - high-order form factors (up to 3);
 - explicit or semi-implicit particle movers;
-- fast and flexible Monte Carlo module allowing simulation of arbitrary mixtures of active and background components, taking into account anisotropic scattering,
+- fast and flexible Monte Carlo module allowing to simulate arbitrary mixtures of active and background components, taking into account anisotropic scattering,
 - universal data-driven solver for Poisson equation.
 
 The code is based on the former Θ-Hall [^chernyshev2019][^chernyshev2022], but it has been heavily modified and rewritten from scratch.
@@ -43,7 +43,7 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 	1. [`_ltplib.bind_remap_fn`](#bind_remap)
 1. [Code examples](#code_examples)
 	1. [`examples/run_localsim.py`](#run_localsim)
-	1. [`examples/run_two-stream2d.py`](#run_two-stream2d)
+	1. [`examples/run_two_stream.py`](#run_two_stream)
 
 ## Build instructions <a name="build"></a>
 The framework uses [pybind11](https://github.com/pybind/pybind11) to create a transparent interface between Python and C++ code. Dependencies are downloaded automatically by CMake FetchContent.
@@ -65,6 +65,9 @@ import _ltplib as ltp
 help(ltp)
 ```
 ## Brief introduction into PiC+MCC <a name="intro"></a>
+<!-- {𝐯} {𝐫} {𝐟} {𝐚} {𝐄} {𝐁} {𝐮} -->
+<!-- $f_i\left({𝐫},\,{𝐯},\,t\right)$ -->
+
 (To be done...)
 
 The following sections provide a brief overview for **\_ltplib** components.
@@ -677,7 +680,7 @@ The syntax as follows `--bginfo KEY1:FRACTION1 KEY2:FRACTION2`.
 
 (To be done...)
 
-## [`examples/run_two-stream2d.py`](./examples/run_two-stream2d.py) <a name="run_two-stream2d"></a>
+## [`examples/run_two_stream.py`](./examples/run_two_stream.py) <a name="run_two_stream"></a>
 Two-stream instability (under development)
 
 (To be done...)

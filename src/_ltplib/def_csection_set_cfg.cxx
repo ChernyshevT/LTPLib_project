@@ -117,6 +117,10 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts, const std::vector<std::st
 		};
 	}
 	/****************************************************************************/
+	if (not (FLAGS[CSEC_DEF] or FLAGS[MTCS_DEF])) {
+		throw bad_arg("cross-section is not defined!");
+	}
+	/****************************************************************************/
 	if (FLAGS[CSEC_DEF] and FLAGS[MTCS_DEF]) {
 		if (FLAGS[DCSFN_DEF]) {
 			throw bad_arg("can not use both \"MTCS\" & \"DCSFN\"");
