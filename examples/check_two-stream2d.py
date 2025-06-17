@@ -38,7 +38,7 @@ def main(args):
 		 "vp_range" : vp_range,
 		}
 		if frame.args.nrep:
-			dset[key].update({"verrs" : verrs})
+			dset[key].update({"verrs" : frame.verrs})
 		
 		if frame.args.ions:
 			vx = pdata.data[j1:j2, 2]
