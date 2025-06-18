@@ -144,6 +144,14 @@ void def_grids (py::module &m) {
 	]
 	)pbdoc")
 	
+	.def("find_node", [] (const grid_holder& self, std::vector<f32> pos) -> u32 {
+		
+		return std::visit([&] <u8 nd> (const grid_t<nd> &grid) {
+			return grid.find_node(&pos[0]);
+		}, self);
+		
+	})
+	
 	.def_property_readonly("ndim", [] (const grid_holder& self) {
 		return self.cfg->shape.size();
 	})

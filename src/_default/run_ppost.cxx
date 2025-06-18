@@ -1,3 +1,5 @@
+#define BACKEND_DEBUG
+
 #ifdef BACKEND_DEBUG
 #include <cstdio>
 #endif

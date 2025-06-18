@@ -8,14 +8,15 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 	u8 md=1; for (auto i{0}; i<nd; ++i) md*=3;
 	
 	if (py::len(cfg["step"]) != nd) {
-		throw bad_arg("len(step) = {} != {}", py::len(cfg["step"]), nd);
-	} for (auto ds : cfg["step"]) {
+		throw bad_arg("len(step) = {} != nd({})", py::len(cfg["step"]), nd);
+	}
+	for (auto ds : cfg["step"]) {
 		step.push_back(py::cast<f32>(ds));
 	}
 	
 	// setup axes
 	if (py::len(cfg["axes"]) != nd) {
-		throw bad_arg("len(axes) = {} != {}", py::len(cfg["axes"]), nd);
+		throw bad_arg("len(axes) = {} != nd({})", py::len(cfg["axes"]), nd);
 	}
 	size_t lctr_size{1};
 	for (auto axis : cfg["axes"]) {
@@ -39,14 +40,16 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 	lctr.resize(lctr_size, 0);
 	
 	// setup flags
-	flags.insert({"cylcrd", 0}); if (cfg.contains("cylcrd")) {
+	flags.insert({"cylcrd", 0});
+	if (cfg.contains("cylcrd")) {
 		if (nd == 2 and py::cast<std::string>(cfg["cylcrd"]) == "x"s) {
 			flags["cylcrd"] = 1;
 		} else {
 			throw bad_arg("grid{} isn't suitable for cylindrical coordinates!", nd);
 		}
 	}
-	flags.insert({"loopax", 0}); if (cfg.contains("loopax")) {
+	flags.insert({"loopax", 0});
+	if (cfg.contains("loopax")) {
 		for (auto c : py::cast<std::string>(cfg["loopax"])) {
 			if (u8(c-'x') >= nd) {
 				throw bad_arg("invalid loop axis: \'{}\'!", c);

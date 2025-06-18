@@ -15,8 +15,8 @@ def main(args):
 		
 		nx,ny = frame.cfg.units
 		dx,dy = frame.cfg.step
-		t0,t1 = [frame.args.dt*k for k in frame.cfg.tindex]
-		ng    = frame.args.order
+		t0,t1 = [frame.cfg.dt*k for k in frame.cfg.tindex]
+		ng    = frame.cfg.order
 		
 		Ex,Ey = np.gradient(frame.vplasma, dx, dy, edge_order=2)
 		en_field = np.mean((Ex*Ex + Ey*Ey)/8/np.pi)*2.99792458e2
@@ -30,8 +30,7 @@ def main(args):
 		
 		key = arg.replace("pdata","fstat").replace(".zip","") 
 		dset[key] = {
-		 "tindex"   : frame.cfg.tindex,
-		 "tstep"    : frame.args.dt,
+		 "cfg"      : frame.cfg
 		 "en_exx"   : np.mean(vx*vx)*2.842815e-16,
 		 "en_eyy"   : np.mean(vy*vy)*2.842815e-16,
 		 "en_field" : en_field,
@@ -47,6 +46,7 @@ def main(args):
 			 "en_ixx" : np.mean(vx*vx)*5.182139e-13,
 			 "en_iyy" : np.mean(vy*vy)*5.182139e-13,
 			})
+		# ~ print(dset.keys)
 	
 	fpath = os.path.dirname(os.path.abspath(arg))
 	save_frame(f"{fpath}/dset.zip", "w", **dset)

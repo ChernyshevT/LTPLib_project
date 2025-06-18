@@ -33,14 +33,18 @@ template<u8 nd> inject_fn_t construct_inject_fn
 			
 			if (u32 k{grid.find_node(pt)}; valid and k != 0) {
 				auto pool{self[k-1]};
+
 				if (u32 j{pool.index[0]}; j < pool.index[1]) {
 					for (u32 i{0}; i<nd+3; ++i) {
 						pool.parts[j][i+1].vec    = pt[i];
 					} pool.parts[j][0  ].tag[0] = tag;
 					++pool.index[0];
-				} else n_overflow++;
+				} else {
+					n_overflow++;
+				}
 			} //else skip
 		}
+		
 		return n_overflow;
 	};
 }
