@@ -136,22 +136,6 @@ public:
 		if constexpr (i > 0) {
 			return find_node<i-1>(pos, sh*(shape[i]+2), k + j*sh);
 		} else {
-			u32 n = lctr[k + j*sh];
-			if (n) {
-				auto node=(*this)[n-1];
-				form_t<nd, 1> form;
-				
-				if (auto flag = node.get_form(&form, pos); flag) {
-					printf("FAIL #%04d\n", n);
-					for (auto j{0u}; j<nd; ++j) {
-						printf("%c %10.3f -> [%010u] (%10.3f .. %10.3f)!\n", char('x'+j)
-						, pos[j], form.idx[j], node.edgel[j], node.edger[j]);
-					}
-				}
-				
-			}
-			
-			
 			return lctr[k+j*sh];
 		}
 	}
