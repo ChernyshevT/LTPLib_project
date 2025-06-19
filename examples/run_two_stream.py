@@ -229,7 +229,7 @@ def main(args, logger):
 		logger.info(f"{len(pstore)} samples created")
 		
 		if fpath := args.save:
-			fname = f"{os.path.abspath(fname)}/pdata-init.zip"
+			fname = f"{fpath}/pdata-init.zip"
 			data, index, = pstore.extract()
 			save_frame(fname, "w", **{
 			 "data"  : data,
@@ -301,7 +301,7 @@ def main(args, logger):
 		
 		# save frame
 		if (fpath := args.save):
-			save_frame(f"{os.path.abspath(fpath)}/frame{irun:06d}.zip", "w",
+			save_frame(f"{fpath}/frame{irun:06d}.zip", "w",
 			 cfg = dict(**vars(args),
 			       step   = grid.step,
 			       units  = grid.units,
@@ -327,7 +327,7 @@ def main(args, logger):
 		# save samples' dump
 		if (fpath := args.save) and irun in args.dump:
 			data, index, = pstore.extract()
-			save_frame(f"{os.path.abspath(fpath)}/pdata{irun:06d}.zip", "w", **{
+			save_frame(f"{fpath}/pdata{irun:06d}.zip", "w", **{
 			 "data"  : data,
 			 "index" : index,
 			 "descr" : pstore.ptlist,
@@ -352,7 +352,7 @@ args = {
 		"help"     : "run simulation without asking (task mode)",
 	},
 	"--save"     : {
-		"type"     : str,
+		"type"     : lambda fpath: os.path.abspath(os.path.expanduser(fpath)),
 		"required" : False,
 		"help"     : "path to save the results; default=\"\" (do not save)"
 	},
@@ -459,10 +459,9 @@ if __name__ == '__main__':
 				raise RuntimeError(f"dir \"{args.save}\" already exists!")
 		
 		# create log-file
-		if args.save:
+		if fpath := args.save:
 			os.makedirs(args.save, exist_ok=True)
-			fname\
-			= f"{args.save}/runat-{datetime.now().strftime('%Y-%m-%d-%H-%M')}.log"
+			fname = f"{fpath}/runat-{datetime.now().strftime('%Y-%m-%d-%H-%M')}.log"
 			
 			logger.info(f"will log into \"{fname}\"")
 			setup_logging(level=args.loglevel.upper(), root=True\
