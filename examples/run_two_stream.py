@@ -74,6 +74,8 @@ def main(args, logger):
 			 "loopax" : "xy",
 			}
 			node_size = mx*my
+			logger.info(f"use default2d preset: {nx}x{ny}")
+			
 		case "lowres3d":
 			nx, mx, dx = 48, 8, 0.025
 			ny, my, dy = 48, 6, 0.025
@@ -94,6 +96,7 @@ def main(args, logger):
 			 "loopax" : "xyz",
 			}
 			node_size = mx*my*mz
+			logger.info(f"use lowres3d preset: {nx}x{ny}x{nz}")
 		case _:
 			raise ValueError(f"invalid preset \"{args.preset}\"")
 		
@@ -115,6 +118,7 @@ def main(args, logger):
 	logger.info(f"tframe = {tframe:07.3f} ns")
 	logger.info(f"order  = {args.order}")
 	logger.info(f"npunit = {args.npunit}")
+	logger.info(f"units  = {}")
 	
 	##############################################################################
 	ltp.load_backend("default");
