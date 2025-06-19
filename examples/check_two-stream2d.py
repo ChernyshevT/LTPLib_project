@@ -12,7 +12,8 @@ def main(args):
 	for arg in args:
 		
 		pdata, frame = load_frame(arg), load_frame(arg.replace("pdata", "frame"))
-		nd = pdata.shape[1]-3
+		
+		nd = pdata.data.shape[1]-3
 		t0,t1 = [frame.cfg.dt*k for k in frame.cfg.tindex]
 		
 		grads = np.gradient(frame.vplasma, *frame.cfg.step, edge_order=2)
