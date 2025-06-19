@@ -70,6 +70,8 @@ def save_fig(fig, **kwargs):
 		fname = f"{fpath}/{fig.name}.{kwargs.get('fmt', 'pdf')}"
 	else:
 		fname = f"{fig.name}.{kwargs.get('fmt', 'pdf')}"
+		
+	fname = os.path.abspath(os.path.expanduser(fname))
 	
 	msg   = f"save \"{fname}\".."
 	try:
