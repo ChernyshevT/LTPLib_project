@@ -118,7 +118,6 @@ def main(args, logger):
 	logger.info(f"tframe = {tframe:07.3f} ns")
 	logger.info(f"order  = {args.order}")
 	logger.info(f"npunit = {args.npunit}")
-	logger.info(f"units  = {}")
 	
 	##############################################################################
 	ltp.load_backend("default");
