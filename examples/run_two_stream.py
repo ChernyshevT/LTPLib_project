@@ -203,17 +203,13 @@ def main(args, logger):
 	# now, let's generate samples to inject
 	if not (fpath := args.load):
 		nppin = np.prod(grid.units)*args.npunit 
-		print(nppin)
-		
 		pdata = np.empty([nppin, grid.ndim+3], dtype=np.float32)
+		
 		# generate positions
 		for ax, (ds, ns) in enumerate(zip(grid.step, grid.units)):
 			pdata[:, ax] = np.random.uniform(0, ds*ns, size=nppin)
 		
-		for ax in range(grid.ndim):
-			mn,mx = np.min(pdata[:, ax]), np.max(pdata[:, ax])
-		
-		#  generate electron velocities
+		# generate electron velocities
 		pdata[:, grid.ndim:] = np.random.normal(0, VE, size=[nppin,3])
 		pdata[:nppin//2, grid.ndim] += V0
 		pdata[nppin//2:, grid.ndim] -= V0

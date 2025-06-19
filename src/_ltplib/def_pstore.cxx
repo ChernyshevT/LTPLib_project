@@ -19,7 +19,7 @@ template<u8 nd> inject_fn_t construct_inject_fn
 	return [&] (u8 tag, const parts_input_t& input) -> size_t {
 		auto pts{input.unchecked<2>()};
 		if (pts.shape(1) != nd+3) {
-			throw std::invalid_argument(fmt::format("pts.shape[1]!={}+3", nd));
+			throw std::invalid_argument(fmt::format("pts.shape[1] != {}+3", nd));
 		}
 		
 		size_t n_overflow{0};

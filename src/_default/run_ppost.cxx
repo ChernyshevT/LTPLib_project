@@ -56,6 +56,7 @@ u32 run_ppost
 				
 				continue;
 			}
+			
 			/* skip if particle is adsorbed (in case of implicit solver) */
 			if (node.check_mask(form.idx)) [[unlikely]] {
 				continue;
