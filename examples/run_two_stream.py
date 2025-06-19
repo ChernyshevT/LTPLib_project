@@ -155,8 +155,9 @@ def main(args, logger):
 
 	##############################################################################
 	# declare function bindings:
-	ppush_fns = [ltp.bind_ppush_fn (pstore, f"ExEy:{mover}", emfield) \
-	 for mover in (["IMPL0","IMPLR"] if args.nrep>0 else ["LEAPF"]) 
+	emf_descr = ("ExEyEz")[:grid.ndim*2]
+	ppush_fns = [ltp.bind_ppush_fn (pstore, f"{emf_descr}:{mover}", emfield) \
+	 for mover in ["LEAPF", "IMPL0","IMPLR"]
 	]
 	ppost_fn = ltp.bind_ppost_fn (pstore, ptfluid, "C")
 	
