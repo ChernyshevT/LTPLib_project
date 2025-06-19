@@ -77,9 +77,9 @@ def main(args, logger):
 			logger.info(f"use default2d preset: {nx}x{ny}")
 			
 		case "lowres3d":
-			nx, mx, dx = 48, 8, 0.025
-			ny, my, dy = 48, 6, 0.025
-			nz, mz, dz = 48, 6, 0.025
+			nx, mx, dx = 96, 16, 0.0125
+			ny, my, dy = 96, 12, 0.0125
+			nz, mz, dz = 96, 12, 0.0125
 			grid_conf = {
 			 "nd"     : 3,
 			 "step"   : [dx,dy,dz],
