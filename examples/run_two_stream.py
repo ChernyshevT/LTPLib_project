@@ -229,7 +229,7 @@ def main(args, logger):
 		logger.info(f"{len(pstore)} samples created")
 		
 		if fpath := args.save:
-			fname = f"{fpath}/pdata-init.zip"
+			fname = f"{os.path.abspath(fname)}/pdata-init.zip"
 			data, index, = pstore.extract()
 			save_frame(fname, "w", **{
 			 "data"  : data,
@@ -301,7 +301,7 @@ def main(args, logger):
 		
 		# save frame
 		if (fpath := args.save):
-			save_frame(f"{fpath}/frame{irun:06d}.zip", "w",
+			save_frame(f"{os.path.abspath(fpath)}/frame{irun:06d}.zip", "w",
 			 cfg = dict(**vars(args),
 			       step   = grid.step,
 			       units  = grid.units,
@@ -327,7 +327,7 @@ def main(args, logger):
 		# save samples' dump
 		if (fpath := args.save) and irun in args.dump:
 			data, index, = pstore.extract()
-			save_frame(f"{fpath}/pdata{irun:06d}.zip", "w", **{
+			save_frame(f"{os.path.abspath(fpath)}/pdata{irun:06d}.zip", "w", **{
 			 "data"  : data,
 			 "index" : index,
 			 "descr" : pstore.ptlist,
