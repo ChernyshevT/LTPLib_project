@@ -28,7 +28,8 @@ def main(args):
 		vx = pdata.data[j0:j1, 2]
 		vy = pdata.data[j0:j1, 3]
 		
-		key = arg.replace("pdata","fstat").replace(".zip","") 
+		# ~ key = arg.replace("pdata","fstat").replace(".zip","") 
+		key = f"stat{frame.cfg.tindex[1]:06d}"
 		dset[key] = {
 		 "cfg"      : frame.cfg,
 		 "en_exx"   : np.mean(vx*vx)*2.842815e-16,
