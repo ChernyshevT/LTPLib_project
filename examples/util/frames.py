@@ -94,6 +94,7 @@ def load_frame(fname: str, noexcept: bool=True) -> frame_cls:
 ################################################################################
 
 def save_frame(fname: str, mode:str ="w", **kwargs):
+	fname = os.path.abspath(fname)
 	msg   = f"save \"{fname}\".."
 	try:
 		
