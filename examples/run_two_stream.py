@@ -179,15 +179,16 @@ def main(args, logger):
 		g_ptfluid[...] *= wcfft
 	
 	def run_field_step():
-		slicer1 = [slice(args.order,) for _ in eq.vmap.shape]
-		slicer2 = [slice(1, -1)       for _ in eq.vmap.shape]
-		padding = [(args.order+1, 1)       for _ in eq.vmap.shape]
+		slicer1 = [slice(args.order, None, None)  for _ in eq.vmap.shape]
+		slicer2 = [slice(1,          -1,   None)  for _ in eq.vmap.shape]
+		padding = [(args.order+1, 1)  for _ in eq.vmap.shape]
 		
 		# collect charge density
 		eq.cmap[...] = 0
 		eq.cmap[...] += g_ptfluid[*slicer1, 0]*M_4PI_E
 		eq.cmap[...] -= g_ptfluid[*slicer1, 1]*M_4PI_E \
 		                if args.ions else args.n_plasma*M_4PI_E
+		
 		# solve
 		verr = eq.solve()
 		

@@ -30,16 +30,16 @@ def main(args):
 		
 		key = arg.replace("pdata","fstat").replace(".zip","") 
 		dset[key] = {
-		 "cfg"      : frame.cfg
+		 "cfg"      : frame.cfg,
 		 "en_exx"   : np.mean(vx*vx)*2.842815e-16,
 		 "en_eyy"   : np.mean(vy*vy)*2.842815e-16,
 		 "en_field" : en_field,
 		 "vp_range" : vp_range,
 		}
-		if frame.args.nrep:
+		if frame.cfg.nrep:
 			dset[key].update({"verrs" : frame.verrs})
 		
-		if frame.args.ions:
+		if frame.cfg.ions:
 			vx = pdata.data[j1:j2, 2]
 			vy = pdata.data[j1:j2, 3] 
 			dset[key].update({
