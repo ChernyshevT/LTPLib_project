@@ -33,8 +33,8 @@ class poisson_eq_sp():
 		self.cwave.flat[1:] = -0.25/np.pi**2/sqsum.flat[1:]
 
 	def solve(self):
-		self.data[...]  = np.fft.fftn(self.cmap, axes=[0,1])*self.cwave
-		self.data[...]  = np.fft.ifftn(self.data, axes=[0,1])
+		self.data[...]  = np.fft.fftn  (self.cmap, axes=self.axes) * self.cwave
+		self.data[...]  = np.fft.ifftn (self.data, axes=self.axes)
 		err = np.max(np.abs(self.vmap-self.data.real))
 		self.vmap[...] = self.data.real
 		return err
@@ -77,9 +77,9 @@ def main(args, logger):
 			logger.info(f"use default2d preset: {nx}x{ny}")
 			
 		case "lowres3d":
-			nx, mx, dx = 96, 16, 0.0125
-			ny, my, dy = 96, 12, 0.0125
-			nz, mz, dz = 96, 12, 0.0125
+			nx, mx, dx = 48, 8, 0.025
+			ny, my, dy = 48, 6, 0.025
+			nz, mz, dz = 48, 6, 0.025
 			grid_conf = {
 			 "nd"     : 3,
 			 "step"   : [dx,dy,dz],
@@ -278,7 +278,8 @@ def main(args, logger):
 			for irep in range(0, args.nrep+1):
 				# push parts
 				t0 = time()
-				run_ppush_step(args.dt, irep>0)
+				mode = (args.nrep>0)+(irep>0)
+				run_ppush_step(args.dt, mode)
 				# obtain density & flows
 				t1 = time()
 				run_ppost_step()
@@ -288,7 +289,7 @@ def main(args, logger):
 				t2 = time()
 				
 				logger.debug\
-				(f"{' 'if irep else '*'}{irun:06d}/{isub:04d}/{irep:02d} verr={verr:6.3e}")
+				(f"{' 'if irep else '*'}{irun:06d}/{isub:04d}/{irep:02d}({'E0R'[mode]}) verr={verr:6.3e}")
 				
 				if irep and verr < args.epsilon:
 					break
