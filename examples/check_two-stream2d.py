@@ -35,7 +35,7 @@ def main(args):
 		 "vp_range" : vp_range,
 		}
 		if frame.cfg.nrep:
-			dset[key].update({"verrs" : frame.verrs})
+			dset[key].update({"errv" : frame.errv})
 		
 		if frame.cfg.ions:
 			vx = pdata.data[j1:j2, nd+0]
