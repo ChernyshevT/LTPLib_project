@@ -2,6 +2,8 @@
 
 #ifdef BACKEND_DEBUG
 #include <cstdio>
+#include <format>
+#include <iostream>
 #endif
 /******************************************************************************/
 
@@ -12,9 +14,68 @@
 #include "common/pushers.hxx"
 #include "common/loop_over.hxx"
 
-template<u8 nd, u8 mode, u8 ord>
+struct post_fn {
+	f32 *vpart;
+	f32 *vdata;
+	u64  fcode;
+	u64  shift;
+	
+	inline
+	post_fn (u8 _tag, f32 _vpart[], f32 _vdata[], u64 _fcode) {
+		fcode = (_fcode>>4);
+		shift = (_fcode & 0xf) * _tag;
+		vpart = _vpart;
+		vdata = _vdata;
+	}
+	
+	inline
+	void operator () (f32 w, u64 k) {
+		
+		for (u64 i{0}, arg{fcode}; arg; i = i+1, arg = arg>>4) {
+			f32 vx{vpart[0]}, vy{vpart[1]}, vz{vpart[2]};
+			
+			switch (arg & 0xf) {
+				default:
+					return;
+				case PPOST_ENUM::C0:
+					vdata[k + shift+i] += w;
+					continue;
+				case PPOST_ENUM::Fx:
+					vdata[k + shift+i] += w*vx;
+					continue;
+				case PPOST_ENUM::Fy:
+					vdata[k + shift+i] += w*vy;
+					continue;
+				case PPOST_ENUM::Fz:
+					vdata[k + shift+i] += w*vz;
+					continue;
+				case PPOST_ENUM::Pxx:
+					vdata[k + shift+i] += w*vx*vx;
+					continue;
+				case PPOST_ENUM::Pyy:
+					vdata[k + shift+i] += w*vy*vy;
+					continue;
+				case PPOST_ENUM::Pzz:
+					vdata[k + shift+i] += w*vz*vz;
+					continue;
+				case PPOST_ENUM::Pxy:
+					vdata[k + shift+i] += w*vx*vy;
+					continue;
+				case PPOST_ENUM::Pxz:
+					vdata[k + shift+i] += w*vx*vz;
+					continue;
+				case PPOST_ENUM::Pyz:
+					vdata[k + shift+i] += w*vy*vz;
+					continue;
+			}
+		}
+	};
+	
+};
+
+template<u8 nd, u8 ord>
 u32 run_ppost
-(const grid_t<nd> &grid, const pstore_t &pstore, vcache_t<f32> &latt) {
+(const grid_t<nd> &grid, const pstore_t &pstore, vcache_t<f32> &latt, u64 fcode) {
 
 	u32 flags{0};
 	#pragma omp parallel for
@@ -57,38 +118,15 @@ u32 run_ppost
 				continue;
 			}
 			
-			/* skip if particle is adsorbed (in case of implicit solver) */
+			/* skip sample if it is inside the masked cell */
 			if (node.check_mask(form.idx)) [[unlikely]] {
 				continue;
 			}
 			
-			// write pVDF moments
-			auto fn = [&p, &cache] (f32 w, size_t kk) {
-				const size_t midx = kk+p.tag[0]*mode;
-				// write density
-				if constexpr (mode >= POST_MODE::C) {
-					cache[midx] += w;
-				}
-				// write flux
-				if constexpr (mode >= POST_MODE::CF) {
-					cache[midx+1] += w*p.vel[0]; //vx
-					cache[midx+2] += w*p.vel[1]; //vy
-					cache[midx+3] += w*p.vel[2]; //vz
-				}
-				// write pressure (raw)
-				if constexpr (mode >= POST_MODE::CFP) {
-					cache[midx+4] += w*p.vel[0]*p.vel[0]; //vx*vx
-					cache[midx+5] += w*p.vel[1]*p.vel[1]; //vy*vy
-					cache[midx+6] += w*p.vel[2]*p.vel[2]; //vz*vz
-				}
-				//write stress (raw)
-				if constexpr (mode >= POST_MODE::CFPS) {
-					cache[midx+7] += w*p.vel[0]*p.vel[1]; //vx*vy
-					cache[midx+8] += w*p.vel[0]*p.vel[2]; //vx*vz
-					cache[midx+9] += w*p.vel[1]*p.vel[2]; //vy*vz
-				}
-			};
-			loop_over_form<ord+1,nd>(fn, offst, form.idx, form.vals);
+			/* calculate pVDF moments */
+			loop_over_form<ord+1,nd>(post_fn(p.tag[0], p.vel, cache, fcode)
+			, offst, form.idx, form.vals);
+
 		}
 		// end loop over particles
 	}

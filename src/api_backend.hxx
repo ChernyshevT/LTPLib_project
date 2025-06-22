@@ -1,5 +1,5 @@
 #pragma once
-#define API_V "API2025-04-01"
+#define API_V "API2025-06-22"
 
 #if defined(_WIN32) || defined(_WIN64)
 #define LIB_EXPORT __declspec(dllexport)
@@ -72,12 +72,26 @@ enum POST_MODE : u8 {
 	CFPS = 10 // concentration, flux, pressure, stress
 };
 
+enum PPOST_ENUM : u64 {
+	/* concentration */
+	C0  = 0x1,
+	/* flux */
+	Fx  = 0x2,
+	Fy  = 0x3,
+	Fz  = 0x4,
+	/* pressure */
+	Pxx = 0x5,
+	Pyy = 0x6,
+	Pzz = 0x7,
+	/* stress */
+	Pxy = 0x8,
+	Pxz = 0x9,
+	Pyz = 0xa,
+};
+
 template<u8 nd>
-using ppost_fn_t = u32 (
-	const grid_t<nd> &,
-	const pstore_t &,
-	vcache_t<f32> &
-);
+using ppost_fn_t = \
+u32 (const grid_t<nd> &, const pstore_t &, vcache_t<f32> &, u64);
 
 /*******************************************************************************
 ** API for ppush functions ****************************************************/
@@ -95,13 +109,8 @@ enum PUSH_MODE : u8 {
 //es-flag
 
 template<u8 nd>
-using ppush_fn_t = u32 (
-	const grid_t<nd> &,
-	pstore_t &,
-	const vcache_t<f32> &,
-	f32,
-	u32
-);
+using ppush_fn_t = \
+u32 (const grid_t<nd> &, pstore_t &, const vcache_t<f32> &, f32, u32);
 
 /*******************************************************************************
 ** API for order functions ***************************************************/

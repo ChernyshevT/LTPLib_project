@@ -85,7 +85,7 @@ u32 run_ppush
 			/* obtain local field acting on particle ***************/
 			f32 fpt[6]{0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
 			auto fn = [&fpt, &flocal, &fcode] (f32 w, size_t k) {
-				for (size_t arg{fcode}, i{0}; arg; arg>>=4, ++i) {
+				for (size_t arg{fcode}, i{0}; arg; ++i, arg = arg>>4) {
 					fpt[arg&0b0111] += w*flocal[k+i];
 				}
 			};
@@ -93,12 +93,6 @@ u32 run_ppush
 
 			// push particle (t -> t+dt)
 			push_pt<nd, mode, cylcrd>(p.pos, fpt, dt);
-			
-			//HACK HACK HACK!!!
-			//~ if (p.pos[0] < 0.0f) {
-				//~ p.pos[0]  = -p.pos[0];  //x
-				//~ p.pos[nd] = -p.pos[nd]; //vx
-			//~ }
 			
 			// find the direction
 			if (u8 idir{node.find_idir(p.pos, mode>0 ? p.pos+nd+3 : nullptr)}) {

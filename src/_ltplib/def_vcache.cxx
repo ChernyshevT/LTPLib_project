@@ -74,6 +74,11 @@ struct vcache_ctor {
 				/*readonly*/ true
 			));
 		}
+		
+		self.reset_fn = [ptr=(void*)field.data, sz=(field.blocksize*grid.size)] () {
+			memset(ptr, 0, sz);
+		};
+		
 	}
 };
  
@@ -112,6 +117,10 @@ void def_vcache(py::module &m) {
 	(), "grid"_a, "dtype"_a, "vsize"_a=1, "order"_a=0
 	,""
 	, py::keep_alive<1, 2>())
+	
+	.def("reset", [] (vcache_holder& self) {
+		self.reset_fn();
+	})
 
 	.def("__len__",
 	[] (const vcache_holder& self) {

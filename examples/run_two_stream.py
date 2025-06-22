@@ -150,16 +150,16 @@ def main(args, logger):
 	ptfluid = ltp.vcache (grid
 	, dtype = "f32"
 	, order = args.order
-	, vsize = len(pstore.ptlist)) # n
+	, vsize = len(pstore.ptlist)*4) # C Pxx Pyy Pzz
 	g_ptfluid = np.zeros (**ptfluid.cfg)
 
 	##############################################################################
 	# declare function bindings:
-	emf_descr = ("ExEyEz")[:grid.ndim*2]
+	emf_descr = "ExEyEz"[:grid.ndim*2]
 	ppush_fns = [ltp.bind_ppush_fn (pstore, f"{emf_descr}:{mover}", emfield) \
 	 for mover in ["LEAPF", "IMPL0","IMPLR"]
 	]
-	ppost_fn = ltp.bind_ppost_fn (pstore, ptfluid, "C")
+	ppost_fn = ltp.bind_ppost_fn (pstore, "C Pxx Pyy Pzz", ptfluid)
 	
 	# remap-fns:
 	remap_emfield = ltp.bind_remap_fn (emfield, "<", g_emfield); #remap_emfield()
@@ -187,7 +187,7 @@ def main(args, logger):
 		# collect charge density
 		eq.cmap[...] = 0
 		eq.cmap[...] += g_ptfluid[*slicer1, 0]*M_4PI_E
-		eq.cmap[...] -= g_ptfluid[*slicer1, 1]*M_4PI_E \
+		eq.cmap[...] -= g_ptfluid[*slicer1, 4]*M_4PI_E \
 		                if args.ions else args.n_plasma*M_4PI_E
 		
 		# solve
@@ -313,13 +313,20 @@ def main(args, logger):
 			 vplasma = np.mean(frame_vplasma, axis=0)
 			           if args.mean else frame_vplasma
 			 ,
-			 # electron concentration:
-			 ne  = np.mean(frame_ptfluid[..., 0], axis=0)
-			       if args.mean else frame_ptfluid[..., 0]
+			 # electron concentration & pressure:
+			 ne = np.mean(frame_ptfluid[..., 0], axis=0)
+			      if args.mean else frame_ptfluid[..., 0]
+			 ,
+			 pe = np.mean(frame_ptfluid[...,  1:4], axis=0)
+			      if args.mean else frame_ptfluid[..., 1:4]
 			 ,
 			 # ion concentration:
-			 **(dict(ni = np.mean(frame_ptfluid[..., 1], axis=0)
-			              if args.mean else frame_ptfluid[..., 1]
+			 **(dict(
+			    ni = np.mean(frame_ptfluid[..., 4], axis=0)
+			    if args.mean else frame_ptfluid[..., 4]
+			    ,
+			    pi = np.mean(frame_ptfluid[..., 5:8], axis=0)
+			    if args.mean else frame_ptfluid[..., 5:8]
 			 ) if args.ions else {}),
 			 # error-vector
 			 **(dict(errv = frame_errv) if args.nrep else {}),

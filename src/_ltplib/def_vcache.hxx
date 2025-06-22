@@ -49,6 +49,8 @@ struct vcache_holder : vcache_v {
 		std::vector<py::array>   nodes;
 	} cache;
 	
+	std::function<void(void)>  reset_fn;
+	
 	/* vcache_holder (const grid_holder&, std::string, py::dict);*/
 	 vcache_holder
 	 (const grid_holder&, std::string, u8, u8, py::kwargs);

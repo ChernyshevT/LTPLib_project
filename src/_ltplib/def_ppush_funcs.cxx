@@ -145,7 +145,7 @@ void def_ppush_funcs (py::module &m) {
 		}, *pstore.gridp);
 	}, "pstore"_a, "descr"_a, "emfield"_a
 	, PPUSH_FN
-	, py::keep_alive<0, 1>()
-	, py::keep_alive<0, 3>()
+	, py::keep_alive<0, 1>() /* keep pstore */
+	, py::keep_alive<0, 3>() /* keep emfield */
 	);
 }

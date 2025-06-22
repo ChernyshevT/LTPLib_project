@@ -1,11 +1,11 @@
 text = \
-"""extern "C" LIB_EXPORT
-u32 ppost{{nd}}_{{mode}}_{{order}}_fn
-(const grid_t<{{nd}}> &grid, const pstore_t &pstore, vcache_t<f32> &ptfluid) {
+r"""extern "C" LIB_EXPORT
+u32 ppost{{nd}}_{{order}}_fn
+(const grid_t<{{nd}}> &grid, const pstore_t &pstore, vcache_t<f32> &ptfluid, u64 fcode) {
 	u32 flags;
 
-	flags = run_ppost<{{nd}}, POST_MODE::{{mode}}, FORM_ORDER::{{order}}>
-	(grid, pstore, ptfluid);
+	flags = run_ppost<{{nd}}, FORM_ORDER::{{order}}>
+	(grid, pstore, ptfluid, fcode);
 	if (flags) {
 		return ERR_CODE::PPOST_ERR | flags;
 	} else {
@@ -16,7 +16,6 @@ u32 ppost{{nd}}_{{mode}}_{{order}}_fn
 
 args = {
 	"nd"    : [1,2,3],
-	"mode"  : ["C", "CF", "CFP", "CFPS"],
 	"order" : ["LINE", "QUAD", "CUBE"]
 }
 
