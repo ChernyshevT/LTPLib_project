@@ -27,20 +27,34 @@ using namespace pybind11::literals;
 extern dylibs_t libs;
 /******************************************************************************/
 const char *PMCSIM_FN {
-R"pbdoc(This binding is for Monte-Carlo simulation on particles' ensemble. 
+R"pbdoc(This function binding is to perform collisional (diffusive) step of
+particles' ensemble evolution, t->t+dt.
+Null-collision Monte-Carlo simulation is used uder the hood, see (README.md).
 
 Parameters
 ----------
 
-  :param pstore: particles' ensemble to search for collisions (will be modified)
-  
-  :param result:
-  
-  :param cset:
-  
-  :param bgrnd: backgrounds' densities, [flow velocities, temperatures...]
+pstore: _ltplib.pstore, will be modified
+  Particles' storage to evolve.
 
-	:returns: bind_mcsim_fn(...) -> fn_object(dt: f32, seed: int) -> RET_ERRC
+events: _ltplib.vcache (order=0, dtype="u32")
+  Value cache to write the number of events in each channel.
+  Note, there is no automatic clean-up, values will append.
+  Use events.reset() to clean-up counters.
+
+cset: _ltplib.csection_set
+  Cross-section database.
+  
+bgrnd: _ltplib.vcache (order=0, dtype="f32")
+  Value cache to store background concentrations to interact with.
+
+Returns
+----------
+
+Function object with 2 argument:
+  bind_ppush_fn(...) -> (dt: float, seed int) -> None
+The function object's call performs the calculation.
+Here, dt --- time step, seed --- seed-value for random generator.
 )pbdoc"};
 
 /******************************************************************************/
@@ -54,8 +68,6 @@ void def_mcsim_funcs (py::module &m) {
 		
 		if (pstore.cfg->ptinfo != cset.cfg->ptinfo)
 		throw std::invalid_argument("incompatable \"ptinfo\" parameters");
-		
-		//if ncsect != cfreq_h.cache.shape[nd]
 		
 		if (cfreq_h.cache.order != 0 or not cfreq_h.cache.dtype.is(py::dtype::of<u32>()))
 		throw std::invalid_argument("result should be order=0, u32");
@@ -79,12 +91,12 @@ void def_mcsim_funcs (py::module &m) {
 				return RET_ERRC{fn (grid, pstore, cfreq, cset, bgrnd, dt, seed)};
 			};
 		}, *pstore.gridp);
-	}, "pstore"_a, "cfreq"_a ,"cset"_a, "bgrnd"_a
+	}, "pstore"_a, "events"_a ,"cset"_a, "bgrnd"_a
 	, PMCSIM_FN
-	, py::keep_alive<0, 1>()
-	, py::keep_alive<0, 2>()
-	, py::keep_alive<0, 3>()
-	, py::keep_alive<0, 4>()
+	, py::keep_alive<0, 1>() /* keep pstore */
+	, py::keep_alive<0, 2>() /* keep events */
+	, py::keep_alive<0, 3>() /* keep cset */
+	, py::keep_alive<0, 4>() /* keep bgrnd */
 	);
 	
 }

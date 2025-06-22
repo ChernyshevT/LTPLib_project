@@ -75,8 +75,7 @@ u64 parse_mode_string(const char* mode_str) {
 
 /******************************************************************************/
 const char * PPOST_FN {
-R"pbdoc(This function binding is used to post pVDF moments on the grid units.
-The 'order' of value cache defines the order of the convolution kernel.
+R"pbdoc(This function binding is used to put pVDF moments to the grid units.
 
 Parameters
 ----------
@@ -85,14 +84,14 @@ pstore: _ltplib.pstore
   Particles' storage to read from
 
 descr: str
-  List of pVDF moments to calculate:
+  String describing set of pVDF moments to calculate:
   - concentration     "C"
   - flux              "F[x|y|z]"
   - pressure/stress   "P[xx|xy|xz|yy|yz|zz]"
   Tokens can be separated by spaces or not, i.e. descr = "CFx Fy Fz Pxx Pyy Pzz"
 
-ptfluid: _ltplib.vcache
-  Value caache to write in.
+ptfluid: _ltplib.vcache (order>=1, dtype="f32")
+  Value cache to write in. The order of ptflued defines the type of form-factor.
  
 Returns
 ----------

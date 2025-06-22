@@ -71,11 +71,12 @@ segmented data and global array.
 
 Parameters
 ----------
-vcache : segmented data
+vcache: _ltpib.vcache
 
-direction : '<' (from array to data) or '>' (from data to array)
+direction: str
+  '<' (from array to data) or '>' (from data to array)
 
-vdata : global data array
+vdata: numpy.ndarray
 
 )pbdoc"
 };
@@ -113,6 +114,9 @@ void def_remap_funcs (py::module &m) {
 				return fn (grid, vcache, ptr);
 			};
 		}, *(vcache_h.gridp), vcache_h);
-	}, "vcache"_a, "direction"_a ,"iodata"_a,
-	REMAP_FN);
+	}, "vcache"_a, "direction"_a ,"vdata"_a
+	, REMAP_FN
+	, py::keep_alive<0, 1>() /* keep vcache */
+	, py::keep_alive<0, 3>() /* keep vdata */
+	);
 }

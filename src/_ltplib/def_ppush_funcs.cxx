@@ -29,29 +29,31 @@ const char *PPUSH_FN {
 R"pbdoc(This function binding is used to calculate collision-less (streaming)
 step of particles' ensemble evolution, t->t+dt.
 
-Note, particle form-factor's order defined by order of emfield.
+Parameters
+----------
+
+pstore: _ltplib.pstore
+  Particles' storage to evolve.
+
+descr: str
+  String describing the set of emfield-components and imtegration scheme to use.
+  Tokens can be separated by spaces or not, i.e. descr = "ExEyBz:[SCHEME]".
+  The following schemes are available (see README.md for details):
+  - "LEAPF"         --- explicit leap-frog scheme;
+  - "IMPL0"+"IMPLR" --- symmetric semi-implicit scheme (predictor+corrector).
+
+emfield: _ltplib.vcache (order>=1, dtype="f32")
+  Vaulue cache to read electromagnetic field components.
+  The order of emfield defines the type of form-factor to use.
 
 Returns
 ----------
 
-	Function object with 2 arguments.
-	The function object's call performs the calculation
-	and return RET_ERRC object:
-	bind_ppush_fn(...) -> fn_object(dt) -> RET_ERRC, where dt is the time-step.
-
-Parameters
-----------
-	pstore: particles' storage to evolve. Note that after the streaming step the
-	integrity of the storage is violated. Additional step (see _ltplib.order_fn)
-	is required to fix the integrity.
-	
-	emfield:
-		Segmented array containing electromagnetic field vectors.
-	
-	descr:
-		String to describe the order of components in emfield-vector,
-		and type of the integrator scheme ("LEAPF" if omitted),
-		for example descr = "Ex Ey Bz : MODE".
+Function object with 1 argument:
+  bind_ppush_fn(...) -> (dt: float) -> None
+The function object's call performs the calculation.
+Here, dt --- time step.
+  
 
 )pbdoc"};
 

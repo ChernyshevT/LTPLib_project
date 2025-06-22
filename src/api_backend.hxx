@@ -107,7 +107,7 @@ enum PUSH_MODE : u8 {
 };
 
 /* nibbles to encode em-field components */
-enum EMF_ENUM : f32 {
+enum EMF_ENUM : u32 {
 	MASK = 0x7,
 	Ex   = 0x8|0,
 	Ey   = 0x8|1,
