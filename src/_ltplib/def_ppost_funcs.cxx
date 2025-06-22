@@ -55,7 +55,7 @@ u64 parse_mode_string(const char* mode_str) {
 			size_t len = std::strlen(table[i].key);
 			if (std::strncmp(mode_str, table[i].key, len) == 0) {
 				if (used[i]) {
-					throw std::invalid_argument(std::format("duplicate token: \"{}\"", table[i].key));
+					throw bad_arg("duplicate token: \"{}\"", table[i].key);
 				}
 				used[i] = true;
 				fcode = fcode | (table[i].val << (4*(1+count)));
@@ -66,7 +66,7 @@ u64 parse_mode_string(const char* mode_str) {
 			}
 		}
 		if (!matched) {
-			throw std::invalid_argument(std::format("invalid descr segment: \"{}\"", mode_str));
+			throw bad_arg("invalid descr segment: \"{}\"", mode_str);
 		}
 	}
 
@@ -75,27 +75,30 @@ u64 parse_mode_string(const char* mode_str) {
 
 /******************************************************************************/
 const char * PPOST_FN {
-R"pbdoc(This function binding is used to obtain pVDF moments on the grid cells.
-Segmented array's order defines the order of the convolution kernel.
+R"pbdoc(This function binding is used to post pVDF moments on the grid units.
+The 'order' of value cache defines the order of the convolution kernel.
 
 Parameters
 ----------
 
-pstore : particles' storage to read from
+pstore: _ltplib.pstore
+  Particles' storage to read from
 
-ptfluid : segmented array to write in
+descr: str
+  List of pVDF moments to calculate:
+  - concentration     "C"
+  - flux              "F[x|y|z]"
+  - pressure/stress   "P[xx|xy|xz|yy|yz|zz]"
+  Tokens can be separated by spaces or not, i.e. descr = "CFx Fy Fz Pxx Pyy Pzz"
 
-mode : list of pVDF moments to calculate:
-	[*] "C"    concentration: {n}
-	[*] "CF"   concentration, flux: {n,fx,fy,fz}
-	[*] "CFP"  concentration, flux, pressure: {n,fx,fy,fz,pxx,pyy,pzz}
-	[*] "CFPS" concentration, flux, pressure+stress: {n,fx,fy,fz,pxx,pyy,pzz,pxt,pxz,pyz}"
-
+ptfluid: _ltplib.vcache
+  Value caache to write in.
+ 
 Returns
 ----------
 
-	Function object. The call performs the calculation and return RET_ERRC object:
-	bind_ppost_fn(...) -> fn_object() -> RET_ERRC
+  Function object. The call performs the calculation and return RET_ERRC object:
+  bind_ppost_fn(...) -> fn_object() -> RET_ERRC
 )pbdoc"
 };
 

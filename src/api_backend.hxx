@@ -72,6 +72,7 @@ enum POST_MODE : u8 {
 	CFPS = 10 // concentration, flux, pressure, stress
 };
 
+/* nibbles to encode pVDF moments */
 enum PPOST_ENUM : u64 {
 	/* concentration */
 	C0  = 0x1,
@@ -103,6 +104,17 @@ enum PUSH_MODE : u8 {
 	
 	EMFLAG = 0b100,  //electromagnetic, 0=electrostatic 
 	RLFLAG = 0b1000, //relativistic case
+};
+
+/* nibbles to encode em-field components */
+enum EMF_ENUM : f32 {
+	MASK = 0x7,
+	Ex   = 0x8|0,
+	Ey   = 0x8|1,
+	Ez   = 0x8|2,
+	Bx   = 0x8|3,
+	By   = 0x8|4,
+	Bz   = 0x8|5,
 };
 
 //rz-flag
