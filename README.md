@@ -460,7 +460,7 @@ This function binds its' arguments to motion equation solver from the backend.
 The function accepts the following arguments:
 - *pstore* --- pVDF samples;
 - *descr* --- string containing components of electromagnetic field
-and type of the solver separated by semicolon symbol (for example `"Ex Ey Bz : METHOD"`);
+and type of the solver separated by semicolon symbol (for example `"Ex Ey Bz : [SCHEME]"`, see below);
 - *emfield* --- value cache for electromagnetic field (`dtype="f32"`).
 
 Resulting functional object has following signature
@@ -534,12 +534,14 @@ ${\rm p} = \int_{𝐯}{𝐯}\otimes{𝐯}\ f({𝐫},\ {𝐯})\ {\rm d}{𝐯}$.
 
 The function accepts the following arguments:
 - *pstore* --- pVDF samples;
-- *ptfluid* --- value cache for the result (`dtype="f32"`);
-- *mode* --- string describing moments to calculate:
-	- `"C"` --- concentration ($n$);
-	- `"CF"` --- concentration, flux (${𝐟}$);
-	- `"CFP"` --- concentration, flux, pressure (${\rm Tr}({\rm p})$);
-	- `"CFPS"` --- concentration, flux, pressure+stress tensor (${\rm p}$).
+- *descr* --- string describing moments to calculate:
+	- `"C"` --- <ins>c</ins>oncentration;
+	- `"F[x|y|z]"` --- <ins>f</ins>lux vector components;
+	- `"P[xx|xy|xz|yy|yz|zz]"` --- <ins>p</ins>ressure/stress tensor components;
+- *ptfluid* --- value cache for the result (`dtype="f32"`).
+The rules for *descr*-string are the same as for previous case,
+i.e. tokens can be separated by spaces and should not repeat.
+For example, `descr = "C Fx Fy Fz Pxx Pyy Pzz"`.
 
 Resulting functional object has following signature
 `() -> _ltplib.RET_ERRC`.
