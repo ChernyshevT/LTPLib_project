@@ -47,7 +47,7 @@ def main(args, logger):
 	M_4PI_E  = 6.035884e-09
 	##############################################################################
 	# problem's presets:
-	E0       = 250  # eV
+	E0       = args.stream_en  # eV
 	T0       = 0.25 # eV
 	
 	V0  = np.sqrt(E0 * ECHARGE/150./ME)
@@ -240,8 +240,8 @@ def main(args, logger):
 	
 	else: # inject existing distro
 		pdata = load_frame(fpath)
-		for key,a,b in zip(f.descr, f.index, f.index[1:]):
-			pstore.inject({key: f.data[a:b]})
+		for key,a,b in zip(pdata.descr, pdata.index, pdata.index[1:]):
+			pstore.inject({key: pdata.data[a:b]})
 		logger.info(f"loaded \"{fpath}\" ({len(pstore)} samples injected)")
 
 	##############################################################################
@@ -261,9 +261,8 @@ def main(args, logger):
 		logger.info("start calculation")
 	# now, run main cycle
 	ts = np.empty([3], dtype=np.float64)
-	for irun in range(1, args.nrun+1):
+	for irun in range(args.nstart, args.nrun+1):
 		# start new frame [t --> t + args.dt*args.nsub] & clear data
-		
 		t0, t1 = (irun-1)*args.nsub*args.dt, irun*args.nsub*args.dt
 		logger.info(f"frame#{irun:06d} ({t0*1e9:07.3f} -> {t1*1e9:07.3f} ns)..")
 		
@@ -352,10 +351,6 @@ args = {
 		"default"  : "INFO",
 		"help"     : "DEBUG/INFO/WARNING/ERROR",
 	},
-	"--prepare"  : {
-		"action"   : "store_false",
-		"help"     : "show configuration & exit",
-	},
 	"--run"      : {
 		"action"   : argparse.BooleanOptionalAction,
 		"help"     : "run simulation without asking (task mode)",
@@ -377,6 +372,10 @@ args = {
 		"required" : False,
 		"help"     : "path to load pVDF dump",
 	},
+	"--nstart" : {
+		"type"     : int,
+		"default"  : 1,
+	},
 	"--order"    : {
 		"type"     : int,
 		"default"  : 1,
@@ -390,6 +389,11 @@ args = {
 	"--ions"    : {
 		"action"   : "store_true",
 		"help"     : "include ions as an active background charge",
+	},
+	"--stream_en"  : {
+		"type"     : float,
+		"default"  : 250,
+		"help"     : "initial kinetic energy",
 	},
 	"--extra": {
 		"type"     : float,
@@ -456,7 +460,7 @@ if __name__ == '__main__':
 	try:
 
 		# check directory
-		if args.save and os.path.isdir(args.save):
+		if args.save and os.path.isdir(args.save) and args.nstart==1:
 			if not args.run:
 				if input\
 				(f"dir \"{args.save}\" already exists, delete contents? [y|yes] or.. ")\
