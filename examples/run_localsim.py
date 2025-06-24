@@ -132,7 +132,7 @@ def main(args):
 	ltp.bind_remap_fn(bgrnd, "<", g_bgrnd)()
 	
 	##############################################################################
-	ppush_fn = ltp.bind_ppush_fn (pstore, "ExBz", emfield)
+	ppush_fn = ltp.bind_ppush_fn (pstore, "ExBz:LEAPF", emfield)
 	mcsim_fn = ltp.bind_mcsim_fn (pstore, cfreq, cset, bgrnd)
 	remap_cfreq_out = ltp.bind_remap_fn (cfreq, ">", g_cfreq)
 	remap_cfreq_in  = ltp.bind_remap_fn (cfreq, "<", g_cfreq)
@@ -163,9 +163,10 @@ def main(args):
 		for isub in range (1, args.nsub+1):
 			
 			t0 = time()
-			mcsim_fn(args.dt, np.random.randint(0xFFFFFFFF, dtype=np.uint32))()
+			seed = np.random.randint(0xFFFFFFFF, dtype=np.uint32)
+			mcsim_fn(args.dt, seed)
 			t1 = time()
-			ppush_fn(args.dt)()
+			ppush_fn(args.dt)
 			t2 = time()
 			ts[1] += t1-t0
 			ts[2] += t2-t1

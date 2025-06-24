@@ -20,8 +20,10 @@ using np_array=py::array;
 #include "def_grid.hxx"
 #include "def_vcache.hxx"
 
-#include "api_backend.hxx"
 #include "typedefs.hxx"
+#include "api_backend.hxx"
+#include "api_frontend.hxx"
+
 #include "io_strings.hxx"
 #include "io_dylibs.hxx"
 extern dylibs_t libs;
@@ -66,18 +68,25 @@ tp* check_array_arg
 
 /******************************************************************************/
 const char *REMAP_FN {
-R"pbdoc(Function binding to transfer (remap) data between cache friendly
-segmented data and global array.
+R"pbdoc(Function binding to transfer (remap) data between cache-friendly
+value cache and external array (vdata).
 
 Parameters
 ----------
 vcache: _ltpib.vcache
 
 direction: str
-  '<' (from array to data) or '>' (from data to array)
+  '<' (from vdata to vcache)
+  or
+  '>' (from vcache to vdata)
 
 vdata: numpy.ndarray
 
+Returns
+----------
+
+Function object without arguments:
+  bind_remap_fn(...) -> () -> None
 )pbdoc"
 };
 
@@ -111,7 +120,7 @@ void def_remap_funcs (py::module &m) {
 			
 			auto &&fn = libs[backend].get_function<remap_fn_t<nd,tp>>(fn_name);
 			return [&, ptr, fn] () mutable {
-				return fn (grid, vcache, ptr);
+				fn(grid, vcache, ptr);
 			};
 		}, *(vcache_h.gridp), vcache_h);
 	}, "vcache"_a, "direction"_a ,"vdata"_a

@@ -317,7 +317,7 @@ void def_csections(py::module &m) {
 		} else {
 			return std::nullopt;
 		}
-	}, py::keep_alive<0, 1>())
+	})
 	
 	/* end database entry class */;
 }

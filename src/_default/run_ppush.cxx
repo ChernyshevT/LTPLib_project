@@ -85,8 +85,8 @@ u32 run_ppush
 			/* obtain local field acting on particle ***************/
 			f32 fpt[6]{0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
 			auto fn = [&fpt, &flocal, &fcode] (f32 w, size_t k) {
-				for (size_t arg{fcode}, i{0}; arg; ++i, arg = arg>>4) {
-					fpt[arg&0b0111] += w*flocal[k+i];
+				for (u32 i{0u}, n{0xf & fcode}; i<n; ++i) {
+					fpt[0xf & (fcode>>(4*i+4))] += w*flocal[k+i];
 				}
 			};
 			loop_over_form<ord+1,nd>(fn, offst, form.idx, form.vals, mudt[p.tag[0]]);

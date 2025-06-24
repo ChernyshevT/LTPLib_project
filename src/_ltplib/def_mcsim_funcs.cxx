@@ -19,10 +19,11 @@ using namespace pybind11::literals;
 #include "def_vcache.hxx"
 #include "def_csection_set.hxx"
 
-#include "api_backend.hxx"
 #include "typedefs.hxx"
-#include "io_strings.hxx"
+#include "api_backend.hxx"
+#include "api_frontend.hxx"
 
+#include "io_strings.hxx"
 #include "io_dylibs.hxx"
 extern dylibs_t libs;
 /******************************************************************************/
@@ -34,7 +35,7 @@ Null-collision Monte-Carlo simulation is used uder the hood, see (README.md).
 Parameters
 ----------
 
-pstore: _ltplib.pstore, will be modified
+pstore: _ltplib.pstore
   Particles' storage to evolve.
 
 events: _ltplib.vcache (order=0, dtype="u32")
@@ -76,7 +77,7 @@ void def_mcsim_funcs (py::module &m) {
 		throw std::invalid_argument("background should be order=0, f32");
 		
 		return std::visit([&] <u8 nd>
-		(const grid_t<nd>& grid) -> std::function<RET_ERRC(f32, u32)> {
+		(const grid_t<nd>& grid) -> std::function<void(f32, u32)> {
 			auto &cfreq = std::get<vcache_t<u32>>(cfreq_h);
 			auto &bgrnd = std::get<vcache_t<f32>>(bgrnd_h);
 			
@@ -86,9 +87,10 @@ void def_mcsim_funcs (py::module &m) {
 			logger::debug("bind {}->{} &grid={}, &pstore={}, &cfreq={}, &cset={}, &bgrnd={}",
 			backend, fn_name, (void*)(&grid), (void*)(&pstore), (void*)(&cfreq), (void*)(&cset), (void*)(&bgrnd) 
 			);
+			
 			auto &&fn = libs[backend].get_function<mcsim_fn_t<nd>>(fn_name);
-			return [&, fn] (f32 dt, u32 seed) -> RET_ERRC {
-				return RET_ERRC{fn (grid, pstore, cfreq, cset, bgrnd, dt, seed)};
+			return [&, fn] (f32 dt, u32 seed) -> void {
+				check_errc(fn(grid, pstore, cfreq, cset, bgrnd, dt, seed));
 			};
 		}, *pstore.gridp);
 	}, "pstore"_a, "events"_a ,"cset"_a, "bgrnd"_a

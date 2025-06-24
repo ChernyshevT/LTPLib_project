@@ -31,9 +31,7 @@ add_library(_ltplib SHARED
 	def_vcache.cxx
 	def_csection_set_cfg.cxx
 	def_csection_set.cxx
-	def_err_codes.cxx
 	def_mcsim_funcs.cxx
-	#def_order_funcs.cxx
 	def_ppost_funcs.cxx
 	def_ppush_funcs.cxx
 	def_remap_funcs.cxx

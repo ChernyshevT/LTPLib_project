@@ -16,8 +16,10 @@ using namespace pybind11::literals;
 #include "def_pstore.hxx"
 #include "def_vcache.hxx"
 
-#include "api_backend.hxx"
 #include "typedefs.hxx"
+#include "api_backend.hxx"
+#include "api_frontend.hxx"
+
 #include "io_strings.hxx"
 #include "io_dylibs.hxx"
 extern dylibs_t libs;
@@ -107,7 +109,7 @@ void def_ppost_funcs (py::module &m) {
 	m.def("bind_ppost_fn",
 	[] (pstore_holder &pstore, std::string descr, vcache_holder &ptfluid_h) {
 		return std::visit([&] <u8 nd>
-		(const grid_t<nd>& grid) -> std::function<RET_ERRC(void)> {
+		(const grid_t<nd>& grid) -> std::function<void(void)> {
 			auto &ptfluid = std::get<vcache_t<f32>>(ptfluid_h);
 			
 			u64 fcode = parse_mode_string(descr.c_str());
@@ -129,9 +131,8 @@ void def_ppost_funcs (py::module &m) {
 			backend, fn_name, (void*)(&grid), (void*)(&pstore), (void*)(&ptfluid), fcode);
 			
 			auto &&fn = libs[backend].get_function<ppost_fn_t<nd>>(fn_name);
-			return [&, fcode, fn] (void) -> RET_ERRC {
-				
-				return RET_ERRC{fn (grid, pstore, ptfluid, fcode)};
+			return [&, fcode, fn] (void) -> void {
+				check_errc(fn(grid, pstore, ptfluid, fcode));
 			};
 		}, *pstore.gridp);
 	}, "pstore"_a, "descr"_a, "ptfluid"_a

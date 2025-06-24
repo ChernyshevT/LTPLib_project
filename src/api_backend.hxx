@@ -1,5 +1,5 @@
 #pragma once
-#define API_V "API2025-06-22"
+#define API_V "API2025-06-24"
 
 #if defined(_WIN32) || defined(_WIN64)
 #define LIB_EXPORT __declspec(dllexport)
@@ -41,7 +41,7 @@ struct                          csection_set_t;
 ** API for pstore operations **************************************************/
 
 template<u8 nd> using _inject_fn_t = u32
-(const grid_t<nd> &, pstore_t &, u64, u8, f32[]);
+(const grid_t<nd> &, pstore_t &, u64, f32[], u8);
 
 template<u8 nd> using _extract_fn_t = void
 (const grid_t<nd> &, const pstore_t &, u64[], f32[]);
@@ -65,13 +65,6 @@ enum FORM_ORDER : u8 {
 /*******************************************************************************
 ** API for ppost functions ****************************************************/
 
-enum POST_MODE : u8 {
-	C    = 1, // concentration
-	CF   = 4, // concentration, flux
-	CFP  = 7, // concentration, flux, pressure
-	CFPS = 10 // concentration, flux, pressure, stress
-};
-
 /* nibbles to encode pVDF moments */
 enum PPOST_ENUM : u64 {
 	/* concentration */
@@ -80,11 +73,10 @@ enum PPOST_ENUM : u64 {
 	Fx  = 0x2,
 	Fy  = 0x3,
 	Fz  = 0x4,
-	/* pressure */
+	/* pressure & stress */
 	Pxx = 0x5,
 	Pyy = 0x6,
 	Pzz = 0x7,
-	/* stress */
 	Pxy = 0x8,
 	Pxz = 0x9,
 	Pyz = 0xa,
@@ -97,51 +89,26 @@ u32 (const grid_t<nd> &, const pstore_t &, vcache_t<f32> &, u64);
 /*******************************************************************************
 ** API for ppush functions ****************************************************/
 
+/* encode scheme */
 enum PUSH_MODE : u8 {
 	LEAPF = 0, // expicit  (leaf-frog)
 	IMPL0 = 1, // implicit (predictor)
 	IMPLR = 2, // implicit (corrector)
-	
-	EMFLAG = 0b100,  //electromagnetic, 0=electrostatic 
-	RLFLAG = 0b1000, //relativistic case
 };
 
 /* nibbles to encode em-field components */
 enum EMF_ENUM : u32 {
-	MASK = 0x7,
-	Ex   = 0x8|0,
-	Ey   = 0x8|1,
-	Ez   = 0x8|2,
-	Bx   = 0x8|3,
-	By   = 0x8|4,
-	Bz   = 0x8|5,
+	Ex   = 0x0,
+	Ey   = 0x1,
+	Ez   = 0x2,
+	Bx   = 0x3,
+	By   = 0x4,
+	Bz   = 0x5,
 };
-
-//rz-flag
-//es-flag
 
 template<u8 nd>
 using ppush_fn_t = \
 u32 (const grid_t<nd> &, pstore_t &, const vcache_t<f32> &, f32, u32);
-
-/*******************************************************************************
-** API for order functions ***************************************************/
-
-template<u8 nd>
-using order_fn_t = u32 (
-	const grid_t<nd> &,
-	pstore_t &
-);
-
-/*******************************************************************************
-** API for pcheck functions ***************************************************/
-
-template<u8 nd>
-using pcheck_fn_t = u32 (
-	const grid_t<nd> &,
-	const pstore_t &,
-	f32
-);
 
 /*******************************************************************************
 ** API for remap/unmap functions **********************************************/
@@ -152,23 +119,20 @@ enum REMAP_MODE : u8 {
 };
 
 template<u8 nd, typename tp> 
-using remap_fn_t = void (
-	const grid_t<nd> &,
-	vcache_t<tp> &,
-	tp *
-);
+using remap_fn_t = \
+void (const grid_t<nd> &, vcache_t<tp> &, tp[]);
 
 /*******************************************************************************
 ** API for Monte-Carlo simulation functions ***********************************/
 
 template<u8 nd> using mcsim_fn_t = u32 (
 	const grid_t<nd> &,
-	pstore_t &,
-	vcache_t<u32> &,
+	pstore_t &, /* pstore will be modified */
+	vcache_t<u32> &, /* events counter */
 	const csection_set_t &,
 	const vcache_t<f32> &,
-	f32,
-	u32
+	f32, /* time step */
+	u32 /* random seed */
 );
 
 /*******************************************************************************

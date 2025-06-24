@@ -172,10 +172,10 @@ def main(args, logger):
 	##############################################################################
 	# main steps:
 	def run_ppush_step(dt, mode):
-		ppush_fns[mode](args.dt)()
+		ppush_fns[mode](args.dt)
 	
 	def run_ppost_step():
-		ppost_fn()()
+		ppost_fn()
 		remap_ptfluid()
 		g_ptfluid[...] *= wcfft
 	

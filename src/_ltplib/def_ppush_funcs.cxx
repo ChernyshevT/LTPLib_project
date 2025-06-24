@@ -18,11 +18,65 @@ using namespace pybind11::literals;
 #include "def_pstore.hxx"
 #include "def_vcache.hxx"
 
-#include "api_backend.hxx"
 #include "typedefs.hxx"
+#include "api_backend.hxx"
+#include "api_frontend.hxx"
+
 #include "io_strings.hxx"
 #include "io_dylibs.hxx"
 extern dylibs_t libs;
+
+/******************************************************************************/
+std::tuple<u32, std::string>
+parse_emf_descr(const char* ptr) {
+	constexpr struct {
+		const char* key;
+		u32 val;
+	} table[] = {
+		{"Ex", EMF_ENUM::Ex},
+		{"Ey", EMF_ENUM::Ey},
+		{"Ez", EMF_ENUM::Ez},
+		{"Bx", EMF_ENUM::Bx},
+		{"By", EMF_ENUM::By},
+		{"Bz", EMF_ENUM::Bz},
+	};
+	constexpr u8 n = sizeof(table) / sizeof(*table);
+	bool used[n]{};
+	u32 fcode = 0, count = 0;
+
+	while (*ptr) {
+		while (std::isspace(*ptr)) {++ptr;};
+
+		bool matched = false;
+		for (u8 i = 0; i < n; ++i) {
+			auto len = std::strlen(table[i].key);
+			if (std::strncmp(ptr, table[i].key, len)) {
+				continue;
+			}
+
+			if (used[i]) {
+				throw std::invalid_argument(std::format("duplicate token: \"{}\"", table[i].key));
+			} used[i] = true;
+
+			ptr += len;
+
+			fcode |= table[i].val << (4 * (count + 1));
+			++count;
+			matched = true;
+			break;
+		}
+
+		if (':' == *ptr) {
+			++ptr;
+			while (std::isspace(*ptr)) {++ptr;};
+			return { fcode | (count & 0xf), std::string(ptr)};
+		}
+		if (!matched)
+			throw std::invalid_argument(std::format("invalid descr segment: \"{}\"", ptr));
+	}
+
+	throw std::invalid_argument(std::format("incomplete descriptor near \"{}\"", ptr));
+}
 
 /******************************************************************************/
 const char *PPUSH_FN {
@@ -53,8 +107,6 @@ Function object with 1 argument:
   bind_ppush_fn(...) -> (dt: float) -> None
 The function object's call performs the calculation.
 Here, dt --- time step.
-  
-
 )pbdoc"};
 
 /******************************************************************************/
@@ -63,86 +115,38 @@ void def_ppush_funcs (py::module &m) {
 	m.def("bind_ppush_fn", []
 	(pstore_holder &pstore, std::string descr, vcache_holder &emfield_h) 
 	{
+		auto [fcode, scheme] = parse_emf_descr(descr.c_str());
 		
-		std::string mode = "LEAPF";
-		u32 fcode{0}, n{0};
-		for (const char *ptr = &descr[0]; *ptr != '\0'; ++ptr) {
-			if (isspace(*ptr)) {
-				continue;
-			}
-			if (*ptr == ':') {
-				++ptr; while (isspace(*ptr)) ++ptr;
-				
-				mode = std::move(std::string(ptr));
-				if (mode.empty()) throw \
-				std::invalid_argument(ptr);
-				
-				break;
-			}
-			if (ptr[1] == '\0' or ptr[1] == ':' or isspace(ptr[1])) {
-				throw std::invalid_argument(ptr);
-			}
-			switch (ptr[0]) {
-				case 'E':
-					switch (ptr[1]) {
-						case 'x':
-							fcode += 0x8 << (4 * n++); break;
-						case 'y':
-							fcode += 0x9 << (4 * n++); break;
-						case 'z':
-							fcode += 0xA << (4 * n++); break;
-						default:
-							throw std::invalid_argument(ptr);
-					}
-					break;
-				case 'B':
-					switch (ptr[1]) {
-						case 'x':
-							fcode += 0xB << (4 * n++); break;
-						case 'y':
-							fcode += 0xC << (4 * n++); break;
-						case 'z':
-							fcode += 0xD << (4 * n++); break;
-						default:
-							throw std::invalid_argument(ptr);
-					}
-					break;
-				default:
-					throw std::invalid_argument(ptr);
-			}
-			++ptr;
-		}
-		if (emfield_h.cache.vsize < n) throw std::invalid_argument(fmt::format\
-		("emfield.vsize={} < {} it isn't big enough to represent all the components",
-		emfield_h.cache.vsize, n));
+		if (emfield_h.cache.vsize < (0xf&fcode)) throw bad_arg
+		("emfield.vsize={} < {}", emfield_h.cache.vsize, (0xf&fcode));
 		
 		return std::visit([&] <u8 nd>
-		(const grid_t<nd>& grid) -> std::function<RET_ERRC(f32)> {
+		(const grid_t<nd>& grid) -> std::function<void(f32)> {
 			auto &emfield = std::get<vcache_t<f32>>(emfield_h);
 			
 			std::string backend = "default";
 			std::string fn_name = fmt::format("ppush{}{}_{}_{}_fn",
 				nd,
 				grid.flags.cylcrd? "c" : "",
-				mode,
+				scheme,
 				emfield.order == 1? "LINE" :
 				emfield.order == 2? "QUAD" :
 				emfield.order == 3? "CUBE" :
 				throw std::invalid_argument(fmt::format("emfield.order={}", emfield.order))
 			);
 			// check argument
-			if (mode != "LEAPF" and pstore.cfg->nargs< 1+(nd+3)*2) throw bad_arg(
+			if (scheme != "LEAPF" and pstore.cfg->nargs< 1+(nd+3)*2) throw bad_arg(
 				"pstore.nargs = {} <= {}",pstore.cfg->nargs, (nd+3)*2
 			);
 			
 			logger::debug\
-			("bind {}->{} &grid={}, &pstore={}, &emfield={}, fcode={}",
+			("bind {}->{} &grid={}, &pstore={}, &emfield={}, fcode={:#010x}",
 			backend, fn_name, (void*)(&grid), (void*)(&pstore), (void*)(&emfield), fcode);
 			
 			auto &&fn = libs[backend].get_function<ppush_fn_t<nd>>(fn_name);
 			
-			return [&, fcode, fn] (f32 dt) -> RET_ERRC {
-				return RET_ERRC{fn (grid, pstore, emfield, dt, fcode)};
+			return [&, fcode, fn] (f32 dt) -> void {
+				check_errc(fn(grid, pstore, emfield, dt, fcode));
 			};
 		}, *pstore.gridp);
 	}, "pstore"_a, "descr"_a, "emfield"_a
