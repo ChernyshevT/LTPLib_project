@@ -40,7 +40,6 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 	1. [`_ltplib.bind_ppush_fn`](#bind_ppush)
 	1. [`_ltplib.bind_ppost_fn`](#bind_ppost)
 	1. [`_ltplib.bind_mcsim_fn`](#bind_mcsim)
-	1. [`_ltplib.bind_remap_fn`](#bind_remap)
 1. [Code examples](#code_examples)
 	1. [`examples/run_localsim.py`](#run_localsim)
 	1. [`examples/run_two_stream.py`](#run_two_stream)
