@@ -143,7 +143,7 @@ def main(args, logger):
 	, dtype = "f32"
 	, order = args.order
 	, vsize = len(grid.step)) # Ex Ey (Ez)
-	g_emfield = np.zeros (**emfield.cfg)
+	#g_emfield = np.zeros (**emfield.cfg)
 	
 	##############################################################################
 	# declare fluid moments vcache & gobal array
@@ -151,7 +151,7 @@ def main(args, logger):
 	, dtype = "f32"
 	, order = args.order
 	, vsize = len(pstore.ptlist)*4) # C Pxx Pyy Pzz
-	g_ptfluid = np.zeros (**ptfluid.cfg)
+	#g_ptfluid = np.zeros (**ptfluid.cfg)
 
 	##############################################################################
 	# declare function bindings:
@@ -160,10 +160,6 @@ def main(args, logger):
 	 for mover in ["LEAPF", "IMPL0","IMPLR"]
 	]
 	ppost_fn = ltp.bind_ppost_fn (pstore, "C Pxx Pyy Pzz", ptfluid)
-	
-	# remap-fns:
-	remap_emfield = ltp.bind_remap_fn (emfield, "<", g_emfield); #remap_emfield()
-	remap_ptfluid = ltp.bind_remap_fn (ptfluid, ">", g_ptfluid); #remap_ptfluid()
 	
 	##############################################################################
 	# declare poisson_eq
@@ -176,8 +172,7 @@ def main(args, logger):
 	
 	def run_ppost_step():
 		ppost_fn()
-		remap_ptfluid()
-		g_ptfluid[...] *= wcfft
+		ptfluid.remap("out")[...] *= wcfft
 	
 	def run_field_step():
 		slicer1 = [slice(args.order, None, None)  for _ in eq.vmap.shape]
@@ -186,8 +181,8 @@ def main(args, logger):
 		
 		# collect charge density
 		eq.cmap[...] = 0
-		eq.cmap[...] += g_ptfluid[*slicer1, 0]*M_4PI_E
-		eq.cmap[...] -= g_ptfluid[*slicer1, 4]*M_4PI_E \
+		eq.cmap[...] += ptfluid[*slicer1, 0]*M_4PI_E
+		eq.cmap[...] -= ptfluid[*slicer1, 4]*M_4PI_E \
 		                if args.ions else args.n_plasma*M_4PI_E
 		
 		# solve
@@ -196,10 +191,10 @@ def main(args, logger):
 		# obtain electric field
 		_vmap = np.pad(eq.vmap, padding, mode="wrap")
 		for i, grad in enumerate(np.gradient(_vmap, *grid.step)):
-			g_emfield[..., i] = -grad[*slicer2]
+			emfield[..., i] = -grad[*slicer2]
 		
 		# put electric field into value cache
-		remap_emfield()
+		emfield.remap("in")
 		
 		return verr
 	
@@ -251,9 +246,9 @@ def main(args, logger):
 	
 	##############################################################################
 	# define arrays to collect data for each frame-data
-	frame_ptfluid = np.zeros([args.nsub+1, *ptfluid.shape], dtype=np.float32)
-	frame_vplasma = np.zeros([args.nsub+1, *eq.vmap.shape], dtype=np.float32)
-	frame_errv    = np.zeros([args.nsub, args.nrep+1],      dtype=np.float32)
+	_ptfluid = np.zeros([args.nsub+1, *ptfluid.shape], dtype=np.float32)
+	_vplasma = np.zeros([args.nsub+1, *eq.vmap.shape], dtype=np.float32)
+	_errv    = np.zeros([args.nsub, args.nrep+1],      dtype=np.float32)
 	
 	if args.run == False or not (args.run or input(f"run? [y] ") == "y"):
 		exit(0)
@@ -267,9 +262,9 @@ def main(args, logger):
 		logger.info(f"frame#{irun:06d} ({t0*1e9:07.3f} -> {t1*1e9:07.3f} ns)..")
 		
 		# refresh arrays to save
-		frame_ptfluid[0, ...] = g_ptfluid
-		frame_vplasma[0, ...] = eq.vmap
-		frame_errv[...] = np.nan
+		_ptfluid[0, ...] = ptfluid[...]
+		_vplasma[0, ...] = eq.vmap[...]
+		_errv[...] = np.nan
 		
 		# run frame-cycle
 		for isub in range(1, args.nsub+1):
@@ -284,7 +279,7 @@ def main(args, logger):
 				run_ppost_step()
 				# recalculate field
 				verr = run_field_step()
-				frame_errv[isub-1, irep] = verr
+				_errv[isub-1, irep] = verr
 				t2 = time()
 				
 				logger.debug\
@@ -294,8 +289,8 @@ def main(args, logger):
 					break
 			
 			#end implicit run, collect avg. data
-			frame_ptfluid[isub, ...] = g_ptfluid
-			frame_vplasma[isub, ...] = eq.vmap
+			_ptfluid[isub, ...] = ptfluid[...]
+			_vplasma[isub, ...] = eq.vmap[...]
 		
 		# end frame cycle
 		logger.info(f"end frame ({len(pstore):} samples)")
@@ -309,26 +304,26 @@ def main(args, logger):
 			       tindex = [(irun - 1) * args.nsub, irun * args.nsub],
 			 ),
 			 # plasma potential:
-			 vplasma = np.mean(frame_vplasma, axis=0)
-			           if args.mean else frame_vplasma
+			 vplasma = np.mean(_vplasma, axis=0)
+			           if args.mean else _vplasma
 			 ,
 			 # electron concentration & pressure:
-			 ne = np.mean(frame_ptfluid[..., 0], axis=0)
-			      if args.mean else frame_ptfluid[..., 0]
+			 ne = np.mean(_ptfluid[..., 0], axis=0)
+			      if args.mean else _ptfluid[..., 0]
 			 ,
-			 pe = np.mean(frame_ptfluid[...,  1:4], axis=0)
-			      if args.mean else frame_ptfluid[..., 1:4]
+			 pe = np.mean(_ptfluid[...,  1:4], axis=0)
+			      if args.mean else _ptfluid[..., 1:4]
 			 ,
 			 # ion concentration:
 			 **(dict(
-			    ni = np.mean(frame_ptfluid[..., 4], axis=0)
-			    if args.mean else frame_ptfluid[..., 4]
+			    ni = np.mean(_ptfluid[..., 4], axis=0)
+			    if args.mean else _ptfluid[..., 4]
 			    ,
-			    pi = np.mean(frame_ptfluid[..., 5:8], axis=0)
-			    if args.mean else frame_ptfluid[..., 5:8]
+			    pi = np.mean(_ptfluid[..., 5:8], axis=0)
+			    if args.mean else _ptfluid[..., 5:8]
 			 ) if args.ions else {}),
 			 # error-vector
-			 **(dict(errv = frame_errv) if args.nrep else {}),
+			 **(dict(errv = _errv) if args.nrep else {}),
 			)
 
 		

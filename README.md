@@ -84,40 +84,36 @@ The code uses sightly modified approach of tile-decomposition described before i
 
 The next example shows how `_ltplib.grid` can be constructed:
 ```python
-grid_cfg = [
- "nd" : 2,
- # First, let's define spatial-step for each dimension
- "step" : [0.25, 0.25], # dx, dy
+grid = ltp.grid(nd = 2,
+
+ # First, let's define spatial-step for the each dimension
+ step = [0.25, 0.25], # dx, dy
 
  # The next two sections describe domain decomposition.
  # Here, the numbers inbetween define edges of sub-domains:
- "axes": [
+ axes = [
   # x-axis, 2 slices
   [0, 16, 32],
   # y-axis, 3 slices
   [0, 20, 40, 60], 
  ],
  # Now the position of each sub-domain is described relative to the "axes":
- "nodes": [
-  (0, 0), # (0 <= x/dx < 16), (0  <= y/dy < 20)
-  (0, 1), # (0 <= x/dx < 16), (20 <= y/dy < 40)
+ nodes = [
+  (0, 0),
+  (0, 1),
+  (0, 2),
   ...
  ],
- # The links between the nodes will be built automatically.
+ # Links between the nodes will be built automatically.
  
  # It is possible to mark some points as particle absorbers
  # using the following optional parameter:
- "mask" : [...], # uint8 numpy array, with the same shape as grid axes.
- # Any value != 0 will be considered as an adsorbing wall.
+ mask = [...], # numpy.uint8-array, with the same shape as grid axes.
+ # Any value != 0 will be considered as an adsorbing cell.
  
  # For periodic boundary condition(s) axis(ex) should be marked:
- "loopax": "x",
- 
- #For 2d problems with axial-symmetry x-axis should be marked:
- "cylcrd": "x",
-]
-
-grid = ltp.grid(**grid_cfg)
+ loopax = "xy",
+)
 ```
 
 [^decyk2014]: Decyk, V. K., & Singh, T. V. (2014). _Particle-in-Cell algorithms for emerging computer architectures._ In Computer Physics Communications (Vol. 185, Issue 3, pp. 708–719). Elsevier BV. 
@@ -135,16 +131,14 @@ This class is used to store pVDF samples (macro-particles). The class constructo
 
 See the example:
 ```python
-pstore_cfg = [
- "ptinfo" : [
+pstore = ltp.pstore(grid, # existing grid
+ ptinfo = [
   {"KEY":"e",   "CHARGE/MASS": -5.272810e+17}, # electron
   {"KEY":"Ar+", "CHARGE/MASS": +7.240801e+12}, # argon ion
  ],
- "npmax" : 100000, # the limit is 16777216 samples/node
- "nargs" : 1+2*(grid.nd+3), # in case of using with implicit mover
-]
-
-pstore = ltp.pstore(grid, **pstore_cfg)
+ npmax = 100000, # the limit is 16777216 samples/node
+ nargs = 1+2*(grid.nd+3), # in case of using with implicit mover
+)
 ```
 #### Methods
 
@@ -157,7 +151,8 @@ The components of sample's vector are $\{x\,\dots\,v_x\,v_y\,v_z\}$.
 In order to **extract** the samples `pstore.extract()` should be used.
 Method accepts no arguments and returns the pair:
 1. numpy-arrays containing all the samples,
-1. list of indexes defining the sample-range for each component (the order of components is the same as in ptinfo).
+1. list of indexes defining the sample-range for each component
+(the components' order is the same as in ptinfo).
 
 To **reset** (clean) the storage use `pstore.reset()`.
 Also, calling `len(pstore)` will return the total number of samples.
@@ -170,11 +165,17 @@ Class constructor accepts following arguments:
 1. *vsize* --- number of components per grid unit (optional, default `1`).
 1. *order* --- form-factor's order (optional, default `0`).
 
+Use `vcache[...]` to read/write values into numpy buffer.
+Method `vcache.remap(str: mode)` should be used to transfer data between
+node-local cache and numpy buffer:
+`mode="in"`, to copy data *from* the buffer into the cache;
+`mode="out"`, to copy data from the cache *into* the buffer.
+
 There are following useful properties:
 - `vcache.dtype` -- python-type,
 - `vcache.shape` -- shape of representing array,
 - `vcache.order` -- form-factor's order,
-- `vcache.cfg` -- helper to construct numpy-arrays: `numpy.array(**pstore.cfg)`.
+- `vcache.cfg` -- helper to construct numpy-arrays: `numpy.empty(**pstore.cfg)`.
 
 ### [`_ltplib.csection_set`](./src/_ltplib/def_csection_set.cxx) (cross-section set) <a name="csection_set"></a>
 This class stores cross-section database for Monte-Carlo simulation.
@@ -185,7 +186,7 @@ In both cases they will be recalculated into cumulative rates and cached into th
 1. *ptdescr* --- string containing keys for active components, separated by spaces.
 This argument **must** exactly match with components from `pstore`.
 1. *bgdescr* --- string containing keys for background components, separated by spaces.
-Optional argument, if given the class will ignore all other backgrounds from configuration sequence.
+Optional argument, if given the class will ignore all other backgrounds from the configuration sequence.
 
 There are optional keywords arguments:
 - *rescale* -- global scale factor for cross-section value.
@@ -291,8 +292,8 @@ and $\xi \rightarrow -1$ correspond to large-angle collisions (back-scattering).
 > $\sigma_{\rm m}/\sigma \leq 2$.
 
 There are three ways to define anisotropic scattering:
-- pass total (`"CSEC"`) + momentum-transfer cross-section (field `"MTCS"`, the syntax is identical to `"CSEC"`);
-- pass total (`"CSEC"`) cross-section + fitting parameter $\xi(\varepsilon - \varepsilon_{\rm th})$ as a python-function (field `"DCSFN"`);
+- pass total (`"CSEC"`) + momentum-transfer cross-section (`"MTCS"`-field, the syntax is identical to `"CSEC"`);
+- pass total (`"CSEC"`) cross-section + fitting parameter $\xi(\varepsilon - \varepsilon_{\rm th})$ as a python-function (`"DCSFN"`-field);
 - or pass `"MTCS"` + `"DCSFN"`.
 
 [^janssen2016]: Janssen, J. F. J., Pitchford, L. C., Hagelaar, G. J. M., & van Dijk, J. (2016). _Evaluation of angular scattering models for electron-neutral collisions in Monte Carlo simulations._ In Plasma Sources Science and Technology (Vol. 25, Issue 5, p. 055026). IOP Publishing. 
@@ -302,7 +303,7 @@ There are three ways to define anisotropic scattering:
 [DOI:10.1088/1361-6463/ad3477](https://doi.org/10.1088/1361-6463/ad3477)
 
 #### Ionization
-In case of ionization, it is assumed that there is not impulse transfer between incident electron and heavy particle ($m/M$-term is ignored).
+In case of ionization, it is assumed that there is no impulse transfer between incident electron and heavy particle ($m/M$-term is ignored).
 The energy/impulse-balance is determined only by incident and secondary particle(s).
 This division is arbitrary, we consider particle secondary if it has smaller resulting energy, i.e. $\varepsilon_2<\varepsilon_1$.
 From energy and impulse conservation
@@ -325,7 +326,7 @@ The spectrum is defined by a single parameter
 $\varepsilon_{\rm OPB}\sim\varepsilon_{\rm th}$ (field `"OPBPARAM"`).
 If it is not given, $\varepsilon_{\rm th}$ will be used instead.
 > [!NOTE] 
-> The current implementation is unfinished and doesn't allow to spawn ions or multiple electrons.
+> The current implementation is unfinished and doesn't allow to spawn ions or multiple electrons or ions.
 > This functionality will be added in further versions.
 
 [^opal1971]: Opal, C. B., Peterson, W. K., & Beaty, E. C. (1971). _Measurements of Secondary-Electron Spectra Produced by Electron Impact Ionization of a Number of Simple Gases._ In The Journal of Chemical Physics (Vol. 55, Issue 8, pp. 4100–4106). AIP Publishing.
@@ -455,16 +456,22 @@ open-boundaries and central body with given $\phi$:
 [DOI:10.1504/ijhpcn.2014.062731](https://doi.org/10.1504/ijhpcn.2014.062731)
 
 ## Function bindings <a name="bindings"></a>
+For user convinience, functions to perform simulatio steps are given as function-bindings.
+Therefore, first the binding (functional object) is created,
+then it can be called during the calculation.
+Exceptions could be raised in case of problems (overflow, energy limit, etc;
+see [error codes](./src/api_backend.hxx#L14)).
+
 ### [`_ltplib.bind_ppush_fn`](./src/_ltplib/def_ppush_funcs.cxx) (motion equation solver) <a name="bind_ppush"></a>
 This function binds its' arguments to motion equation solver from the backend.
 The function accepts the following arguments:
 - *pstore* --- pVDF samples;
-- *descr* --- string containing components of electromagnetic field
+- *descr* --- string containing description of electromagnetic field
 and type of the solver separated by semicolon symbol (for example `"Ex Ey Bz : [SCHEME]"`, see below);
 - *emfield* --- value cache for electromagnetic field (`dtype="f32"`).
 
 Resulting functional object has following signature
-`(dt : float) -> _ltplib.RET_ERRC`,
+`(dt : float) -> None`,
 where `dt` is time step. Two solvers are available.
 
 #### Explicit scheme
@@ -528,7 +535,7 @@ This binding is used to calculate raw pVDF moments [^saint-raymond2009]:
 - concentration
 $n = \int_{𝐯}f({𝐫},\ {𝐯})\ {\rm d}{𝐯}$;
 - flux vector
-${𝐟} = n{𝐮} =\int_{𝐯}{𝐯}\ f({𝐫},\ {𝐯})\ {\rm d}{𝐯}$, where ${𝐮}$ is flux velocity;
+$n{𝐮} =\int_{𝐯}{𝐯}\ f({𝐫},\ {𝐯})\ {\rm d}{𝐯}$, where ${𝐮}$ is flux velocity;
 - pressure/stress tensor
 ${\rm p} = \int_{𝐯}{𝐯}\otimes{𝐯}\ f({𝐫},\ {𝐯})\ {\rm d}{𝐯}$.
 
@@ -544,7 +551,7 @@ i.e. tokens can be separated by spaces and should not repeat.
 For example, `descr = "C Fx Fy Fz Pxx Pyy Pzz"`.
 
 Resulting functional object has following signature
-`() -> _ltplib.RET_ERRC`.
+`() -> None`.
 
 [^saint-raymond2009]: Saint-Raymond, L. (2009). _Hydrodynamic Limits of the Boltzmann Equation._ In Lecture Notes in Mathematics. Springer Berlin Heidelberg.
 [DOI:10.1007/978-3-540-92847-8](https://doi.org/10.1007/978-3-540-92847-8)
@@ -558,8 +565,10 @@ The arguments are:
 - *bgrnd* --- value cache containing background densities (`dtype="f32"`, `order=0`).
 
 Functional object's signature is
-`(dt: float, seed: int) -> _ltplib.RET_ERRC`,
-where `dt` is time step and `seed` is random number.
+`(dt: float, seed: int) -> None`,
+where `dt` is time step and `seed` is a random number
+(`seed` + node id will be used to initialize
+[KISS-rng](https://github.com/sleeepyjack/kiss_rng)-based source for the each *node*).
 
 #### Search algorithm
 To simulate the collisions, **\_ltplib** uses Poisson's flow of random events[^birdsall1991-2],
@@ -624,18 +633,6 @@ The preset with these coss-sections can be found in [`examples/csections_db/CH4.
 [^brennan1991]: Brennan, M. J. (1991). _Optimization of Monte Carlo codes using null collision techniques for experimental simulation at low E/N_. In IEEE Transactions on Plasma Science (Vol. 19, Issue 2, pp. 256–261). Institute of Electrical and Electronics Engineers (IEEE). [DOI:10.1109/27.106822](https://doi.org/10.1109/27.106822)
 
 [^elhafi2021]: El Hafi, M., Blanco, S., Dauchet, J., Fournier, R., Galtier, M., Ibarrart, L., Tregan, J.-M., & Villefranque, N. (2021). _Three viewpoints on null-collision Monte Carlo algorithms._ In Journal of Quantitative Spectroscopy and Radiative Transfer (Vol. 260, p. 107402). Elsevier BV. [DOI:10.1016/j.jqsrt.2020.107402](https://doi.org/10.1016/j.jqsrt.2020.107402)
-
-### [`_ltplib.bind_remap_fn`](./src/_ltplib/def_remap_funcs.cxx) <a name="bind_remap"></a>
-This binding is used to transfer data between value cache and numpy array.
-The function accepts the following arguments:
-- *vcache* --- value cache (local data);
-- *direction* --- string;
-- *iodata* --- numpy array (global data).
-```python
-_ltplib.bind_remap_fn(vcache, "<", iodata) # to copy from iodata to vcache
-_ltplib.bind_remap_fn(vcache, ">", iodata) # to copy from vcache to iodata 
-```
-Functional object's signature is `() -> None`.
 
 # Code examples for \_ltplib <a name="code_examples"></a>
 

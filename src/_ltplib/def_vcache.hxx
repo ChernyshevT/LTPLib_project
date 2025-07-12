@@ -18,6 +18,7 @@ using namespace pybind11::literals;
 #include "io_memory.hxx"
 #include "api_vcache.hxx"
 #include "api_backend.hxx"
+#include "api_frontend.hxx"
 #include "def_grid.hxx"
 
 struct vcache_cfg {
@@ -49,7 +50,10 @@ struct vcache_holder : vcache_v {
 		std::vector<py::array>   nodes;
 	} cache;
 	
+	mholder_t                  mem_h;
+	py::array                  buffer_h;
 	std::function<void(void)>  reset_fn;
+	std::function<void(void)>  remap_fns[2];
 	
 	/* vcache_holder (const grid_holder&, std::string, py::dict);*/
 	 vcache_holder

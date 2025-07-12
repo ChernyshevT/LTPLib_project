@@ -276,8 +276,8 @@ void def_csections(py::module &m) {
 	
 	
 	/* start database entry class */ entry_cls
-	.def_readonly("descr", &db_entry_t::descr,
-	"channel's description")
+	.def_readonly("descr", &db_entry_t::descr
+	, "channel's description")
 
 	.def ("__str__",
 	[] (const db_entry_t& self) -> std::string {

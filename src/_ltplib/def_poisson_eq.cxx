@@ -11,6 +11,7 @@ using namespace pybind11::literals;
 
 #include "typedefs.hxx"
 #include "api_backend.hxx"
+#include "api_frontend.hxx"
 #include "common/poisson_eq.hxx"
 
 #include "io_strings.hxx"
@@ -22,11 +23,6 @@ typedef std::variant<
 	poisson_eq_t<2>,
 	poisson_eq_t<3>
 > poisson_eq_v;
-
-typedef std::unordered_map<
-	const char*,
-	std::unique_ptr<void, std::function<void(void*)>>
-> mholder_t;
 
 typedef const py::array_t<u8, py::array::c_style>&
   umap_a;
@@ -175,7 +171,8 @@ void def_poisson_eq(py::module &m) {
 			throw bad_arg("invalid wrelax parameter ({})!", w);
 		}
 		return self.iter_fn(w);
-	}, "wrelax"_a=1.0f, "perform SOR-iteration, update poisson_eq.vmap")
+	}, "wrelax"_a=1.0f
+	, "performs SOR-iteration, updates poisson_eq.vmap")
 	
 	; /* end class */
 

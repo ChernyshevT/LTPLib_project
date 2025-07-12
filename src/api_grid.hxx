@@ -12,27 +12,6 @@ template <u8 nd, u8 order>
 struct form_t {
 	u32 idx [nd];
 	f32 vals[nd*(order+1)];
-	
-	//~ template<u8 md=nd, typename func>
-	//~ void loop_over (func&& fn, u32 shape[], f32 w=1.0f, size_t sh=1, size_t k=0) {
-		//~ if constexpr (md) for (u8 i{0}; i<order+1; ++i) {
-			//~ loop_over<md-1>
-			//~ (fn, shape, w*vals[(md-1)*(order+1)+i], sh*shape[]
-		//~ } else {
-			//~ fn(w, k);
-		//~ }
-	//~ }
-	
-	//~ template<u8 len, u8 nd, u8 md=0, typename func>
-	//~ void loop_over
-	//~ (func&& fn, size_t *offset, u32 *idx, f32 *form, f32 w=1.0f, size_t k=0) {
-		//~ if constexpr (md<nd) for (u8 i{0}; i<len; ++i) {
-			//~ loop_over_form <len, nd, md+1>
-			//~ (fn, offset, idx, form, w*form[md*len+i], k+(idx[md]+i)*offset[md+1]);
-		//~ } else {
-			//~ fn(w, k);
-		//~ }
-	//~ }
 };
 
 template<u8 order>

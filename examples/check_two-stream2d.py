@@ -23,6 +23,7 @@ def main(args):
 		slicer = [slice(frame.cfg.order,None,None) for _ in range(nd)]
 		
 		ne = frame.ne[*slicer]
+		ma = ne>0
 		pe_xx = frame.pe[*slicer, 0]*2.842815e-16
 		pe_yy = frame.pe[*slicer, 1]*2.842815e-16
 		pe_zz = frame.pe[*slicer, 2]*2.842815e-16
@@ -30,9 +31,9 @@ def main(args):
 		key = f"stat{frame.cfg.tindex[1]:06d}"
 		dset[key] = {
 		 "cfg"      : frame.cfg,
-		 "en_exx"   : np.nanmean(pe_xx/ne),
-		 "en_eyy"   : np.nanmean(pe_yy/ne),
-		 "en_ezz"   : np.nanmean(pe_zz/ne),
+		 "en_exx"   : np.mean(pe_xx[ma]/ne[ma]),
+		 "en_eyy"   : np.mean(pe_yy[ma]/ne[ma]),
+		 "en_ezz"   : np.mean(pe_zz[ma]/ne[ma]),
 		 "en_field" : en_field,
 		 "vp_range" : vp_range,
 		}
@@ -41,13 +42,14 @@ def main(args):
 		
 		if frame.cfg.ions:
 			ni = frame.ni[*slicer]
+			ma = ni>0
 			pi_xx = frame.pi[*slicer, 0]*5.182139e-13
 			pi_yy = frame.pi[*slicer, 1]*5.182139e-13
 			pi_zz = frame.pi[*slicer, 2]*5.182139e-13
 			dset[key].update({
-			 "en_ixx" : np.nanmean(pi_xx/ni),
-			 "en_iyy" : np.nanmean(pi_yy/ni),
-			 "en_izz" : np.nanmean(pi_zz/ni),
+			 "en_ixx" : np.mean(pi_xx[ma]/ni[ma]),
+			 "en_iyy" : np.mean(pi_yy[ma]/ni[ma]),
+			 "en_izz" : np.mean(pi_zz[ma]/ni[ma]),
 			})
 	
 	fpath = os.path.dirname(os.path.abspath(arg))

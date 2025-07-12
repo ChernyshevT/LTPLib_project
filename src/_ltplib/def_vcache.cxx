@@ -17,6 +17,8 @@ using namespace pybind11::literals;
 #include "typedefs.hxx"
 #include "io_strings.hxx"
 #include "io_memory.hxx"
+#include "io_dylibs.hxx"
+extern dylibs_t libs;
 // here was numpy...
 
 #include "def_vcache.hxx"
@@ -79,6 +81,47 @@ struct vcache_ctor {
 			memset(ptr, 0, sz);
 		};
 		
+		/* create build-in vmap if requested **************************************/
+		{
+			std::vector<py::ssize_t> shape(nd+1);
+			std::vector<py::ssize_t> strides(nd+1);
+			u64                      msize{sizeof(tp)*field.vsize};
+			shape[nd]   = field.vsize;
+			strides[nd] = sizeof(tp);
+			for (auto i{1u}; i<=nd; ++i) {
+				auto a = grid.axes[nd-i][grid.shape[nd-i]];
+				auto b = grid.axes[nd-i][0];
+				msize *= a-b + self.cache.order;
+				shape  [nd-i] = a-b + self.cache.order;
+				strides[nd-i] = strides[nd-i+1]*shape[nd-i+1];
+			}
+			py::print(msize);
+			self.mem_h["vmap_ptr"]  = {malloc(msize),  &free};
+			
+			
+			tp *ptr = (tp*)self.mem_h["vmap_ptr"].get();
+			self.buffer_h = py::memoryview::from_buffer(
+				/* ptr    */ ptr,
+				/*shape   */ std::move(shape),
+				/*strides */ std::move(strides),
+				/*readonly*/ false
+			);
+			
+			
+			std::string backend = "default";
+			std::string fn_name = fmt::format("remap{}{}", nd, datatypecode<tp>());
+
+			auto &&fn_in = libs[backend].get_function<remap_fn_t<nd,tp>>(fn_name+"_NODES_fn");
+			self.remap_fns[REMAP_MODE::NODES] = [&, ptr, fn = fn_in] () mutable {
+				fn(grid, field, ptr);
+			};
+
+			auto &&fn_out = libs[backend].get_function<remap_fn_t<nd,tp>>(fn_name+"_ARRAY_fn");
+			self.remap_fns[REMAP_MODE::ARRAY] = [&, ptr, fn = fn_out] () mutable {
+				fn(grid, field, ptr);
+			};
+		}
+		
 	}
 };
  
@@ -117,34 +160,25 @@ void def_vcache(py::module &m) {
 	(), "grid"_a, "dtype"_a, "vsize"_a=1, "order"_a=0
 	,""
 	, py::keep_alive<1, 2>())
-	
-	.def("reset", [] (vcache_holder& self) {
-		self.reset_fn();
-	})
 
-	.def("__len__",
-	[] (const vcache_holder& self) {
-		return self.cache.nodes.size();
-	}, "number of nodes")
+	//~ .def_property_readonly("nodes",
+	//~ [] (const vcache_holder& self) {
+		//~ return std::cref(self.cache.nodes);
+	//~ }, "returns list readonly buffers corresponding to the nodes")
 
-	.def_property_readonly("nodes",
-	[] (const vcache_holder& self) {
-		return std::cref(self.cache.nodes);
-	}, "returns list readonly buffers corresponding to the nodes")
+	//~ .def("__getitem__",
+	//~ [] (const vcache_holder& self, u32 k) {
+		//~ if (k < self.cache.nodes.size()) {
+			//~ return std::cref(self.cache.nodes[k]);
+		//~ } else throw 
+		//~ py::index_error(fmt::format("{} >= {}", k, self.cache.nodes.size()));
+	//~ }, "k"_a, "returns readonly buffer for specific node, same as self.nodes[k]")
 
-	.def("__getitem__",
-	[] (const vcache_holder& self, u32 k) {
-		if (k < self.cache.nodes.size()) {
-			return std::cref(self.cache.nodes[k]);
-		} else throw \
-		py::index_error(fmt::format("{} >= {}", k, self.cache.nodes.size()));
-	}, "k"_a, "returns readonly buffer for specific node, same as self.nodes[k]")
-
-	.def("__iter__", [] (const vcache_holder& self) {
-		return py::make_iterator(
-			self.cache.nodes.begin(), self.cache.nodes.end()
-		);
-	}, "iterate over nodes, same as iter(self.nodes)", py::keep_alive<0, 1>())
+	//~ .def("__iter__", [] (const vcache_holder& self) {
+		//~ return py::make_iterator(
+			//~ self.cache.nodes.begin(), self.cache.nodes.end()
+		//~ );
+	//~ }, "iterate over nodes, same as iter(self.nodes)", py::keep_alive<0, 1>())
 
 	.def_property_readonly("order",
 	[] (const vcache_holder& self) {
@@ -165,6 +199,36 @@ void def_vcache(py::module &m) {
 	[] (const vcache_holder& self) {
 		return py::dict("shape"_a=self.cache.shape, "dtype"_a=self.cache.dtype);
 	}, "helper function to construct corresponding array: numpy.array(**self.cfg)")
+	
+	.def("__getitem__", [] (vcache_holder &self, py::handle index) {
+		return self.buffer_h[index];
+	})
+	
+	.def("__setitem__", [] (vcache_holder &self, py::handle index, py::handle val) {
+		self.buffer_h[index] = val;
+	})
+
+	.def("reset", [] (vcache_holder& self) -> vcache_holder& {
+		self.reset_fn();
+		return self;
+	})
+
+	.def("remap",
+	[] (vcache_holder& self, py::str mode) -> vcache_holder& {
+		switch (_hash(mode)) {
+			case "<"_hash:
+			case "in"_hash:
+				self.remap_fns[REMAP_MODE::NODES]();
+				return self;
+			case ">"_hash:
+			case "out"_hash:
+				self.remap_fns[REMAP_MODE::ARRAY]();
+				return self;
+			default:
+				throw bad_arg("mode = \"{}\"", py::cast<std::string>(mode));
+		}
+	}, "")
+	
 	
 	;// end class
 }
