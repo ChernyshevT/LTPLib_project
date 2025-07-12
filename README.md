@@ -1,4 +1,4 @@
-_[document version: 20250622]_
+_[document version: 20250713]_
 <!-- {𝐯} {𝐫} {𝐟} {𝐚} {𝐄} {𝐁} {𝐮} -->
 > [!NOTE]
 > The project is still under active development, so changes and midifications are possible.
