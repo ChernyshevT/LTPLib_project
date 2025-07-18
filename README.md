@@ -544,6 +544,7 @@ The function accepts the following arguments:
 	- `"C"` --- <ins>c</ins>oncentration;
 	- `"F[x|y|z]"` --- <ins>f</ins>lux vector components;
 	- `"P[xx|xy|xz|yy|yz|zz]"` --- <ins>p</ins>ressure/stress tensor components;
+	- `"KEn"` --- s<ins>k</ins>inetic <ins>en</ins>ergy ($\sum_{i in x|y|z} p_{ii}$);
 - *ptfluid* --- value cache for the result (`dtype="f32"`).
 The rules for *descr*-string are the same as for previous case,
 i.e. tokens can be separated by spaces and should not repeat.

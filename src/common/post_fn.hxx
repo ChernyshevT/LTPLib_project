@@ -53,6 +53,9 @@ struct post_fn {
 			case PPOST_ENUM::Pyz:
 				vdata[k + shift+i] += w*vy*vz;
 				continue;
+			case PPOST_ENUM::KEn:
+				vdata[k + shift+i] += w*(vx*vx + vy*vy + vz*vz);
+				continue;
 		}
 	};
 };

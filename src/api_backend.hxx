@@ -1,5 +1,5 @@
 #pragma once
-#define API_V "API2025-06-24"
+#define API_V "API2025-07-18"
 
 #if defined(_WIN32) || defined(_WIN64)
 #define LIB_EXPORT __declspec(dllexport)
@@ -80,6 +80,8 @@ enum PPOST_ENUM : u64 {
 	Pxy = 0x8,
 	Pxz = 0x9,
 	Pyz = 0xa,
+	/* total kinetic energy */
+	KEn = 0xb,
 };
 
 template<u8 nd>

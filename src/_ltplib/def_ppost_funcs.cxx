@@ -39,7 +39,8 @@ u64 parse_mode_string(const char* mode_str) {
 		{"Pzz", PPOST_ENUM::Pzz},
 		{"Pxy", PPOST_ENUM::Pxy},
 		{"Pxz", PPOST_ENUM::Pxz},
-		{"Pyz", PPOST_ENUM::Pyz}
+		{"Pyz", PPOST_ENUM::Pyz},
+		{"KEn", PPOST_ENUM::KEn},
 	};
 	constexpr u8 n{sizeof(table)/sizeof(*table)};
 
