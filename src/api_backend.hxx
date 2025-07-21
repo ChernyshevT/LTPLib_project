@@ -94,8 +94,8 @@ u32 (const grid_t<nd> &, const pstore_t &, vcache_t<f32> &, u64);
 /* encode scheme */
 enum PUSH_MODE : u8 {
 	LEAPF = 0, // expicit  (leaf-frog)
-	IMPL0 = 1, // implicit (predictor)
-	IMPLR = 2, // implicit (corrector)
+	IMPL0 = 1, // semi-implicit (predictor)
+	IMPLR = 2, // semi-implicit (corrector)
 };
 
 /* nibbles to encode em-field components */

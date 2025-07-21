@@ -87,49 +87,39 @@ PYBIND11_MODULE (_ltplib, m) {
 
 /******************************************************************************/
 void check_errc (u32 errc) {
+	std::string msg;
+	
 	if (not errc) [[likely]] {
 		return;
 	}
 	
-	std::string msg;
-	
 	if (errc & ERR_CODE::INVALID_SEQ) {
-		msg = fmt::format("{}{}INVALID_SEQ"
-		, msg, !msg.empty()?"|":"");
+		msg = fmt::format("{}{}INVALID_SEQ",      msg, !msg.empty()? "|": "");
 	}
 	if (errc & ERR_CODE::PPOST_ERR) {
-		msg = fmt::format("{}{}PPOST"
-		, msg, !msg.empty()?"|":"");
+		msg = fmt::format("{}{}PPOST",            msg, !msg.empty()? "|": "");
 	}
 	if (errc & ERR_CODE::PPUSH_ERR) {
-		msg = fmt::format("{}{}PPUSH"
-		, msg, !msg.empty()?"|":"");
+		msg = fmt::format("{}{}PPUSH",            msg, !msg.empty()? "|": "");
 	}
 	if (errc & ERR_CODE::ORDER_ERR) {
-		msg = fmt::format("{}{}ORDER"
-		, msg, !msg.empty()?"|":"");
+		msg = fmt::format("{}{}ORDER",            msg, !msg.empty()? "|": "");
 	}
 	if (errc & ERR_CODE::MCSIM_ERR) {
-		msg = fmt::format("{}{}MCSIM"
-		, msg, !msg.empty()?"|":"");
+		msg = fmt::format("{}{}MCSIM",            msg, !msg.empty()? "|": "");
 	}
 	if (errc & ERR_CODE::PTOVERFLOW) {
-		msg = fmt::format("{}{}PTOVERFLOW"
-		, msg, !msg.empty()?"|":"");
+		msg = fmt::format("{}{}PTOVERFLOW",       msg, !msg.empty()? "|": "");
 	}
 	if (errc & ERR_CODE::PTOUTOFRANGE) {
-		msg = fmt::format("{}{}PTOUTOFRANGE"
-		, msg, !msg.empty()?"|":"");
+		msg = fmt::format("{}{}PTOUTOFRANGE",     msg, !msg.empty()? "|": "");
 	}
 	if (errc & ERR_CODE::PTMAXENERGY) {
-		msg = fmt::format("{}{}PTMAXENERGY"
-		, msg, !msg.empty()?"|":"");
+		msg = fmt::format("{}{}PTMAXENERGY",      msg, !msg.empty()? "|": "");
 	}
 	if (errc & ERR_CODE::PTMAXPROBABILITY) {
-		msg = fmt::format("{}{}PTMAXPROBABILITY"
-		, msg, !msg.empty()?"|":"");
+		msg = fmt::format("{}{}PTMAXPROBABILITY", msg, !msg.empty()? "|": "");
 	}
-	
 	throw std::runtime_error(msg);
 }
 /******************************************************************************/

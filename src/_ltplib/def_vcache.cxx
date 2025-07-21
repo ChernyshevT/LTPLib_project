@@ -95,9 +95,7 @@ struct vcache_ctor {
 				shape  [nd-i] = a-b + self.cache.order;
 				strides[nd-i] = strides[nd-i+1]*shape[nd-i+1];
 			}
-			py::print(msize);
 			self.mem_h["vmap_ptr"]  = {malloc(msize),  &free};
-			
 			
 			tp *ptr = (tp*)self.mem_h["vmap_ptr"].get();
 			self.buffer_h = py::memoryview::from_buffer(
@@ -106,7 +104,6 @@ struct vcache_ctor {
 				/*strides */ std::move(strides),
 				/*readonly*/ false
 			);
-			
 			
 			std::string backend = "default";
 			std::string fn_name = fmt::format("remap{}{}", nd, datatypecode<tp>());
@@ -151,55 +148,44 @@ vcache_holder:: vcache_holder
 vcache_holder::~vcache_holder (void) {
 	logger::debug("delete vcache ({})", (void*)(this));
 }
+
+/******************************************************************************/
+const char *VCACHE_DESCR = {
+R"pbdoc(Value cache -- node-local storage for lattice-based values.
+)pbdoc"};
+
+const char *VCACHE_CTOR = {
+R"pbdoc(Creates value cache.
+
+Parameters
+----------
+grid : existing grid.
+
+dtype : value datatype
+  "f32" for 32-bit float values
+  "u32" for 32-bit unsigned values (used to count events during MCC simulation).
+
+vsize : the size of value vector (default is 1)
+
+order : form-factor's order (default is 0)
+)pbdoc"};
+
+const char *REMAP_DESCR = {
+R"pbdoc(transfer (remap) data between nodes and build-in numpy-buffer:
+  mode="in"  or "<" copies data from buffer into nodes
+  mode="out" or ">" copies data from nodes into buffer
+)pbdoc"};
+
 /******************************************************************************/
 void def_vcache(py::module &m) {
 	
-	py::class_<vcache_holder> cls (m, "vcache"); cls
+	py::class_<vcache_holder> (m, "vcache", VCACHE_DESCR)
 	
 	.def(py::init<const grid_holder&, std::string, u8, u8, py::kwargs>
 	(), "grid"_a, "dtype"_a, "vsize"_a=1, "order"_a=0
-	,""
+	, VCACHE_CTOR
 	, py::keep_alive<1, 2>())
 
-	//~ .def_property_readonly("nodes",
-	//~ [] (const vcache_holder& self) {
-		//~ return std::cref(self.cache.nodes);
-	//~ }, "returns list readonly buffers corresponding to the nodes")
-
-	//~ .def("__getitem__",
-	//~ [] (const vcache_holder& self, u32 k) {
-		//~ if (k < self.cache.nodes.size()) {
-			//~ return std::cref(self.cache.nodes[k]);
-		//~ } else throw 
-		//~ py::index_error(fmt::format("{} >= {}", k, self.cache.nodes.size()));
-	//~ }, "k"_a, "returns readonly buffer for specific node, same as self.nodes[k]")
-
-	//~ .def("__iter__", [] (const vcache_holder& self) {
-		//~ return py::make_iterator(
-			//~ self.cache.nodes.begin(), self.cache.nodes.end()
-		//~ );
-	//~ }, "iterate over nodes, same as iter(self.nodes)", py::keep_alive<0, 1>())
-
-	.def_property_readonly("order",
-	[] (const vcache_holder& self) {
-		return self.cache.order;
-	})
-	
-	.def_property_readonly("shape",
-	[] (const vcache_holder& self) {
-		return self.cache.shape;
-	})
-	
-	.def_property_readonly("dtype",
-	[] (const vcache_holder& self) {
-		return self.cache.dtype;
-	})
-
-	.def_property_readonly("cfg",
-	[] (const vcache_holder& self) {
-		return py::dict("shape"_a=self.cache.shape, "dtype"_a=self.cache.dtype);
-	}, "helper function to construct corresponding array: numpy.array(**self.cfg)")
-	
 	.def("__getitem__", [] (vcache_holder &self, py::handle index) {
 		return self.buffer_h[index];
 	})
@@ -211,7 +197,7 @@ void def_vcache(py::module &m) {
 	.def("reset", [] (vcache_holder& self) -> vcache_holder& {
 		self.reset_fn();
 		return self;
-	})
+	}, "put 0 to into all nodes, same as self[...] = 0; self.remap(\"in\")")
 
 	.def("remap",
 	[] (vcache_holder& self, py::str mode) -> vcache_holder& {
@@ -227,8 +213,28 @@ void def_vcache(py::module &m) {
 			default:
 				throw bad_arg("mode = \"{}\"", py::cast<std::string>(mode));
 		}
-	}, "")
+	}, "mode"_a,
+	REMAP_DESCR)
+
+	.def_property_readonly("order",
+	[] (const vcache_holder& self) {
+		return self.cache.order;
+	}, "form-factor's order to use")
 	
+	.def_property_readonly("shape",
+	[] (const vcache_holder& self) {
+		return self.cache.shape;
+	}, "buffer's shape, same as self[...].shape")
+	
+	.def_property_readonly("dtype",
+	[] (const vcache_holder& self) {
+		return self.cache.dtype;
+	}, "buffer's dtype, same as self[...].dtype")
+
+	.def_property_readonly("cfg",
+	[] (const vcache_holder& self) {
+		return py::dict("shape"_a=self.cache.shape, "dtype"_a=self.cache.dtype);
+	}, "helper to construct corresponding array: numpy.empty(**self.cfg)")
 	
 	;// end class
 }

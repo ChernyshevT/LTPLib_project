@@ -174,7 +174,7 @@ There are following useful properties:
 - `vcache.dtype` -- python-type,
 - `vcache.shape` -- shape of representing array,
 - `vcache.order` -- form-factor's order,
-- `vcache.cfg` -- helper to construct numpy-arrays: `numpy.empty(**pstore.cfg)`.
+- `vcache.cfg` -- helper to construct numpy-arrays: `numpy.empty(**vcache.cfg)`.
 
 ### [`_ltplib.csection_set`](./src/_ltplib/def_csection_set.cxx) (cross-section set) <a name="csection_set"></a>
 This class stores cross-section database for Monte-Carlo simulation.
@@ -544,7 +544,7 @@ The function accepts the following arguments:
 	- `"C"` --- <ins>c</ins>oncentration;
 	- `"F[x|y|z]"` --- <ins>f</ins>lux vector components;
 	- `"P[xx|xy|xz|yy|yz|zz]"` --- <ins>p</ins>ressure/stress tensor components;
-	- `"KEn"` --- <ins>k</ins>inetic <ins>en</ins>ergy ($\sum_{i} p_{ii}$);
+	- `"KEn"` --- <ins>k</ins>inetic <ins>en</ins>ergy ($p_{xx}+p_{yy}+p_{zz}$);
 - *ptfluid* --- value cache for the result (`dtype="f32"`).
 The rules for *descr*-string are the same as for previous case,
 i.e. tokens can be separated by spaces and should not repeat.

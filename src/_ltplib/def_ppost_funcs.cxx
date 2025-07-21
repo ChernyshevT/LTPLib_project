@@ -58,7 +58,7 @@ u64 parse_mode_string(const char* mode_str) {
 			size_t len = std::strlen(table[i].key);
 			if (std::strncmp(mode_str, table[i].key, len) == 0) {
 				if (used[i]) {
-					throw bad_arg("duplicate token: \"{}\"", table[i].key);
+					throw bad_arg("token duplication: \"{}\"", table[i].key);
 				}
 				used[i] = true;
 				fcode = fcode | (table[i].val << (4*(1+count)));

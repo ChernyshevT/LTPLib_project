@@ -52,7 +52,7 @@ $$\varepsilon = \varepsilon_{\rm th} + 2^{j/2-4}-0.0625,~j\in\mathbb{N},$$
 where $\varepsilon_{\rm th}$ is a reaction threshold.
 )pbdoc"};
 
-const char *CSECTION_SET_INIT {
+const char *CSECTION_SET_CTOR {
 R"pbdoc(Creates coress-cestion database.
 
 Parameters
@@ -145,12 +145,12 @@ The following example contains all possible variants for configuration entries:
   },
 ]
 
-max_energy : defines energy limit and size of the looku  p-table.
+max_energy : defines energy limit and size of the look-up table.
 
-ptdescr : the string to describe all the active components separated by spaces.
+ptdescr : string to describe all the active components separated by spaces.
   Any other component from the configuration sequence will be omitted.
   
-bgdescr : the string to describe all the background components separated by spaces. 
+bgdescr : string to describe all the background components separated by spaces. 
   In case of empty string it will be ignored and background components will be
   taken into account according to configuration sequence.
   In case of non-empty string, only listed components will be used.
@@ -177,7 +177,7 @@ void def_csections(py::module &m) {
 	
 	.def(py::init<std::vector<py::dict>, f32, py::str, py::str, py::kwargs>
 	(), "cfg"_a, "max_energy"_a, "ptdescr"_a="e", "bgdescr"_a=""s
-	, CSECTION_SET_INIT)
+	, CSECTION_SET_CTOR)
 	
 	.def_readonly("max_energy", &csection_set_holder::max_energy,
 	"energy limit")

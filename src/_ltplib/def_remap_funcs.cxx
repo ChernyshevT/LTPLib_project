@@ -87,8 +87,7 @@ Returns
 
 Function object without arguments:
   bind_remap_fn(...) -> () -> None
-)pbdoc"
-};
+)pbdoc"};
 
 /******************************************************************************/
 void def_remap_funcs (py::module &m) {
