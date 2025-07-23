@@ -47,8 +47,6 @@ def main(args, logger):
 	M_4PI_E  = 6.035884e-09
 	##############################################################################
 	# problem's presets:
-	WPE = np.sqrt(M_4PI_E*args.n_plasma * ECHARGE/ME)
-
 	# the problem's base geometry:
 	match args.preset:
 		case "default2d":
@@ -93,25 +91,6 @@ def main(args, logger):
 			logger.info(f"use lowres3d preset: {nx}x{ny}x{nz}")
 		case _:
 			raise ValueError(f"invalid preset \"{args.preset}\"")
-		
-	logger.info(f"using \"{args.preset}\" preset, {len(grid_conf['nodes'])} nodes")
-	
-	# ~ stats = {
-		# ~ "v_max*dt/dx": max(V0, VE)*args.dt/dx,
-		# ~ "dt*wce": args.dt * WPE,
-		# ~ "dx/rde": dx*WPE/max(V0, VE),
-		# ~ "vte/v0" : VE/V0,
-	# ~ }
-	# ~ for k,v in stats.items():
-		# ~ msg = f"{k} = {v:06.3f}"
-		# ~ if v<0.5:
-			# ~ logger.info(msg)
-		# ~ else:
-			# ~ logger.warning(msg)
-	tframe = args.dt*args.nsub*1e9
-	logger.info(f"tframe = {tframe:07.3f} ns")
-	logger.info(f"order  = {args.order}")
-	logger.info(f"npunit = {args.npunit}")
 	
 	##############################################################################
 	ltp.load_backend("default")
@@ -152,9 +131,8 @@ def main(args, logger):
 	 {"KEY":"e", "CHARGE/MASS": -ECHARGE/ME},
 	]
 	, npmax = npmax
-	, nargs = 1 + (grid.ndim+3)*2 # extra memory for implicit solver
-	) 
-	
+	, nargs = 1 + (grid.ndim+3)*2) # extra memory for implicit solver
+
 	##############################################################################
 	# declare electric field vcache
 	emfield = ltp.vcache (grid
@@ -216,8 +194,8 @@ def main(args, logger):
 		for i, grad in enumerate(np.gradient(_vmap, *grid.step), 1):
 			emfield[..., i] = -grad[*slicer2]
 		# apply external fields
-		emfield[..., 0] += B0
-		emfield[..., 1] += E0
+		emfield[..., 0] += B0/2.99792458e10 # Gauss -> Gauss*s/cm
+		emfield[..., 1] += E0/2.99792458e2  # V/cm -> statV/cm
 		
 		# put emfield field into value cache
 		emfield.remap("in")
@@ -280,8 +258,22 @@ def main(args, logger):
 	 "chinfo"   : chinfo,
 	 "fluidinfo": "C Fx Fy KEn",
 	}
-	for key in cfg:
-		logger.info(f"{key}: {cfg[key]}")
+	# ~ for key in cfg:
+		# ~ logger.info(f"{key}: {cfg[key]}")
+		
+	WPE = np.sqrt(M_4PI_E * args.n_plasma * ECHARGE/ME)
+	WMX = args.n_bgrnd * cset[len(cset)-1].rate_max
+	
+	tframe = args.dt*args.nsub*1e9
+	logger.info(f"order  = {args.order}")
+	logger.info(f"npunit = {args.npunit}")
+	logger.info(f"nppin  = {nppin}")
+	logger.info(f"tframe = {tframe:07.3f} ns")
+	logger.info(f"1/δt   = {1/args.dt:e} 1/s")
+	logger.info(f"ωpe    = {WPE:e} 1/s")
+	logger.info(f"n0∑ϑ   = {WMX:e} 1/s")
+	logger.info(f"E0     = {E0:e} V/cm")
+	logger.info(f"B0     = {B0:e} G")
 	
 	##############################################################################
 	if args.run == False or not (args.run or input(f"run? [y] ") == "y"):
@@ -290,7 +282,7 @@ def main(args, logger):
 	# run initial step
 	logger.info("start calculation")
 	ppost_fn()
-	ptfluid.remap("out")[...] *= args.n_plasma/len(pstore)
+	ptfluid.remap("out")[...] *= args.n_plasma/args.npunit*nppin/len(pstore)
 	recalc_field()
 	
 	##############################################################################
@@ -324,7 +316,7 @@ def main(args, logger):
 				# obtain density & flows
 				t1 = time()
 				ppost_fn()
-				ptfluid.remap("out")[...] *= args.n_plasma/len(pstore)
+				ptfluid.remap("out")[...] *= args.n_plasma/args.npunit*nppin/len(pstore)
 				# recalculate field
 				verr = recalc_field()
 				t2 = time()
@@ -349,7 +341,7 @@ def main(args, logger):
 		############################################################################
 		# end frame cycle
 		logger.info(f"end frame ({len(pstore):} samples)")
-		# acquire frame-avgeraged event-frequencies
+		# acquire frame-avgeraged values
 		_cevfreq[...]\
 		 = events.remap("out")[...].astype(np.float32)/np_counter/args.dt
 		
@@ -367,10 +359,20 @@ def main(args, logger):
 			ptfluid.remap("out")[...] *= args.n_plasma/len(pstore)
 		
 		############################################################################
+		ne = np.mean(_ptfluid[..., 0])
+		vx = np.mean(_ptfluid[..., 1])/ne
+		vy = np.mean(_ptfluid[..., 2])/ne
+		ke = np.mean(_ptfluid[..., 3])/ne*2.842815e-16
+		
+		logger.info(f"ne = {ne:e} cm^-3")
+		logger.info(f"vx = {vx:e} cm/s")
+		logger.info(f"vy = {vy:e} cm/s")
+		logger.info(f"ke = {ke:e} eV")
+		
 		for j, entry in enumerate(chinfo):
 			freq = np.mean(_cevfreq[..., j])
-			print(f"#{j+1:02d} {entry:<40} {freq:e}")
-			
+			logger.info(f"#{j+1:02d} {entry:<40} {freq:e}")
+		
 		# save frame
 		if (fpath := args.save):
 			save_frame(f"{fpath}/frame{irun:06d}.zip", "w", **{
