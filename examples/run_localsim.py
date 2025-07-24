@@ -101,7 +101,6 @@ def main(args):
 
 	#######################
 	# init particle storage
-	import consts
 	pstore_cfg = {
 		"npmax" : int(args.npp*(1.0 + args.extra)/args.nodes),
 		"ptinfo": [
