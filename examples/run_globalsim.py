@@ -50,8 +50,10 @@ def main(args, logger):
 	# the problem's base geometry:
 	match args.preset:
 		case "default2d":
-			nx, mx, dx = 192, 16, 0.00625
-			ny, my, dy = 192, 16, 0.00625
+			# ~ nx, mx, dx = 192, 16, 0.00625
+			# ~ ny, my, dy = 192, 16, 0.00625
+			nx, mx, dx = 96, 16, 0.0125
+			ny, my, dy = 96, 16, 0.0125
 			grid_conf = {
 			 "nd"     : 2,
 			 "step"   : [dx,dy],
@@ -154,10 +156,12 @@ def main(args, logger):
 	
 	##############################################################################
 	# set-up background
+	#xs, ys = np.mgrid[0:nx, 0:ny]
 	for j, frac in enumerate(fracs):
+		#bgrnd[..., j] = args.n_bgrnd*frac*(np.sin(xs*2*np.pi/nx)*np.sin(ys*2*np.pi/ny))**2
 		bgrnd[..., j] = args.n_bgrnd*frac
 	bgrnd.remap("in")
-
+	
 	##############################################################################
 	# declare function bindings:
 	mcsim_fn = ltp.bind_mcsim_fn(pstore, events, cset, bgrnd)
@@ -256,7 +260,7 @@ def main(args, logger):
 	 "E0"       : E0,
 	 "B0"       : B0,
 	 "chinfo"   : chinfo,
-	 "fluidinfo": "C Fx Fy KEn",
+	 "flinfo"   : ["C","Fx","Fy","KEn"],
 	}
 	# ~ for key in cfg:
 		# ~ logger.info(f"{key}: {cfg[key]}")
@@ -325,7 +329,7 @@ def main(args, logger):
 				(f"{' 'if irep else '*'}{irun:06d}/{isub:04d}/{irep:02d}({'E0R'[mode]}) verr={verr:6.3e}")
 				
 				_errv[isub-1, irep] = verr
-				if irep and verr < args.epsilon:
+				if irep>1 and verr < args.epsilon:
 					break
 			
 			# end sub-cycle, collect data to average
@@ -342,6 +346,7 @@ def main(args, logger):
 		# end frame cycle
 		logger.info(f"end frame ({len(pstore):} samples)")
 		# acquire frame-avgeraged values
+		print(events.remap("out")[...,0])
 		_cevfreq[...]\
 		 = events.remap("out")[...].astype(np.float32)/np_counter/args.dt
 		
@@ -385,6 +390,8 @@ def main(args, logger):
 			 "ptfluid": np.mean(_ptfluid, axis=0),
 			 # event-frequencies:
 			 "cevfreq": _cevfreq,
+			 "events" : events[...],
+			 "bgrnd" : bgrnd[...],
 			 # error-vector
 			 **({"errv": _errv} if args.nrep else {}),
 			 },

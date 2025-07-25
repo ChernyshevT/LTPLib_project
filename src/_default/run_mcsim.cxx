@@ -10,18 +10,21 @@
 
 template<u8 nd>
 u32 run_mcsim
-(const grid_t<nd> &grid, pstore_t &pstore, vcache_t<u32> &cflatt
-, const csection_set_t &cset, const vcache_t<f32> &bglatt, f32 dt, u32 seed) {
+(const grid_t<nd> &grid, pstore_t &pstore, vcache_t<u32> &events
+, const csection_set_t &cset, const vcache_t<f32> &bgrnd, f32 dt, u32 seed) {
 	
+	/* loop over nodes */
 	u32 flags{0};
 	#pragma omp parallel for
 	for (u32 k=0; k<grid.size; ++k) {
-
+		auto rng{rng_t(seed+k)};
 		auto node{grid[k]};
 		auto pool{pstore[k]};
-		auto bgseg{bglatt[k]};
-		auto cfseg{cflatt[k]};
-		auto rng{rng_t(seed+k)};
+		
+		f32 *bgrnd_seq{bgrnd[k]};
+		u32 *event_seq{events[k]};
+		
+		/* loop over particles */
 		u32 j1{pool.index[0]}, nh{0};
 		for (u32 j{0}; j<j1; ++j) {
 			struct {
@@ -29,16 +32,17 @@ u32 run_mcsim
 				u8  *tag =  data[0].tag;
 				f32 *pos = &data[1].vec;
 			} p0, p1;
-			u32 idx[nd];
 			
 			for (auto i{0}; i<1+nd+3; ++i) {
 				p0.data[i] = pool.parts[j][i];
 			}
 			
-			u32 flag{0};
-			for (u8 i{0u}; i<nd; ++i) {
-				idx[i] = u32((p0.pos[i]-node.edgel[i])/grid.step[i]);
-				flag |= ERR_CODE::PTOUTOFRANGE*(idx[i] >= node.shape[i]);
+			/* obtain position id */
+			u32 flag{0}, idpt{0};
+			for (u32 i{1u}, sh{1u}, axpos; i<=nd; sh*=node.shape[nd-i], ++i) {
+				axpos = u32((p0.pos[nd-i]-node.edgel[nd-i])/grid.step[nd-i]);
+				idpt += axpos*sh;
+				flag |= ERR_CODE::PTOUTOFRANGE*(axpos >= node.shape[nd-i]);
 			}
 			if (flag) {
 				#pragma omp atomic
@@ -47,13 +51,8 @@ u32 run_mcsim
 				continue;
 			}
 			
-			f32 *bg{bgseg};
-			for (auto i{1u}, sh{bglatt.vsize}; i<=nd; ++i) {
-				bg += idx[nd-i]*sh;
-				sh *= node.shape[nd-i];
-			}
-			
-			auto cl{mcrun(rng, cset, p0.tag[0], p0.pos+nd, bg, dt)};
+			/* run Monte-Carlo simulation */
+			auto cl{mcrun(rng, cset, p0.tag[0], p0.pos+nd, &bgrnd_seq[idpt*bgrnd.vsize], dt)};
 			next: switch (cl.type) {
 				
 				case cltype::ERROR_ENLIMIT:
@@ -112,16 +111,12 @@ u32 run_mcsim
 			skip: continue;
 			
 			end: if (cl.chnl) {
-				u32 *cf{cfseg};
-				for (auto i{1u}, sh{cflatt.vsize}; i<=nd; ++i) {
-					cf += idx[nd-i]*sh;
-					sh *= node.shape[nd-i];
-				}
-				++cf[cl.chnl-1];
+				++event_seq[idpt*events.vsize + (cl.chnl-1)];
 			}
-		} // end loop over particles
+		}
+		/* end loop over particles */
 		
-		// fill up holes with particles from the tail
+		/* fill up holes with particles from the tail */
 		for (u32 ih{0}, j_src, j_dst; ih<nh; ++ih) {
 			j_src = j1-ih-1;
 			j_dst = pool.flags[(nh-ih-1)*2+1];
@@ -129,10 +124,10 @@ u32 run_mcsim
 				pool.parts[j_dst][i] = pool.parts[j_src][i];
 			}
 		}
-		// write actual particle number
+		/* write actual particle number */
 		pool.index[0] = j1-nh;
 	}
-	// end omp parallel for
+	/* end loop over nodes */
 
 	return flags;
 }
