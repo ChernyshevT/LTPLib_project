@@ -45,6 +45,8 @@ def main(args, logger):
 	ME, MP   = 9.109383e-28, 1.6605402e-24 # gram
 	ECHARGE  = 4.803204e-10 # statC
 	M_4PI_E  = 6.035884e-09
+	CLIGHT   = 2.99792458e+10
+
 	##############################################################################
 	# problem's presets:
 	# the problem's base geometry:
@@ -198,7 +200,7 @@ def main(args, logger):
 		for i, grad in enumerate(np.gradient(_vmap, *grid.step), 1):
 			emfield[..., i] = -grad[*slicer2]
 		# apply external fields
-		emfield[..., 0] += B0/2.99792458e10 # Gauss -> Gauss*s/cm
+		emfield[..., 0] += B0/CLIGHT # Gauss -> Gauss*s/cm
 		emfield[..., 1] += E0/2.99792458e2  # V/cm -> statV/cm
 		
 		# put emfield field into value cache
@@ -263,8 +265,10 @@ def main(args, logger):
 	 "flinfo"   : ["C","Fx","Fy","KEn"],
 	}
 	
+	WCE = ECHARGE*B0/ME/CLIGHT
 	WPE = np.sqrt(M_4PI_E * args.n_plasma * ECHARGE/ME)
 	WMX = args.n_bgrnd * cset[len(cset)-1].rate_max
+	RCE = 2*(E0*ME/ECHARGE)*(CLIGHT/B0)**2
 	
 	tframe = args.dt*args.nsub*1e9
 	logger.info(f"order  = {args.order}")
@@ -273,9 +277,14 @@ def main(args, logger):
 	logger.info(f"tframe = {tframe:07.3f} ns")
 	logger.info(f"1/δt   = {1/args.dt:e} 1/s")
 	logger.info(f"ωpe    = {WPE:e} 1/s")
+	if B0 != 0:
+		logger.info(f"ωce    = {WCE:e} 1/s")
 	logger.info(f"n0∑ϑ   = {WMX:e} 1/s")
 	logger.info(f"E0     = {E0:e} V/cm")
-	logger.info(f"B0     = {B0:e} G")
+	if B0 != 0:
+		logger.info(f"B0     = {B0:e} G")
+		logger.info(f"rce    = {RCE:f} cm") 
+		
 	
 	##############################################################################
 	if args.run == False or not (args.run or input(f"run? [y] ") == "y"):
@@ -311,17 +320,14 @@ def main(args, logger):
 			##########################################################################
 			# run streaming-phase (sub-cycle for implicit solver)
 			for irep in range(0, args.nrep+1):
-				# push parts
-				t0 = time()
-				mode = (args.nrep>0)+(irep>0)
-				ppush_fns[mode](args.dt)
-				# obtain density & flows
-				t1 = time()
+				# push particles
+				ppush_fns[(args.nrep>0)+(irep>0)](args.dt)
+				npp = len(pstore)
+				# obtain density & flows & kinetic energy
 				ppost_fn()
-				ptfluid.remap("out")[...] *= args.n_plasma/args.npunit*nppin/len(pstore)
+				ptfluid.remap("out")[...] *= args.n_plasma/args.npunit*nppin/npp
 				# recalculate field
 				verr = recalc_field()
-				t2 = time()
 				
 				logger.debug\
 				(f"{' 'if irep else '*'}{irun:06d}/{isub:04d}/{irep:02d}({'E0R'[mode]}) verr={verr:6.3e}")
@@ -336,10 +342,9 @@ def main(args, logger):
 			
 			##########################################################################
 			# run collision-phase
-			seed = np.random.randint(0xFFFFFFFF, dtype=np.uint32)
-			mcsim_fn(args.dt, seed)
+			mcsim_fn(args.dt, np.random.randint(0xFFFFFFFF, dtype=np.uint32))
 			npp = len(pstore); np_counter += npp
-			
+			# [!] we need this hack because electrons spawn without paired ions
 			ptfluid.remap("out")[...] *= args.n_plasma/args.npunit*nppin/npp
 			recalc_field()
 
