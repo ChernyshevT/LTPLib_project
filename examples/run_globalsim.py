@@ -339,6 +339,9 @@ def main(args, logger):
 			seed = np.random.randint(0xFFFFFFFF, dtype=np.uint32)
 			mcsim_fn(args.dt, seed)
 			npp = len(pstore); np_counter += npp
+			
+			ptfluid.remap("out")[...] *= args.n_plasma/args.npunit*nppin/npp
+			recalc_field()
 
 		############################################################################
 		# end frame cycle
