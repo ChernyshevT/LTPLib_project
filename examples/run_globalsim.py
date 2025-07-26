@@ -50,10 +50,10 @@ def main(args, logger):
 	# the problem's base geometry:
 	match args.preset:
 		case "default2d":
-			# ~ nx, mx, dx = 192, 16, 0.00625
-			# ~ ny, my, dy = 192, 16, 0.00625
-			nx, mx, dx = 96, 16, 0.0125
-			ny, my, dy = 96, 16, 0.0125
+			nx, mx, dx = 192, 16, 0.00625
+			ny, my, dy = 192, 16, 0.00625
+			#nx, mx, dx = 96, 16, 0.0125
+			#ny, my, dy = 96, 16, 0.0125
 			grid_conf = {
 			 "nd"     : 2,
 			 "step"   : [dx,dy],
@@ -262,9 +262,7 @@ def main(args, logger):
 	 "chinfo"   : chinfo,
 	 "flinfo"   : ["C","Fx","Fy","KEn"],
 	}
-	# ~ for key in cfg:
-		# ~ logger.info(f"{key}: {cfg[key]}")
-		
+	
 	WPE = np.sqrt(M_4PI_E * args.n_plasma * ECHARGE/ME)
 	WMX = args.n_bgrnd * cset[len(cset)-1].rate_max
 	
@@ -304,7 +302,6 @@ def main(args, logger):
 		
 		# reset collision counter
 		events.reset()
-		# ~ events[...] = 0; events.remap("in")
 		np_counter = 0
 		
 		############################################################################
