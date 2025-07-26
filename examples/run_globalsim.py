@@ -241,7 +241,7 @@ def main(args, logger):
 	_vplasma = np.zeros([args.nsub+1, *eq.vmap.shape], dtype=np.float32)
 	_errv    = np.zeros([args.nsub, args.nrep+1], dtype=np.float32)
 	# collision event frequencies
-	_cevfreq = np.zeros(events.shape, dtype=np.float32)
+	_evtfreq = np.zeros(events.shape, dtype=np.float32)
 
 	# channels' info to write into frame
 	chinfo = []
@@ -304,6 +304,7 @@ def main(args, logger):
 		
 		# reset collision counter
 		events.reset()
+		# ~ events[...] = 0; events.remap("in")
 		np_counter = 0
 		
 		############################################################################
@@ -345,10 +346,14 @@ def main(args, logger):
 		############################################################################
 		# end frame cycle
 		logger.info(f"end frame ({len(pstore):} samples)")
+		
 		# acquire frame-avgeraged values
-		print(events.remap("out")[...,0])
-		_cevfreq[...]\
-		 = events.remap("out")[...].astype(np.float32)/np_counter/args.dt
+		#print(events.remap("out")[...,0])
+		_evtfreq[...] = events.remap("out")[...].astype(np.float32)\
+		* (args.nsub*nppin/np_counter) / (args.npunit*args.dt*args.nsub)
+		               
+		
+		#/cfg.npunit/cfg.dt/cfg.nsub/cfg.n_bgrnd
 		
 		# keep ensemble's size constant (if required)
 		if args.resample and npp != nppin:
@@ -375,7 +380,7 @@ def main(args, logger):
 		logger.info(f"ke = {ke:e} eV")
 		
 		for j, entry in enumerate(chinfo):
-			freq = np.mean(_cevfreq[..., j])
+			freq = np.mean(_evtfreq[..., j])/args.n_bgrnd
 			logger.info(f"#{j+1:02d} {entry:<40} {freq:e}")
 		
 		# save frame
@@ -389,7 +394,7 @@ def main(args, logger):
 			 # electron concentration, flux & kinetic energy:
 			 "ptfluid": np.mean(_ptfluid, axis=0),
 			 # event-frequencies:
-			 "cevfreq": _cevfreq,
+			 "evtfreq": _evtfreq,
 			 "events" : events[...],
 			 "bgrnd" : bgrnd[...],
 			 # error-vector

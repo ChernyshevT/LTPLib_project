@@ -34,10 +34,10 @@ struct vcache_ctor {
 	const py::dict  cfg;
 	
 	template<typename tp, u8 nd>
-	void operator () (vcache_t<tp>& field, const grid_t<nd> &grid) {
+	void operator () (vcache_t<tp>& vcache, const grid_t<nd> &grid) {
 		self.cache.dtype = py::dtype::of<tp>();
 		logger::debug("construct vcache{} ({}, &grid{} = {})",
-		datatypecode<tp>(), (void*)(&field), nd, (void*)(&grid)
+		datatypecode<tp>(), (void*)(&vcache), nd, (void*)(&grid)
 		);
 		
 		self.cache.shape.resize(nd+1);
@@ -45,21 +45,21 @@ struct vcache_ctor {
 		self.cache.vsize     = py::cast<u8>(cfg.attr("get")("vsize",1));
 		self.cache.shape[nd] = self.cache.vsize;
 		
-		field.vsize = self.cache.vsize;
-		field.order = self.cache.order;
+		vcache.vsize = self.cache.vsize;
+		vcache.order = self.cache.order;
 
-		size_t nn{field.vsize};
+		size_t nn{vcache.vsize};
 		for (int i{0}; i<nd; ++i) {
-			self.cache.shape[i] = grid.axes[i][grid.shape[i]]-grid.axes[i][0]+field.order;
+			self.cache.shape[i] = grid.axes[i][grid.shape[i]]-grid.axes[i][0]+vcache.order;
 			size_t mx{0};
 			for (u32 j=1; j<grid.shape[i]+1; ++j) {
-				mx = std::max(mx, size_t(grid.axes[i][j]-grid.axes[i][j-1]+field.order));
+				mx = std::max(mx, size_t(grid.axes[i][j]-grid.axes[i][j-1]+vcache.order));
 			}
 			nn *= mx;
-		} field.blocksize = nn;
+		} vcache.blocksize = nn;
 		
 		self.m.data_h
-			.req(&field.data, field.blocksize*grid.size)
+			.req(&vcache.data, vcache.blocksize*grid.size)
 			.alloc();
 		
 		self.cache.nodes.reserve(grid.size);
@@ -70,23 +70,33 @@ struct vcache_ctor {
 				strides[nd-i] = i==1? sizeof(tp) : strides[nd-i+1]*shape[nd-i+1];
 			}
 			self.cache.nodes.push_back(py::memoryview::from_buffer(
-				/* ptr    */ field[k],
+				/* ptr    */ vcache[k],
 				/*shape   */ std::move(shape),
 				/*strides */ std::move(strides),
 				/*readonly*/ true
 			));
 		}
 		
-		self.reset_fn = [ptr=(void*)field.data, sz=(field.blocksize*grid.size)] () {
-			memset(ptr, 0, sz);
+		// [TODO: move into backend!]
+		self.reset_fn = [&] () {
+			for (u32 k{0}; k<grid.size; ++k) {
+				u32 msize{vcache.vsize * (u32)(sizeof(tp))};
+				for (u8 i{0u}; i<nd; ++i) {
+					auto id = grid.nodes[k].map[i];
+					auto a = grid.axes[i][id];
+					auto b = grid.axes[i][id+1];
+					msize *= b-a + vcache.order;
+				}
+				memset(vcache[k], 0, msize);
+			}
 		};
 		
 		/* create build-in vmap if requested **************************************/
 		{
 			std::vector<py::ssize_t> shape(nd+1);
 			std::vector<py::ssize_t> strides(nd+1);
-			u64                      msize{sizeof(tp)*field.vsize};
-			shape[nd]   = field.vsize;
+			u64                      msize{sizeof(tp)*vcache.vsize};
+			shape[nd]   = vcache.vsize;
 			strides[nd] = sizeof(tp);
 			for (auto i{1u}; i<=nd; ++i) {
 				auto a = grid.axes[nd-i][grid.shape[nd-i]];
@@ -110,12 +120,12 @@ struct vcache_ctor {
 
 			auto &&fn_in = libs[backend].get_function<remap_fn_t<nd,tp>>(fn_name+"_NODES_fn");
 			self.remap_fns[REMAP_MODE::NODES] = [&, ptr, fn = fn_in] () mutable {
-				fn(grid, field, ptr);
+				fn(grid, vcache, ptr);
 			};
 
 			auto &&fn_out = libs[backend].get_function<remap_fn_t<nd,tp>>(fn_name+"_ARRAY_fn");
 			self.remap_fns[REMAP_MODE::ARRAY] = [&, ptr, fn = fn_out] () mutable {
-				fn(grid, field, ptr);
+				fn(grid, vcache, ptr);
 			};
 		}
 		
