@@ -48,55 +48,6 @@ def main(args, logger):
 	CLIGHT   = 2.99792458e+10
 
 	##############################################################################
-	# problem's presets:
-	# the problem's base geometry:
-	match args.preset:
-		case "default2d":
-			nx, mx, dx = 192, 16, 0.00625
-			ny, my, dy = 192, 16, 0.00625
-			#nx, mx, dx = 96, 16, 0.0125
-			#ny, my, dy = 96, 16, 0.0125
-			grid_conf = {
-			 "nd"     : 2,
-			 "step"   : [dx,dy],
-			 "axes"   : [
-			  [*range(0,nx+1,mx)],
-			  [*range(0,ny+1,my)],
-			 ],
-			 "nodes"  : [(x, y)\
-			  for x in range(nx//mx)\
-			  for y in range(ny//my)\
-			 ],
-			 "loopax" : "xy",
-			}
-			node_size = mx*my
-			logger.info(f"use default2d preset: {nx}x{ny}")
-			
-		case "lowres3d":
-			nx, mx, dx = 48, 8, 0.025
-			ny, my, dy = 48, 6, 0.025
-			nz, mz, dz = 48, 6, 0.025
-			grid_conf = {
-			 "nd"     : 3,
-			 "step"   : [dx,dy,dz],
-			 "axes"   : [
-			  [*range(0, nx+1, mx)],
-			  [*range(0, ny+1, my)],
-			  [*range(0, nz+1, mz)],
-			 ],
-			 "nodes"  : [(x, y, z)\
-			  for x in range(nx//mx)\
-			  for y in range(ny//my)\
-			  for z in range(nz//mz)\
-			 ],
-			 "loopax" : "xyz",
-			}
-			node_size = mx*my*mz
-			logger.info(f"use lowres3d preset: {nx}x{ny}x{nz}")
-		case _:
-			raise ValueError(f"invalid preset \"{args.preset}\"")
-	
-	##############################################################################
 	ltp.load_backend("default")
 	
 	##############################################################################
@@ -120,10 +71,19 @@ def main(args, logger):
 	, ptdescr = "e"
 	, rescale = 1e4 #CGS (m² -> cm²)
 	)
-	
-	##############################################################################
+
+	# ############################################################################
+	# the problem's base geometry:
+	nx, mx, dx = 576, 24, 0.00048828125
+	ny, my, dy = 576, 24, 0.00048828125
+	node_size = mx*my
+	logger.info(f"use default2d preset: {nx}x{ny} ({dx*nx}x{dy*ny} cm)")
 	# declare grid
-	grid = ltp.grid(**grid_conf)
+	grid = ltp.grid(2
+	, step = [dx,dy]
+	, axes = [[*range(0,nx+1,mx)], [*range(0,ny+1,my)]]
+	, nodes = [(x,y) for x in range(nx//mx) for y in range(ny//my)]
+	, loopax = "xy")
 	
 	##############################################################################
 	# declare particle storage
@@ -201,7 +161,7 @@ def main(args, logger):
 			emfield[..., i] = -grad[*slicer2]
 		# apply external fields
 		emfield[..., 0] += B0/CLIGHT # Gauss -> Gauss*s/cm
-		emfield[..., 1] += E0/2.99792458e2  # V/cm -> statV/cm
+		emfield[..., 1] -= E0/2.99792458e2  # V/cm -> statV/cm
 		
 		# put emfield field into value cache
 		emfield.remap("in")
