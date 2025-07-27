@@ -281,7 +281,8 @@ def main(args, logger):
 			# run streaming-phase (sub-cycle for implicit solver)
 			for irep in range(0, args.nrep+1):
 				# push particles
-				ppush_fns[(args.nrep>0)+(irep>0)](args.dt)
+				mode = (args.nrep>0)+(irep>0)
+				ppush_fns[mode](args.dt)
 				npp = len(pstore)
 				# obtain density & flows & kinetic energy
 				ppost_fn()
@@ -302,7 +303,8 @@ def main(args, logger):
 			
 			##########################################################################
 			# run collision-phase
-			mcsim_fn(args.dt, np.random.randint(0xFFFFFFFF, dtype=np.uint32))
+			seed = np.random.randint(0xFFFFFFFF, dtype=np.uint32)
+			mcsim_fn(args.dt, seed)
 			npp = len(pstore); np_counter += npp
 			# [!] we need this hack because electrons spawn without paired ions
 			ptfluid.remap("out")[...] *= args.n_plasma/args.npunit*nppin/npp
