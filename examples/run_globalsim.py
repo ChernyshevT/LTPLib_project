@@ -138,8 +138,6 @@ def main(args, logger):
 	# get actual fields
 	E0 = args.EN*args.n_bgrnd*1e-17 #SI Td -> V/cm
 	B0 = args.BN*args.n_bgrnd*1e-17 #SI Hx -> Gauss
-	
-	print(B0, E0, args.BN)
 
 	##############################################################################
 	# declare poisson_eq
@@ -234,8 +232,8 @@ def main(args, logger):
 	logger.info(f"order    = {args.order}")
 	logger.info(f"npunit   = {args.npunit}")
 	logger.info(f"nppin    = {nppin}")
-	logger.info(f"n_plasma = {args.n_plasma:e} 1/cm^3")
-	logger.info(f"n_bgrnd  = {args.n_bgrnd:e} 1cm/^3")
+	logger.info(f"n_plasma = {args.n_plasma:e} cm^-3")
+	logger.info(f"n_bgrnd  = {args.n_bgrnd:e} cm^-3")
 	logger.info(f"tframe   = {tframe:07.3f} ns")
 	logger.info(f"1/δt     = {1/args.dt:e} 1/s")
 	logger.info(f"ωpe      = {WPE:e} 1/s")
