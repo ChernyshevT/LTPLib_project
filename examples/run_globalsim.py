@@ -228,7 +228,7 @@ def main(args, logger):
 	WCE = ECHARGE*B0/ME/CLIGHT
 	WPE = np.sqrt(M_4PI_E * args.n_plasma * ECHARGE/ME)
 	WMX = args.n_bgrnd * cset[len(cset)-1].rate_max
-	RCE = 2*(E0*ME/ECHARGE)*(CLIGHT/B0)**2
+	RCE = 2*(E0*ME/ECHARGE)*(CLIGHT/B0)**2 if B0 else np.nan
 	
 	tframe = args.dt*args.nsub*1e9
 	logger.info(f"order  = {args.order}")
