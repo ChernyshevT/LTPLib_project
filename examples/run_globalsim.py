@@ -336,10 +336,10 @@ def main(args, logger):
 			ptfluid.remap("out")[...] *= args.n_plasma/len(pstore)
 		
 		############################################################################
-		ne = np.mean(_ptfluid[..., 0])
-		vx = np.mean(_ptfluid[..., 1])/ne
-		vy = np.mean(_ptfluid[..., 2])/ne
-		ke = np.mean(_ptfluid[..., 3])/ne*2.842815e-16
+		ne = np.nanmean(_ptfluid[..., 0])
+		vx = np.nanmean(_ptfluid[..., 1])/ne
+		vy = np.nanmean(_ptfluid[..., 2])/ne
+		ke = np.nanmean(_ptfluid[..., 3])/ne*2.842815e-16
 		
 		logger.info(f"ne = {ne:e} cm^-3")
 		logger.info(f"vx = {vx:e} cm/s")
