@@ -127,7 +127,7 @@ def main(args, logger):
 	# declare function bindings:
 	mcsim_fn = ltp.bind_mcsim_fn(pstore, events, cset, bgrnd)
 	
-	ppost_fn = ltp.bind_ppost_fn(pstore, "C Fx Fy KEn", ptfluid)
+	ppost_fn = ltp.bind_ppost_fn(pstore, "C KEn Fx Fy", ptfluid)
 	
 	emf_descr = "BzExEyEz"[:(1+grid.ndim)*2]
 	ppush_fns = [ltp.bind_ppush_fn(pstore, f"{emf_descr}:{scheme}", emfield) \
@@ -164,9 +164,6 @@ def main(args, logger):
 		emfield[..., 0] += B0/CLIGHT # Gauss -> Gauss*s/cm
 		emfield[..., 1] -= E0/2.99792458e2  # V/cm -> statV/cm
 		
-		# put emfield field into value cache
-		emfield.remap("in")
-		
 		return verr
 	
 		
@@ -202,6 +199,7 @@ def main(args, logger):
 	# arrays to collect data for the each frame
 	_ptfluid = np.zeros([args.nsub+1, *ptfluid.shape], dtype=np.float32)
 	_vplasma = np.zeros([args.nsub+1, *eq.vmap.shape], dtype=np.float32)
+	_emenrgy = np.zeros([args.nsub+1, *emfield.shape[:2]], dtype=np.float32)
 	_errv    = np.zeros([args.nsub, args.nrep+1], dtype=np.float32)
 	# collision event frequencies
 	_evtfreq = np.zeros(events.shape, dtype=np.float32)
@@ -223,7 +221,7 @@ def main(args, logger):
 	 "E0"       : E0,
 	 "B0"       : B0,
 	 "chinfo"   : chinfo,
-	 "flinfo"   : ["C","Fx","Fy","KEn"],
+	 "flinfo"   : ["C","KEn", "Fx","Fy"],
 	}
 	
 	WCE = ECHARGE*B0/ME/CLIGHT
@@ -259,6 +257,7 @@ def main(args, logger):
 	ppost_fn()
 	ptfluid.remap("out")[...] *= args.n_plasma/args.npunit*nppin/len(pstore)
 	recalc_field()
+	emfield.remap("in")
 	
 	##############################################################################
 	# now, run the main cycle
@@ -271,17 +270,28 @@ def main(args, logger):
 		# refresh arrays to save
 		_ptfluid[0, ...] = ptfluid[...]
 		_vplasma[0, ...] = eq.vmap[...]
+		_emenrgy[0, ...] = np.sum(emfield[..., 1:]**2, axis=2)
 		_errv[...] = np.nan
 		
 		# reset collision counter
 		events.reset()
 		np_counter = 0
 		
-		############################################################################
+		#################
 		# run frame-cycle
 		for isub in range(1, args.nsub+1):
-			
-			##########################################################################
+
+			#####################
+			# run collision-phase
+			seed = np.random.randint(0xFFFFFFFF, dtype=np.uint32)
+			mcsim_fn(args.dt, seed)
+			npp = len(pstore); np_counter += npp
+			# [!] we need this hack because electrons spawn without paired ions
+			ptfluid.remap("out")[...] *= args.n_plasma/args.npunit*nppin/npp
+			recalc_field()
+			emfield.remap("in")
+
+			#####################################################
 			# run streaming-phase (sub-cycle for implicit solver)
 			for irep in range(0, args.nrep+1):
 				# push particles
@@ -293,6 +303,7 @@ def main(args, logger):
 				ptfluid.remap("out")[...] *= args.n_plasma/args.npunit*nppin/npp
 				# recalculate field
 				verr = recalc_field()
+				emfield.remap("in")
 				
 				logger.debug\
 				(f"{' 'if irep else '*'}{irun:06d}/{isub:04d}/{irep:02d}({'E0R'[mode]}) verr={verr:6.3e}")
@@ -304,15 +315,7 @@ def main(args, logger):
 			# end sub-cycle, collect data to average
 			_ptfluid[isub, ...] = ptfluid[...]
 			_vplasma[isub, ...] = eq.vmap[...]
-			
-			##########################################################################
-			# run collision-phase
-			seed = np.random.randint(0xFFFFFFFF, dtype=np.uint32)
-			mcsim_fn(args.dt, seed)
-			npp = len(pstore); np_counter += npp
-			# [!] we need this hack because electrons spawn without paired ions
-			ptfluid.remap("out")[...] *= args.n_plasma/args.npunit*nppin/npp
-			recalc_field()
+			_emenrgy[isub, ...] = np.sum(emfield[..., 1:]**2, axis=2)*0.125/np.pi
 
 		############################################################################
 		# end frame cycle
@@ -322,9 +325,6 @@ def main(args, logger):
 		#print(events.remap("out")[...,0])
 		_evtfreq[...] = events.remap("out")[...].astype(np.float32)\
 		* (args.nsub*nppin/np_counter) / (args.npunit*args.dt*args.nsub)
-		               
-		
-		#/cfg.npunit/cfg.dt/cfg.nsub/cfg.n_bgrnd
 		
 		# keep ensemble's size constant (if required)
 		if args.resample and npp != nppin:
@@ -341,9 +341,9 @@ def main(args, logger):
 		
 		############################################################################
 		ne = np.nanmean(_ptfluid[..., 0])
-		vx = np.nanmean(_ptfluid[..., 1])/ne
-		vy = np.nanmean(_ptfluid[..., 2])/ne
-		ke = np.nanmean(_ptfluid[..., 3])/ne*2.842815e-16
+		ke = np.nanmean(_ptfluid[..., 1])/ne*2.842815e-16
+		vx = np.nanmean(_ptfluid[..., 2])/ne
+		vy = np.nanmean(_ptfluid[..., 3])/ne
 		
 		logger.info(f"ne = {ne:e} cm^-3")
 		logger.info(f"vx = {vx:e} cm/s")
@@ -362,7 +362,9 @@ def main(args, logger):
 			 },
 			 # plasma potential:
 			 "vplasma": np.mean(_vplasma, axis=0),
-			 # electron concentration, flux & kinetic energy:
+			 # field-energy
+			 "emenrgy": np.mean(_emenrgy, axis=0),
+			 # electron concentration, kinetic energy, x/y-fluxes:
 			 "ptfluid": np.mean(_ptfluid, axis=0),
 			 # event-frequencies:
 			 "evtfreq": _evtfreq,
