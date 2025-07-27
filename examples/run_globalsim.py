@@ -74,8 +74,8 @@ def main(args, logger):
 
 	# ############################################################################
 	# the problem's base geometry:
-	nx, mx, dx = 576, 24, 0.00048828125
-	ny, my, dy = 576, 24, 0.00048828125
+	nx, mx, dx = 384, 32, 0.00048828125
+	ny, my, dy = 384, 32, 0.00048828125
 	node_size = mx*my
 	logger.info(f"use default2d preset: {nx}x{ny} ({dx*nx}x{dy*ny} cm)")
 	# declare grid
