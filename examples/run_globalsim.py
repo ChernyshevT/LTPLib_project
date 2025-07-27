@@ -74,10 +74,9 @@ def main(args, logger):
 
 	# ############################################################################
 	# the problem's base geometry:
-	nx, mx, dx = 192, 16, 0.00625
-	ny, my, dy = 192, 16, 0.00625
+	nx, mx, dx = 192, 16, 1/(2<<9)
+	ny, my, dy = 192, 16, 1/(2<<9)
 	node_size = mx*my
-	logger.info(f"use default2d preset: {nx}x{ny} ({dx*nx}x{dy*ny} cm)")
 	# declare grid
 	grid = ltp.grid(2
 	, step = [dx,dy]
@@ -139,6 +138,8 @@ def main(args, logger):
 	# get actual fields
 	E0 = args.EN*args.n_bgrnd*1e-17 #SI Td -> V/cm
 	B0 = args.BN*args.n_bgrnd*1e-17 #SI Hx -> Gauss
+	
+	print(B0, E0, args.BN)
 
 	##############################################################################
 	# declare poisson_eq
@@ -229,21 +230,24 @@ def main(args, logger):
 	WPE = np.sqrt(M_4PI_E * args.n_plasma * ECHARGE/ME)
 	WMX = args.n_bgrnd * cset[len(cset)-1].rate_max
 	RCE = 2*(E0*ME/ECHARGE)*(CLIGHT/B0)**2 if B0 else np.nan
-	
 	tframe = args.dt*args.nsub*1e9
-	logger.info(f"order  = {args.order}")
-	logger.info(f"npunit = {args.npunit}")
-	logger.info(f"nppin  = {nppin}")
-	logger.info(f"tframe = {tframe:07.3f} ns")
-	logger.info(f"1/δt   = {1/args.dt:e} 1/s")
-	logger.info(f"ωpe    = {WPE:e} 1/s")
+	
+	logger.info(f"use default2d preset: {nx}x{ny} ({dx*nx}x{dy*ny} cm)")
+	logger.info(f"order    = {args.order}")
+	logger.info(f"npunit   = {args.npunit}")
+	logger.info(f"nppin    = {nppin}")
+	logger.info(f"n_plasma = {args.n_plasma:e} 1/cm^3")
+	logger.info(f"n_bgrnd  = {args.n_bgrnd:e} 1cm/^3")
+	logger.info(f"tframe   = {tframe:07.3f} ns")
+	logger.info(f"1/δt     = {1/args.dt:e} 1/s")
+	logger.info(f"ωpe      = {WPE:e} 1/s")
 	if B0 != 0:
-		logger.info(f"ωce    = {WCE:e} 1/s")
-	logger.info(f"n0∑ϑ   = {WMX:e} 1/s")
-	logger.info(f"E0     = {E0:e} V/cm")
+		logger.info(f"ωce      = {WCE:e} 1/s")
+	logger.info(f"n0∑ϑ     = {WMX:e} 1/s")
+	logger.info(f"E0       = {E0:e} V/cm")
 	if B0 != 0:
-		logger.info(f"B0     = {B0:e} G")
-		logger.info(f"rce    = {RCE:f} cm") 
+		logger.info(f"B0       = {B0:e} G")
+		logger.info(f"rce      = {RCE:f} cm") 
 		
 	
 	##############################################################################
@@ -383,7 +387,7 @@ args = {
 	"--loglevel" : {
 		"type"     : str,
 		"required" : False,
-		"default"  : "INFO",
+		"default"  : "DEBUG",
 		"help"     : "DEBUG/INFO/WARNING/ERROR",
 	},
 	"--run"      : {
