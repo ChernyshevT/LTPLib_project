@@ -159,7 +159,7 @@ def main(args, logger):
 		for i, grad in enumerate(np.gradient(_vmap, *grid.step), 1):
 			emfield[..., i] = -grad[*slicer2]
 		# apply external fields
-		emfield[..., 0] += B0/CLIGHT # Gauss -> Gauss*s/cm
+		emfield[..., 0] += B0/CLIGHT        # Gauss -> Gauss*s/cm
 		emfield[..., 1] -= E0/2.99792458e2  # V/cm -> statV/cm
 		
 		return verr
@@ -344,10 +344,11 @@ def main(args, logger):
 		vx = np.nanmean(_ptfluid[..., 2])/ne
 		vy = np.nanmean(_ptfluid[..., 3])/ne
 		
-		logger.info(f"ne = {ne:e} cm^-3")
-		logger.info(f"ke = {ke:e} eV")
-		logger.info(f"vx = {vx:e} cm/s")
-		logger.info(f"vy = {vy:e} cm/s")
+		logger.info(f"ne    = {ne:e} cm^-3")
+		logger.info(f"ke    = {ke:e} eV")
+		logger.info(f"ux    = {vx:e} cm/s")
+		logger.info(f"uy    = {vy:e} cm/s")
+		logger.info(f"cferq = {np.mean(np.sum(_evtfreq, axis=-1)):e} 1/s")
 		
 		for j, entry in enumerate(chinfo):
 			freq = np.mean(_evtfreq[..., j])/args.n_bgrnd
