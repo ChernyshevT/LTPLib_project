@@ -244,6 +244,7 @@ def main(args, logger):
 	if B0 != 0:
 		logger.info(f"B0       = {B0:e} G")
 		logger.info(f"rce      = {RCE:f} cm") 
+		logger.info(f"u_drift   = {E0/2.99792458e2 * CLIGHT/B0:e} cm/s")
 		
 	
 	##############################################################################
@@ -313,7 +314,7 @@ def main(args, logger):
 			# end sub-cycle, collect data to average
 			_ptfluid[isub, ...] = ptfluid[...]
 			_vplasma[isub, ...] = eq.vmap[...]
-			_emenrgy[isub, ...] = np.sum(emfield[..., 1:]**2, axis=2)*0.125/np.pi
+			_emenrgy[isub, ...] = np.sum(emfield[..., 1:]**2, axis=2)/8/np.pi
 
 		############################################################################
 		# end frame cycle
@@ -344,9 +345,9 @@ def main(args, logger):
 		vy = np.nanmean(_ptfluid[..., 3])/ne
 		
 		logger.info(f"ne = {ne:e} cm^-3")
+		logger.info(f"ke = {ke:e} eV")
 		logger.info(f"vx = {vx:e} cm/s")
 		logger.info(f"vy = {vy:e} cm/s")
-		logger.info(f"ke = {ke:e} eV")
 		
 		for j, entry in enumerate(chinfo):
 			freq = np.mean(_evtfreq[..., j])/args.n_bgrnd

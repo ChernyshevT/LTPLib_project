@@ -17,14 +17,6 @@
 	 dict(search="DATABASE:         Community database")),
 	},
 
-	{"TYPE":"ATTACHMENT",   "THRESHOLD":6.0, "COMMENT":"CH3+H^-",
-	 "CSEC":(f"{fpath}/CH4/INELASTIC.txt",
-	  dict(search="CH4 -> CH3+H^-", exterp=0)),
-	},
-	{"TYPE":"ATTACHMENT",   "THRESHOLD":6.0, "COMMENT":"H2+CH2^-",
-	 "CSEC":(f"{fpath}/CH4/INELASTIC.txt",
-	  dict(search="CH4 -> H2+CH2^-", exterp=0)),
-	},
 	{"TYPE":"ROTATIONAL",   "THRESHOLD":0.0078,
 	 "CSEC":(f"{fpath}/CH4/INELASTIC.txt",
 	  dict(search="0.0078 / threshold energy", exterp=0)),
@@ -44,8 +36,17 @@
 	 "CSEC":(f"{fpath}/CH4/INELASTIC.txt",
 	  dict(search="CH4 -> CH4(V13)(0.362eV)")),
 	},
-	 
-	##############################################################################
+
+	{"TYPE":"ATTACHMENT",   "THRESHOLD":6.0, "COMMENT":"CH3+H^-",
+	 "CSEC":(f"{fpath}/CH4/INELASTIC.txt",
+	  dict(search="CH4 -> CH3+H^-", exterp=0)),
+	},
+	{"TYPE":"ATTACHMENT",   "THRESHOLD":6.0, "COMMENT":"H2+CH2^-",
+	 "CSEC":(f"{fpath}/CH4/INELASTIC.txt",
+	  dict(search="CH4 -> H2+CH2^-", exterp=0)),
+	},
+
+	###################################################################
 	# Set of the Electron Collision Cross Sections for Methane Molecule
 	# doi:  10.1109/TPS.2018.2885610, cite: gadoum2018
 	{"TYPE":"DISSOCIATION", "THRESHOLD":8.8,
@@ -72,7 +73,7 @@
 	  dict(search="CH4 -> C+H2+H2(14eV-dissoc)"))
 	},
 	
-	##############################################################################
+	#####################################################
 	# Cross Sections for Electron Collisions with Methane
 	# doi:  10.1063/1.4918630, cite: song2015
 	{"TYPE":"IONIZATION",   "THRESHOLD":12.63, "OPBPARAM":7.3,
