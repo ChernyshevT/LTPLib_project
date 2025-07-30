@@ -25,11 +25,11 @@ FetchContent_MakeAvailable(fmt)
 ################################################################################
 add_library(_ltplib SHARED 
 	_ltplib.cxx
-	def_grid_cfg.cxx
+	grid_cfg.cxx
 	def_grid.cxx
 	def_pstore.cxx
 	def_vcache.cxx
-	def_csection_set_cfg.cxx
+	csection_set_cfg.cxx
 	def_csection_set.cxx
 	def_mcsim_funcs.cxx
 	def_ppost_funcs.cxx

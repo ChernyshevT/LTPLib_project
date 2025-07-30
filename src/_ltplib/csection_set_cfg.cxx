@@ -95,11 +95,14 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts, const std::vector<std::st
 	if (enth < 0 \
 	or (enth != 0 and opc == opcode::ELASTIC) \
 	or (enth == 0 and opc != opcode::ELASTIC and opc != opcode::ATTACHMENT)) {
-		throw bad_arg("{}/THRESHOLD = {}", descr, enth);
+		throw bad_arg("{}/THRESHOLD = {} makes no sense", descr, enth);
 	}
 	/****************************************************************************/
 	if (opc >= opcode::IONIZATION and (FLAGS[MTCS_DEF] | FLAGS[DCSFN_DEF])) {
 		throw bad_arg("{}/MTCS makes no sense", descr);
+	}
+	if (opc != opcode::IONIZATION and FLAGS[OPBPARAM_DEF]) {
+		throw bad_arg("{}/OPBPARAM makes no sense", descr);
 	}
 	/****************************************************************************/
 	if (FLAGS[CSEC_DEF]) {
@@ -529,9 +532,6 @@ csfunc_t from_data
 			mxx += logf(x)*logf(x);
 			mxy += logf(x)*logf(y);
 			++nex;
-			//py::print(x, y, "*");
-		} else {
-			//py::print(x, y);
 		}
 		++j;
 	}
@@ -544,10 +544,20 @@ csfunc_t from_data
 		
 		a = (mxy - mx*my)/(mxx - mx*mx);
 		b = expf(my - a*mx);
+
+		if (nex == 1) {
+			throw bad_arg("can not extrapolate: no enough points!");
+		}
+		if (isnan(a) or isnan(b)) {
+			throw bad_arg("can not extrapolate: invalid values!");
+		}
+		if (a > 0.0f) {
+			throw bad_arg("can not extrapolate: growing function!");
+		}
+
 		logger::debug\
-		("build extrapolation using {} points: a={:e}, b={:e}", nex, a, b);
-		
-		if (nex == 1 or a > 0.0f) throw bad_arg("failed to extrapolate");
+		("build extrapolation using {} points ({:e} -> {:e} eV): a={:e}, b={:e}"
+		, nex, xys[n-nex][0], xys[n-1][0], a, b);
 	}
 	
 	return [=] (f32 x) -> f32 {
@@ -642,7 +652,9 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
 			}
 			
 			// if pattern is founded in lxcat-file
-			if (not (foundPattern or startScan) and line.starts_with(pattern)) {
+			//if (not (foundPattern or startScan) and line.starts_with(pattern)) {
+			if (not (foundPattern or startScan)
+			    and line.find(pattern) != std::string::npos) {
 				foundPattern = true;
 				continue;
 			}
@@ -658,9 +670,9 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
 			
 			// skip if comment
 			if (startScan and (line.starts_with("!")
-			or line.starts_with("#")
-			or line.starts_with("%")
-			or line.starts_with("//")
+			 or line.starts_with("#")
+			 or line.starts_with("%")
+			 or line.starts_with("//")
 			)) {
 				continue;
 			}
@@ -714,7 +726,7 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
  ******************************************************************************/
 f32 MTCS_from_DCS (f32 x, f32 ef) {
 	if (fabsf(x) >= 1.0f) {
-		throw bad_arg("invalid DCS value |{}| >= 1", fabsf(x));
+		throw bad_arg("invalid DCS value: |{}| >= 1!", fabsf(x));
 	}
 	
 	f32 f0, v0;
