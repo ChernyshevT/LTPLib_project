@@ -555,8 +555,9 @@ csfunc_t from_data
 			throw bad_arg("can not extrapolate: growing function!");
 		}
 
-		logger::debug\
-		("build extrapolation using {} points ({:e} -> {:e} eV): a={:e}, b={:e}"
+		logger::debug(
+		"build extrapolation using {} points"
+		"{:10.2e} -> {:10.2e} eV): a={:10.2e}, b={:10.2e}"
 		, nex, xys[n-nex][0], xys[n-1][0], a, b);
 	}
 	
