@@ -557,7 +557,7 @@ csfunc_t from_data
 
 		logger::debug(
 		"build extrapolation using {} points"
-		"{:10.2e} -> {:10.2e} eV): a={:10.2e}, b={:10.2e}"
+		" ({:8.2e}, {:8.2e} eV): a={:+9.2e}, b={:+9.2e}"
 		, nex, xys[n-nex][0], xys[n-1][0], a, b);
 	}
 	

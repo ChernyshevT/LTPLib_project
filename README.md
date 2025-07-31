@@ -226,6 +226,9 @@ Then the first set of processes is finished, the next background (or active part
 > It is allowed for same `"TYPE":"PARTICLE"` to repeat for each background.
 > Extra entries will be ignored.
 > It was made this way because it is pretty useful to store the conf.seq. as a preset for the each type of the gas.
+> [!TIP]
+> [LXCat data parser](https://pypi.org/project/lxcat_data_parser/) may be used
+> to convert [LXCat](https://lxcat.net)-database into configuration sequence.
 
 There are two forms of how process cross-section can be passed:
 directly `"CSEC": cs_data` or as a tuple with additional parameters
