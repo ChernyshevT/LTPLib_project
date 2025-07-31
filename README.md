@@ -42,6 +42,7 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 	1. [`_ltplib.bind_mcsim_fn`](#bind_mcsim)
 1. [Code examples](#code_examples)
 	1. [`examples/run_localsim.py`](#run_localsim)
+	1. [`examples/run_spatialsim.py`](#run_spatialsim)
 	1. [`examples/run_two_stream.py`](#run_two_stream)
 
 ## Build instructions <a name="build"></a>
@@ -660,11 +661,10 @@ The code runs from command line with following parameters:
 - *--bginfo* list of background components and their molar fractions, separated by spaces.
 The presets for the each backgrounds are stored in [`examples/csections_db`](./examples/csections_db).
 The syntax as follows `--bginfo KEY1:FRACTION1 KEY2:FRACTION2`.
-- *--nbg* sets the total background's concentration ($n_0$).
+- *--n_bg* sets the total background's concentration ($n_0$).
 - *--EN* sets reduced electric field ($E_x/n_0$, in Townsend units).
 - *--BN* sets reduced magnetic field ($B_z/n_0$, in Huxley units).
 - *--max_energy* sets energy limit for `_ltplib.csection_set`.
-- *--te* sets initial temperature of an electron ensemble (in eV units).
 - *--dt* sets time step ($\delta t$, seconds).
 - *--nsub* sets the number of time-steps per one frame.
 - *--nrun* sets the number of frames to calculate.
@@ -675,11 +675,41 @@ The syntax as follows `--bginfo KEY1:FRACTION1 KEY2:FRACTION2`.
 - *--run* this option is used to run simulation without asking (batch mode).
 - *--loglevel* DEBUG|INFO|WARNING|ERROR. 
 
+(To be done...)
+
 [^tejerodelcaz2019]: Tejero-del-Caz, A., Guerra, V., Gonçalves, D., da Silva, M. L., Marques, L., Pinhão, N., Pintassilgo, C. D., & Alves, L. L. (2019). _The LisbOn KInetics Boltzmann solver._ In Plasma Sources Science and Technology (Vol. 28, Issue 4, p. 043001). IOP Publishing.
 [DOI:10.1088/1361-6595/ab0537](https://doi.org/10.1088/1361-6595/ab0537)
 
 [^dias2023]: Dias, T. C., Tejero-del-Caz, A., Alves, L. L., & Guerra, V. (2023). _The LisbOn KInetics Monte Carlo solver._ In Computer Physics Communications (Vol. 282, p. 108554). Elsevier BV. 
 [DOI:10.1016/j.cpc.2022.108554](https://doi.org/10.1016/j.cpc.2022.108554)
+
+## [`examples/run_localsim.py`](./examples/run_spatialsim.py) <a name="run_spatialsim"></a>
+This problem is further expansion of the previous one. Here we consider
+electron ensamble taking into account spatial gradients and self-sustained
+electric fields.
+
+The code runs from command line with following parameters:
+- *-h, --help* shows help and exit.
+- *--bginfo* list of background components and their molar fractions, separated by spaces.
+The presets for the each backgrounds are stored in [`examples/csections_db`](./examples/csections_db).
+The syntax as follows `--bginfo KEY1:FRACTION1 KEY2:FRACTION2`.
+- *--n_bg* sets the total background's concentration ($n_0$).
+- *--n_plasma* sets average electron concentration.
+- *--EN* sets reduced electric field ($E_x/n_0$, in Townsend units).
+- *--BN* sets reduced magnetic field ($B_z/n_0$, in Huxley units).
+- *--max_energy* sets energy limit for `_ltplib.csection_set`.
+- *--dt* sets time step ($\delta t$, seconds).
+- *--nsub* sets the number of time-steps per one frame.
+- *--nrun* sets the number of frames to calculate.
+- *--nrep* >= 1 activate semi-implicit scheme (iteration limit).
+- *--epsilon* sets $\epsilon_\phi>\norm{\delta \phi}_\infty$ criterion to stop semi-implicit solver. 
+- *--npunit* average number of samples per grid unit.
+- *--extra* this option sets extra capacity for the `_ltplib.pstore`.
+- *--resample* this options is used to resample the ensemble each frame to keep its size constant.
+- *--save* sets directory to save the results of simulation.
+- *--dump* mark frames to save pVDF into the files. 
+- *--run* this option is used to run simulation without asking (batch mode).
+- *--loglevel* DEBUG|INFO|WARNING|ERROR.
 
 (To be done...)
 
