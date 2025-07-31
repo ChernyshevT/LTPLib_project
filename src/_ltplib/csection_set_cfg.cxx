@@ -487,18 +487,6 @@ csection_set_cfg::csection_set_cfg (
 		++k;
 	}
 
-		// add cumulative-rate function
-		//~ entry.fns["C_RATE"] = 
-		//~ [rvec, fn=csection_t(&rvec[0]), max_energy=max_energy] (f32 enel) -> f32 {
-			//~ if (enel-fn.enth <= max_energy) {
-				//~ return fn[enel];
-			//~ } else {
-				//~ return NAN;
-			//~ } 
-		//~ };
-		
-		//~ py::print(rvec);
-
 	update_cache (this);
 }
 
@@ -653,9 +641,8 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
 			}
 			
 			// if pattern is founded in lxcat-file
-			//if (not (foundPattern or startScan) and line.starts_with(pattern)) {
 			if (not (foundPattern or startScan)
-			    and line.find(pattern) != std::string::npos) {
+			    and (line.find(pattern) != std::string::npos)) {
 				foundPattern = true;
 				continue;
 			}
@@ -695,8 +682,7 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
 			}
 
 		} catch (std::exception& e) {
-			throw bad_arg("{} LINE#{}: {}"
-			, fname, n, e.what());
+			throw bad_arg("{} LINE#{}: {}", fname, n, e.what());
 		}
 		
 		if (not foundPattern and not pattern.empty()) {
@@ -725,7 +711,9 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
  * Benchmark calculations for anisotropic scattering in  kinetic models for
  * low temperature plasma. doi: 10.1088/1361-6463/ad3477]
  ******************************************************************************/
+
 f32 MTCS_from_DCS (f32 x, f32 ef) {
+	/* x{ξ}, ef{ε/εₜ or 0} -> σₘ/σ */
 	if (fabsf(x) >= 1.0f) {
 		throw bad_arg("invalid DCS value: |{}| >= 1!", fabsf(x));
 	}
@@ -741,7 +729,7 @@ f32 MTCS_from_DCS (f32 x, f32 ef) {
 }
 
 f32 DCS_from_MTCS (f32 sm, f32 s0, f32 ef) {
-
+	/* sm{σₘ}, s0{σ}, ef{ε/εₜ or 0} -> ξ */
 	if (s0 == 0.0f or fabsf(ef-1.0f) <= FLT_EPSILON) {
 		return 0.0f;
 	}
@@ -753,10 +741,8 @@ f32 DCS_from_MTCS (f32 sm, f32 s0, f32 ef) {
 	}
 	
 	if (v0 >= f0) {
-		throw bad_arg(\
-		"invalid MTCS/ICS ratio: |1-σₘ/σ| >= √(1-ε/εₜ)"
-		", (1 - {:5.2e}/{:5.2e} = {:f} >= {:f})!", sm, s0, v0, f0
-		);
+		throw bad_arg("invalid MTCS/ICS ratio: |1-σₘ/σ| >= √(1-ε/εₜ), "
+		"(1 - {:5.2e}/{:5.2e} = {:f} >= {:f})!", sm, s0, v0, f0);
 	}
 	
 	do {
