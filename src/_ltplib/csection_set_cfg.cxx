@@ -110,25 +110,27 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts, const std::vector<std::st
 	}
 	/****************************************************************************/
 	if (FLAGS[MTCS_DEF]) {
+		if (not (FLAGS[CSEC_DEF] or FLAGS[DCSFN_DEF])) {
+			throw bad_arg("\"MTCS\" & [\"CSEC\" or \"DCSFN\"] should be defined!");
+		}
 		fns["CS1"] = read_csect(entry["MTCS"], enth, py::dict{**opts});
 	}
 	/****************************************************************************/
 	if (FLAGS[DCSFN_DEF]) {
+		if (FLAGS[CSEC_DEF] and FLAGS[MTCS_DEF]) {
+			throw bad_arg("can not use all three of: \"CSEC\" & \"MTCS\" & \"DCSFN\"!");
+		}
 		fns["DCS"] = \
 		[enth=enth, fn=py::cast<py::function>(entry["DCSFN"])] (f32 enel) -> f32 {
 			return enel >= enth ? py::cast<f32>(fn(enel-enth)) : NAN;
 		};
 	}
 	/****************************************************************************/
-	if (not (FLAGS[CSEC_DEF] or FLAGS[MTCS_DEF])) {
+	if (not (FLAGS[CSEC_DEF] or FLAGS[MTCS_DEF] or FLAGS[DCSFN_DEF])) {
 		throw bad_arg("cross-section is not defined!");
 	}
 	/****************************************************************************/
 	if (FLAGS[CSEC_DEF] and FLAGS[MTCS_DEF]) {
-		if (FLAGS[DCSFN_DEF]) {
-			throw bad_arg("can not use both \"MTCS\" & \"DCSFN\"");
-		}
-		
 		fns["DCS"] = \
 		[enth=enth, fn0=fns["CS0"], fn1=fns["CS1"]] (f32 enel) -> f32 {
 			if (enel >= enth) {
@@ -141,10 +143,6 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts, const std::vector<std::st
 	}
 	/****************************************************************************/
 	if (FLAGS[CSEC_DEF] and FLAGS[DCSFN_DEF]) {
-		if (FLAGS[MTCS_DEF]) {
-			throw bad_arg("can not use both \"MTCS\" & \"DCSFN\"");
-		}
-		
 		fns["CS1"] = \
 		[enth=enth, fn0=fns["CS0"], fnX=fns["DCS"]] (f32 enel) -> f32 {
 			if (enel >= enth) {
@@ -157,10 +155,6 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts, const std::vector<std::st
 	}
 	/****************************************************************************/
 	if (FLAGS[MTCS_DEF] and FLAGS[DCSFN_DEF]) {
-		if (FLAGS[CSEC_DEF]) {
-			throw bad_arg("can not use all three of \"CS\", \"MTCS\" & \"DCSFN\"");
-		}
-		
 		fns["CS0"] = \
 		[enth=enth, fn1=fns["CS1"], fnX=fns["DCS"]] (f32 enel) -> f32 {
 			if (enel >= enth) {
