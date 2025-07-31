@@ -683,7 +683,7 @@ The syntax as follows `--bginfo KEY1:FRACTION1 KEY2:FRACTION2`.
 [^dias2023]: Dias, T. C., Tejero-del-Caz, A., Alves, L. L., & Guerra, V. (2023). _The LisbOn KInetics Monte Carlo solver._ In Computer Physics Communications (Vol. 282, p. 108554). Elsevier BV. 
 [DOI:10.1016/j.cpc.2022.108554](https://doi.org/10.1016/j.cpc.2022.108554)
 
-## [`examples/run_localsim.py`](./examples/run_spatialsim.py) <a name="run_spatialsim"></a>
+## [`examples/run_spatialsim.py`](./examples/run_spatialsim.py) <a name="run_spatialsim"></a>
 This problem is further expansion of the previous one. Here we consider
 electron ensamble taking into account spatial gradients and self-sustained
 electric fields.
