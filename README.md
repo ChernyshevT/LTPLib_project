@@ -702,7 +702,7 @@ The syntax as follows `--bginfo KEY1:FRACTION1 KEY2:FRACTION2`.
 - *--nsub* sets the number of time-steps per one frame.
 - *--nrun* sets the number of frames to calculate.
 - *--nrep* >= 1 activate semi-implicit scheme (iteration limit).
-- *--epsilon* sets $\epsilon_\phi>\norm{\delta \phi}_\infty$ criterion to stop semi-implicit solver. 
+- *--epsilon* sets $\epsilon_\phi>\left|\delta \phi\right|_\infty$ criterion to stop semi-implicit solver. 
 - *--npunit* average number of samples per grid unit.
 - *--extra* this option sets extra capacity for the `_ltplib.pstore`.
 - *--resample* this options is used to resample the ensemble each frame to keep its size constant.
