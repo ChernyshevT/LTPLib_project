@@ -74,8 +74,8 @@ def main(args, logger):
 
 	# ############################################################################
 	# the problem's base geometry:
-	nx, mx, dx = 192, 16, 1/(2<<9)
-	ny, my, dy = 192, 16, 1/(2<<9)
+	nx, mx, dx = 384, 32, 1/(2<<9)
+	ny, my, dy = 384, 32, 1/(2<<9)
 	node_size = mx*my
 	# declare grid
 	grid = ltp.grid(2
@@ -425,7 +425,7 @@ args = {
 	"--npunit"   : {
 		"help"     : "number of samples per cell",
 		"type"     : int,
-		"default"  : 256, #1
+		"default"  : 64, #1
 	},
 	"--extra": {
 		"type"     : float,
