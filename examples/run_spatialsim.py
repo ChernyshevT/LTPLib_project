@@ -159,7 +159,7 @@ def main(args, logger):
 		for i, grad in enumerate(np.gradient(_vmap, *grid.step), 1):
 			emfield[..., i] = -grad[*slicer2]
 		# apply external fields
-		emfield[..., 0] += B0/CLIGHT        # Gauss -> Gauss*s/cm
+		emfield[..., 0]  = B0/CLIGHT        # Gauss -> Gauss*s/cm
 		emfield[..., 1] -= E0/2.99792458e2  # V/cm -> statV/cm
 		
 		return verr
