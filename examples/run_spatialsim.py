@@ -308,7 +308,7 @@ def main(args, logger):
 				(f"{' 'if irep else '*'}{irun:06d}/{isub:04d}/{irep:02d}({'E0R'[mode]}) verr={verr:6.3e}")
 				
 				_errv[isub-1, irep] = verr
-				if irep>1 and verr < args.epsilon:
+				if irep>=1 and verr < args.epsilon:
 					break
 			
 			# end sub-cycle, collect data to average
