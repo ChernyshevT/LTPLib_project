@@ -1,10 +1,14 @@
 #pragma once
-#define API_V "API2025-07-18"
+#define API_V "API2025-08-02"
+
+#if __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__
+#	error "This code requires little-endian architecture."
+#endif
 
 #if defined(_WIN32) || defined(_WIN64)
-#define LIB_EXPORT __declspec(dllexport)
+#	define LIB_EXPORT __declspec(dllexport)
 #else
-#define LIB_EXPORT __attribute__ ((visibility ("default")))
+#	define LIB_EXPORT __attribute__ ((visibility ("default")))
 #endif
 
 #include "typedefs.hxx"
@@ -24,14 +28,10 @@ enum ERR_CODE : u32 {
 	PTMAXENERGY      = 0x100,
 };
 
-struct RET_ERRC {
- u32 flags;
-};
-
 /******************************************************************************/
 template<u8 nd> struct          grid_t;
 
-template<typename tp> struct    vcache_t;
+template<typename DTYPE> struct vcache_t;
 
 struct                          pstore_t;
 
@@ -40,14 +40,14 @@ struct                          csection_set_t;
 /*******************************************************************************
 ** API for pstore operations **************************************************/
 
-template<u8 nd> using _inject_fn_t = u32
-(const grid_t<nd> &, pstore_t &, u64, f32[], u8);
+template<u8 nd> using _inject_fn_t = u64
+(const grid_t<nd> &, pstore_t &, f32 pts[], u64 num, u8 tag);
 
 template<u8 nd> using _extract_fn_t = void
-(const grid_t<nd> &, const pstore_t &, u64[], f32[]);
+(const grid_t<nd> &, const pstore_t &, f32 pts[], u64 index[]);
 
 template<u8 nd> using _countpp_fn_t = void
-(const grid_t<nd> &, pstore_t &, u64[]);
+(const grid_t<nd> &, pstore_t &, u64 index[]);
 
 template<u8 nd> using _reset_fn_t = void
 (const grid_t<nd> &, pstore_t &);
@@ -86,7 +86,7 @@ enum PPOST_ENUM : u64 {
 
 template<u8 nd>
 using ppost_fn_t = \
-u32 (const grid_t<nd> &, const pstore_t &, vcache_t<f32> &, u64);
+u32 (const grid_t<nd> &, const pstore_t &, vcache_t<f32> &, u64 fcode);
 
 /*******************************************************************************
 ** API for ppush functions ****************************************************/
@@ -100,17 +100,17 @@ enum PUSH_MODE : u8 {
 
 /* nibbles to encode em-field components */
 enum EMF_ENUM : u32 {
-	Ex   = 0x0,
-	Ey   = 0x1,
-	Ez   = 0x2,
-	Bx   = 0x3,
-	By   = 0x4,
-	Bz   = 0x5,
+	Ex = 0x0,
+	Ey = 0x1,
+	Ez = 0x2,
+	Bx = 0x3,
+	By = 0x4,
+	Bz = 0x5,
 };
 
 template<u8 nd>
 using ppush_fn_t = \
-u32 (const grid_t<nd> &, pstore_t &, const vcache_t<f32> &, f32, u32);
+u32 (const grid_t<nd> &, pstore_t &, const vcache_t<f32> &, f32 dt, u32 fcode);
 
 /*******************************************************************************
 ** API for remap/unmap functions **********************************************/
@@ -120,21 +120,17 @@ enum REMAP_MODE : u8 {
 	ARRAY = 1, // collect nodes' data into global array
 };
 
-template<u8 nd, typename tp> 
+template<u8 nd, typename DTYPE> 
 using remap_fn_t = \
-void (const grid_t<nd> &, vcache_t<tp> &, tp[]);
+void (const grid_t<nd> &, vcache_t<DTYPE> &, DTYPE buffer[]);
 
 /*******************************************************************************
 ** API for Monte-Carlo simulation functions ***********************************/
 
-template<u8 nd> using mcsim_fn_t = u32 (
-	const grid_t<nd> &,
-	pstore_t &, /* pstore will be modified */
-	vcache_t<u32> &, /* events counter */
-	const csection_set_t &,
-	const vcache_t<f32> &,
-	f32, /* time step */
-	u32 /* random seed */
+template<u8 nd> using mcsim_fn_t = \
+u32 (const grid_t<nd> &, pstore_t &, vcache_t<u32> &events,
+     const csection_set_t &, const vcache_t<f32> &bgrnd,
+     f32 dt, u32 seed
 );
 
 /*******************************************************************************
@@ -144,26 +140,21 @@ template<u8 nd>
 struct poisson_eq_t;
 
 template<u8 nd>
-using SOR_iter_fn_t = f32 (poisson_eq_t<nd> &, f32);
+using SOR_iter_fn_t = f32 (poisson_eq_t<nd> &, f32 wrelax);
 
 /******************************************************************************/
 
-template<u8 nd, typename tp>
+template<u8 nd, typename DTYPE>
 struct ndarray_iface {
 	size_t     shape[nd];
 	size_t     offst[nd+1];
 	ptrdiff_t  strides[nd];
-	tp        *ptr;
+	DTYPE     *ptr;
 
 	inline
-	tp& operator [] (size_t k) const {
+	DTYPE& operator [] (size_t k) const {
 		return ptr[k];
 	}
 };
 
 /******************************************************************************/
-
-#include "api_grid.hxx"
-#include "api_pstore.hxx"
-#include "api_vcache.hxx"
-#include "api_csection_set.hxx"

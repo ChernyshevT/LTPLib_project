@@ -4,8 +4,6 @@
 # for low temperature plasma
 # doi:10.1088/1361-6463/ad3477 , cite: flynn2024
 [
-	{"TYPE":"PARTICLE", "KEY":"e",
-	 "ENCFFT": 2.842815e-16}, # (cm/s)² -> eV (CGS)
 	{"TYPE":"BACKGROUND", "KEY":"RR-SC-SC",
 	 "MASSRATE":9.109383e-28/(4*1.660538921e-24)},
 

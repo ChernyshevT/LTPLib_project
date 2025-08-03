@@ -91,16 +91,16 @@ descr: str
   - concentration     "C"
   - flux              "F[x|y|z]"
   - pressure/stress   "P[xx|xy|xz|yy|yz|zz]"
-  Tokens can be separated by spaces or not, i.e. descr = "CFx Fy Fz Pxx Pyy Pzz"
+  Tokens can be separated by spaces or not, i.e. "C Fx Fy Fz Pxx Pyy Pzz"
 
-ptfluid: _ltplib.vcache (order>=1, dtype="f32")
+ptfluid: _ltplib.vcache (dtype="f32")
   Value cache to write in. The order of ptflued defines the type of form-factor.
  
 Returns
 ----------
 
   Function object. The call performs the calculation and return RET_ERRC object:
-  bind_ppost_fn(...) -> fn_object() -> RET_ERRC
+  bind_ppost_fn(...) -> fn_object() -> None
 )pbdoc"
 };
 

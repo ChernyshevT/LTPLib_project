@@ -269,7 +269,7 @@ def main(args, logger):
 		# refresh arrays to save
 		_ptfluid[0, ...] = ptfluid[...]
 		_vplasma[0, ...] = eq.vmap[...]
-		_emenrgy[0, ...] = np.sum(emfield[..., 1:]**2, axis=2)
+		_emenrgy[0, ...] = np.sum(emfield[..., 1:]**2, axis=2)/8/np.pi
 		_errv[...] = np.nan
 		
 		# reset collision counter

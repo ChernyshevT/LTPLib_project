@@ -62,20 +62,20 @@ struct vcache_ctor {
 			.req(&vcache.data, vcache.blocksize*grid.size)
 			.alloc();
 		
-		self.cache.nodes.reserve(grid.size);
-		for (auto k{0u}; k<grid.size; ++k) {
-			std::vector<py::ssize_t> shape(nd), strides(nd);
-			for (auto i{1u}; i<=nd; ++i) {
-				shape  [nd-i] = grid[k].shape[nd-i]+self.cache.order;
-				strides[nd-i] = i==1? sizeof(tp) : strides[nd-i+1]*shape[nd-i+1];
-			}
-			self.cache.nodes.push_back(py::memoryview::from_buffer(
-				/* ptr    */ vcache[k],
-				/*shape   */ std::move(shape),
-				/*strides */ std::move(strides),
-				/*readonly*/ true
-			));
-		}
+		//~ self.cache.nodes.reserve(grid.size);
+		//~ for (auto k{0u}; k<grid.size; ++k) {
+			//~ std::vector<py::ssize_t> shape(nd), strides(nd);
+			//~ for (auto i{1u}; i<=nd; ++i) {
+				//~ shape  [nd-i] = grid[k].shape[nd-i]+self.cache.order;
+				//~ strides[nd-i] = i==1? sizeof(tp) : strides[nd-i+1]*shape[nd-i+1];
+			//~ }
+			//~ self.cache.nodes.push_back(py::memoryview::from_buffer(
+				//~ /* ptr    */ vcache[k],
+				//~ /*shape   */ std::move(shape),
+				//~ /*strides */ std::move(strides),
+				//~ /*readonly*/ true
+			//~ ));
+		//~ }
 		
 		// [TODO: move into backend!]
 		self.reset_fn = [&] () {

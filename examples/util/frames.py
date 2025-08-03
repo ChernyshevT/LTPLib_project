@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 import os, io, zipfile, json, mmap, struct
 import numpy as np
-
-from types import SimpleNamespace
+import types
 from .loggers import *
+
+namespace = types.SimpleNamespace
 
 ################################################################################
 def to_namspace(obj):
 	if   isinstance(obj, dict):
-		return SimpleNamespace(**{k: to_namspace(obj[k]) for k in obj})
+		return namespace(**{k: to_namspace(obj[k]) for k in obj})
 	elif isinstance(obj, list):
 		return [to_namspace(item) for item in obj]
 	elif isinstance(obj, tuple):
@@ -27,7 +28,7 @@ class npEncoder(json.JSONEncoder):
 			return float(obj)
 		if isinstance(obj, np.ndarray):
 			return obj.tolist()
-		if isinstance(obj, SimpleNamespace):
+		if isinstance(obj, namespace):
 			return vars(obj)
 		if isinstance(obj, (set, tuple)):
 			return list(obj)
@@ -37,15 +38,39 @@ class npEncoder(json.JSONEncoder):
 
 logger = get_logger()
 
-class frame_cls:
-	__slots__ = ("_zipf", "_list", "_noex", "files")
+# ~ class unpack_vals:
+	# ~ __slots__ = ("_vdata", "_funcs", "_cache")
+	
+	# ~ def __init__(self, vdata: np.ndarray, funcs: dict[str, object]):
+		# ~ self._vdata = vdata
+		# ~ self._funcs = funcs
+		# ~ self._cache = dict()
+	
+	# ~ def __getitem__(self, key: str):
+		# ~ if key not in self._cache:
+			# ~ if key not in self._funcs:
+				# ~ return None
+			# ~ else:
+				# ~ self._cache[key] = self._funcs[key](vdata)
+		# ~ return self._cache[key]
+	
+	# ~ def __getattr__(self, key: str) -> np.ndarray:
+		# ~ return self[key]
 
-	def __init__(self, fname: str, noexcept: bool):
-		self._zipf = zipfile.ZipFile(fname, "r")
-		self._list = [os.path.splitext(f)[0] for f in self._zipf.namelist()]
-		self._noex = noexcept
+class frame_cls:
+	__slots__ = ("_zipf", "_list", "_cache", "files")
+
+	def __init__(self, fname: str, **kwargs):
+		self._zipf  = zipfile.ZipFile(fname, "r")
+		self._list  = [os.path.splitext(f)[0] for f in self._zipf.namelist()]
+		self._cache = dict()
 		self.files = self._zipf.namelist()
 		logger.info(f"open {fname}")
+	
+	def add_funcs (self, **kwargs):
+		for key, func in kwargs.items():
+			self._cache[key] = func(self)
+		return self
 	
 	def __dir__(self):
 		return self._list
@@ -64,10 +89,7 @@ class frame_cls:
 		if f"{key}.txt"  in self.files:
 			return self._zipf.read(f"{key}.txt").decode("utf-8")
 		###############################
-		if self._noex:
-			return None
-		else:
-			raise ValueError(f"invalid key: \"{key}\"")
+		return self._cache.get(key)
 		
 	def __getattr__(self, key: str):
 		return self[key]
@@ -80,16 +102,9 @@ class frame_cls:
 		if f"{key}.txt"  in self.files:
 			return 1
 		return 0
-	
-	def __iter__(self):
-		for key in self._list:
-			yield key, self[key]
-	
-	def __len__(self):
-		return len(self._list)
 
-def load_frame(fname: str, noexcept: bool=True) -> frame_cls:
-	return frame_cls(fname, noexcept)
+def load_frame(fname: str) -> frame_cls:
+	return frame_cls(fname)
 
 ################################################################################
 
@@ -131,5 +146,6 @@ def save_frame(fname: str, mode:str ="w", **kwargs):
 		logger.error(f"{msg} fail: \"{e}\"")
 		raise e
 
+################################################################################
 # Specify the entities to export
-__all__ = ["load_frame", "save_frame"]
+__all__ = ["load_frame", "save_frame", "namespace"]

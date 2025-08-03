@@ -161,7 +161,7 @@ bgdescr : string to describe all the background components separated by spaces.
 
 **kwargs can be used to pass some global default parameters:
   sacle, exterp : same as for the individual entry,
-  debug : prints additional info during the building of the lookup-table 
+  debug=True : prints additional info during the building of the lookup-table 
 )pbdoc"};
 
 /******************************************************************************/
@@ -290,18 +290,20 @@ void def_csections(py::module &m) {
 	.def_readonly("rate_max", &db_entry_t::rmax,
 	"null-collision cumulative rate")
 	
-	.def_property_readonly("rate_fn", [] (const db_entry_t& self) -> csfunc_t {
+	.def_property_readonly("rate_fn"
+	, [] (const db_entry_t& self) -> csfunc_t {
 		return self.fns.at("C_RATE");
 	}, "function for energy-depended cumulative rate"
 	, py::keep_alive<0, 1>())
 	
-	.def_property_readonly("csec_fn", [] (const db_entry_t& self) -> csfunc_t {
+	.def_property_readonly("csec_fn"
+	, [] (const db_entry_t& self) -> csfunc_t {
 		return self.fns.at("CS0");
 	}, "function for cross-section"
 	, py::keep_alive<0, 1>())
 	
-	.def_property_readonly("mtcs_fn",
-	[] (const db_entry_t& self) -> std::optional<csfunc_t> {
+	.def_property_readonly("mtcs_fn"
+	, [] (const db_entry_t& self) -> std::optional<csfunc_t> {
 		if (self.fns.contains("CS1")) {
 			return self.fns.at("CS1");
 		} else {
@@ -310,8 +312,8 @@ void def_csections(py::module &m) {
 	}, "function for momentum-transfer cross-section (or None)"
 	, py::keep_alive<0, 1>())
 	
-	.def ("__getattr__",
-	[] (const db_entry_t& self, py::str key) -> std::optional<py::object> {
+	.def ("__getattr__"
+	, [] (const db_entry_t& self, py::str key) -> std::optional<py::object> {
 		if (self.extra.contains(key)) {
 			return self.extra[key];
 		} else {

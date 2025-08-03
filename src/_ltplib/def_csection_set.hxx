@@ -22,22 +22,42 @@ namespace py = pybind11; using namespace pybind11::literals;
 
 typedef std::function<f32(f32)> csfunc_t;
 
+struct pt_entry_t;
+struct db_group_t;
+struct db_entry_t;
+struct csection_set_cfg;
+
+struct pt_entry_t {
+	std::string name;
+	f32 encfft;
+	
+	pt_entry_t (csection_set_cfg *cfg, py::dict entry);
+};
+
+struct db_group_t {
+	std::string name;
+	f32 massrate{0.0f};
+	//~ u16 pt_uid        = 0;
+	//~ u16 ma_uid        = 0;
+	u16 ch_index[2]{0};
+	//~ u16 ch_xtra       = 0;
+	//~ u16 bg_idx        = 0;
+	//~ u16 bg_therm_mark = 0;
+	//~ u16 bg_flux_mark  = 0;
+	
+	db_group_t (csection_set_cfg *cfg, py::dict entry);
+};
+
 struct db_entry_t {
 	opcode         opc;
 	std::bitset<5> FLAGS{0};
-	std::string  descr;
-	f32          enth;
-	f32          rmax;
-	csfunc_t       fn0;
-	csfunc_t       fn1;
-	csfunc_t       fnX;
-	csfunc_t       fnR;
-	
+	std::string    descr;
+	f32            enth;
+	f32            rmax;
 	py::dict       extra;
-	
 	std::unordered_map<std::string, csfunc_t> fns; 
 	
-	db_entry_t (py::dict entry, py::dict opts, const std::vector<std::string>&);
+	db_entry_t (csection_set_cfg *cfg, py::dict entry, py::dict opts);
 };
 
 /******************************************************************************/
@@ -52,10 +72,17 @@ struct csection_set_cfg {
 	u8                       tsize,  ntype; 
 	u16                      ncsect, nxtra;
 	
+	//~ std::unordered_map<std::string>
+	std::vector<f32>              _consts;
+	std::vector<f32>              _tabs;
+	std::vector<u16>              _index;
+	std::vector<pt_entry_t>       pt_entries;
+	std::vector<db_group_t>       db_groups;
 	std::vector<db_entry_t>       db_entries;
 	
 	csection_set_cfg
 	(std::vector<py::dict>, f32, py::str, py::str, py::dict);
+
 };
 
 /******************************************************************************/

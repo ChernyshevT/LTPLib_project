@@ -234,4 +234,9 @@ const char* datatypecode() {
 	else throw;
 }
 
+//~ template <typename DTYPE>
+//~ DTYPE _pycast (py::handle obj, fmt::format_string<DTYPE> msg) {
+	//~ DTYPE retv = ;
+//~ } 
+
 #endif

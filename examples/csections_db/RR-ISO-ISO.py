@@ -4,8 +4,6 @@
 # in crossed electric and magnetic fields.
 # doi: 10.1088/0022-3727/27/9/007, cite: ness1994
 [
-	{"TYPE":"PARTICLE", "KEY":"e",
-	 "ENCFFT": 2.842815e-16}, # (cm/s)² -> eV (CGS)
 	{"TYPE":"BACKGROUND", "KEY":"RR-ISO-ISO",
 	 "MASSRATE":9.109383e-28/(4*1.660538921e-24)},
 	

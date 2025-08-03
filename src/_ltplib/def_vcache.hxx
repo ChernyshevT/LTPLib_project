@@ -47,14 +47,13 @@ struct vcache_holder : vcache_v {
 		py::dtype                dtype;
 		u8                       order;
 		u8                       vsize;
-		std::vector<py::array>   nodes;
 	} cache;
 	
 	mholder_t                  mem_h;
 	py::array                  buffer_h;
 	std::function<void(void)>  reset_fn;
 	std::function<void(void)>  remap_fns[2];
-	
+
 	/* vcache_holder (const grid_holder&, std::string, py::dict);*/
 	 vcache_holder
 	 (const grid_holder&, std::string, u8, u8, py::kwargs);

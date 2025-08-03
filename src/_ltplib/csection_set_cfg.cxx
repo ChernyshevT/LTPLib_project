@@ -11,9 +11,73 @@ f32 DCS_from_MTCS (f32 sm, f32 s0, f32 ef);
 
 f32 MTCS_from_DCS (f32 x, f32 ef);
 
-void update_cache (csection_set_cfg *cfg) {
+u16 add_const (csection_set_cfg *cfg, f32 arg, bool unique=false) {
+	auto it = std::find (cfg->_consts.begin(), cfg->_consts.end(), arg);
+	if (it != cfg->_consts.end() and not unique) {
+		return u16(it - cfg->_consts.begin());
+	} else {
+		cfg->_consts.push_back(arg);
+		return u16(cfg->_consts.size() - 1);
+	}
+}
+
+void update_cfg (csection_set_cfg *cfg) {
+	
+	//~ cfg->_index.push_back();
+	py::print("_index:", cfg->_index);
 };
 
+
+/******************************************************************************/
+pt_entry_t::pt_entry_t (csection_set_cfg* cfg, py::dict entry) {
+	
+	for (auto [key, val] : entry) switch (_hash(key)) {
+		default:
+			throw bad_arg("PARTICLE: unknown field \"{}\"!", py::cast<std::string>(key));
+		case "TYPE"_hash:
+			continue;
+		case "KEY"_hash:
+			this->name = py::cast<std::string>(val);
+			continue;
+		case "ENCFFT"_hash:
+			this->encfft = py::cast<f32>(val);
+			continue;
+	}
+	
+	logger::debug("csection_set: add PARTICLE \"{}\"", this->name);
+};
+
+/******************************************************************************/
+db_group_t::db_group_t (csection_set_cfg* cfg, py::dict entry) {
+
+	if (cfg->pt_entries.empty()) {
+		throw bad_arg("\"PARTICLE\"-block is not defined yet!");;
+	}
+	
+	if (cfg->_index.empty()) {
+		cfg->_index.push_back(0);
+	}
+	
+	cfg->_index.push_back(cfg->db_entries.size());
+	
+	for (auto [key, val] : entry) switch (_hash(key)) {
+		default:
+			throw bad_arg("BACKGROUND: unknown field \"{}\"!"
+			, py::cast<std::string>(key));
+		case "TYPE"_hash:
+			continue;
+		case "KEY"_hash:
+			this->name = py::cast<std::string>(val);
+			continue;
+		case "MASSRATE"_hash:
+			this->massrate = py::cast<f32>(val);
+			continue;
+	}
+	
+	logger::debug("csection_set: add BACKGROUND \"{}\"", this->name);
+};
+
+/******************************************************************************/
 enum state : u8 {
 	ENTH_DEF=0,
 	CSEC_DEF,
@@ -24,7 +88,13 @@ enum state : u8 {
 };
 
 /******************************************************************************/
-db_entry_t::db_entry_t (py::dict entry, py::dict opts, const std::vector<std::string> &ptinfo) {
+db_entry_t::db_entry_t (csection_set_cfg *cfg, py::dict entry, py::dict opts) {
+	
+	if (cfg->db_groups.empty()) {
+		throw bad_arg("\"BACKGROUND\"-block is not defined yet!");;
+	}
+	
+	cfg->_index.back() = cfg->db_entries.size();
 	
 	enth = 0.0f;
 	FLAGS.reset();
@@ -33,12 +103,16 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts, const std::vector<std::st
 	for (auto [key, val] : entry) switch (_hash(key)) {
 		
 		default:
-			throw bad_arg("unknown field \"{}\"", py::cast<std::string>(key));
+			throw bad_arg("unknown field \"{}\"!", py::cast<std::string>(key));
 		case "TYPE"_hash:
 			descr = py::cast<std::string>(val);
 			switch (_hash(val)) {
 				default:
 					throw bad_arg("invalid \"TYPE\" field: \"{}\"!", descr);
+				case "EFFECTIVE"_hash:
+					throw bad_arg("\"EFFECTIVE\" cross-section aren't supported, yet!");
+				case "EXCHANGE"_hash:
+					throw bad_arg("\"EXCHANGE\" cross-sections aren't supported, yet!");
 				case "ELASTIC"_hash:
 					opc = opcode::ELASTIC;
 					continue;
@@ -80,7 +154,9 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts, const std::vector<std::st
 			FLAGS.set(OPBPARAM_DEF);
 			continue;
 		case "SPAWN"_hash:
-			throw std::logic_error ("\"SPAWN\" is not implemented yet!");
+			throw bad_arg("\"SPAWN\" is not implemented yet!");
+		case "TRANSFORM"_hash:
+			throw bad_arg("\"TRANSFORM\" is not implemented yet!");
 		case "COMMENT"_hash: try {
 				extra["comment"] = py::cast<std::string>(entry["COMMENT"]);
 			} catch (...) {}
@@ -95,14 +171,14 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts, const std::vector<std::st
 	if (enth < 0 \
 	or (enth != 0 and opc == opcode::ELASTIC) \
 	or (enth == 0 and opc != opcode::ELASTIC and opc != opcode::ATTACHMENT)) {
-		throw bad_arg("{}/THRESHOLD = {} makes no sense", descr, enth);
+		throw bad_arg("{}/THRESHOLD = {} makes no sense!", descr, enth);
 	}
 	/****************************************************************************/
 	if (opc >= opcode::IONIZATION and (FLAGS[MTCS_DEF] | FLAGS[DCSFN_DEF])) {
-		throw bad_arg("{}/MTCS makes no sense", descr);
+		throw bad_arg("{}/MTCS makes no sense!", descr);
 	}
 	if (opc != opcode::IONIZATION and FLAGS[OPBPARAM_DEF]) {
-		throw bad_arg("{}/OPBPARAM makes no sense", descr);
+		throw bad_arg("{}/OPBPARAM makes no sense!", descr);
 	}
 	/****************************************************************************/
 	if (FLAGS[CSEC_DEF]) {
@@ -165,8 +241,12 @@ db_entry_t::db_entry_t (py::dict entry, py::dict opts, const std::vector<std::st
 			} else return NAN;
 		};
 	}
+	
+	logger::debug("csection_set: add {}+{} {} {}"
+	, cfg->pt_entries.back().name, cfg->db_groups.back().name
+	, this->descr
+	, py::cast<std::string>(this->extra.attr("get")("comment","")));
 }
-
 /******************************************************************************/
 csection_set_cfg::csection_set_cfg (
 	std::vector<py::dict> entries,
@@ -256,6 +336,9 @@ csection_set_cfg::csection_set_cfg (
 				continue;
 			}
 			enel = points[k-1] + enth;
+			if (enel == 0) { /* fix infinities */
+				enel = 0.5f*points[1];
+			}
 			
 			s0 = entry.fns.at("CS0")(enel);
 			s1 = s0;
@@ -343,6 +426,7 @@ csection_set_cfg::csection_set_cfg (
 		/* select particle and background *****************************************/
 		switch (_hash(entry["TYPE"])) {
 			case "PARTICLE"_hash: {
+				this->pt_entries.emplace_back(this, entry);
 				std::string key;
 				if (entry.contains("KEY") and entry.contains("ENCFFT")) {
 					key = py::cast<std::string>(entry["KEY"]);
@@ -360,6 +444,8 @@ csection_set_cfg::csection_set_cfg (
 			} continue;
 			
 			case "BACKGROUND"_hash: {
+				this->db_groups.emplace_back(this, entry);
+				
 				if (not TYPE_isdefined) throw bad_arg
 				("\"PARTICLE\" entry is not defined!");
 				
@@ -412,7 +498,7 @@ csection_set_cfg::csection_set_cfg (
 		if (not flags.n0_def) {
 			throw bad_arg("background is not defined yet!");
 		}
-		db_entries.emplace_back(entry, opts, ptinfo);
+		db_entries.emplace_back(this, entry, opts);
 		auto& db_entry{db_entries.back()};
 		
 		chinfo.push_back\
@@ -437,6 +523,7 @@ csection_set_cfg::csection_set_cfg (
 	} catch (const std::exception& e) {
 		throw bad_arg("entry[{}]: {}", &entry-&entries[0], e.what());
 	}
+	
 	if (k2) {
 		// null-collision search cmd
 		pprogs[0][k2].arg = flags.jset;
@@ -481,7 +568,7 @@ csection_set_cfg::csection_set_cfg (
 		++k;
 	}
 
-	update_cache (this);
+	update_cfg(this);
 }
 
 /******************************************************************************/
@@ -530,7 +617,7 @@ csfunc_t from_data
 		if (nex == 1) {
 			throw bad_arg("can not extrapolate: no enough points!");
 		}
-		if (isnan(a) or isnan(b)) {
+		if (not (isfinite(a) or isfinite(b))) {
 			throw bad_arg("can not extrapolate: invalid values!");
 		}
 		if (a > 0.0f) {
@@ -606,6 +693,7 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
 	            * py::cast<f32>(opts.attr("get")("rescale", 1.0f));
 	
 		return [scale, enth, fn=py::cast<py::function>(obj)] (f32 x) -> f32 {
+			x = x>0.0f? x : FLT_EPSILON; 
 			return scale*py::cast<f32>(fn(x, enth));
 		};
 	}
@@ -626,11 +714,12 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
 		auto lineno  = py::cast<u32>(opts.attr("get")("lineno", 0));
 		bool foundPattern = pattern.empty();
 		bool startScan    = pattern.empty();
+		u32  n0=0, n1=0;
 		// scan lines
-		for (u32 n{1u}, n1{lineno}; std::getline(fp, line); n++) try {
+		for (u32 n{1u}; std::getline(fp, line); n++) try {
 			
 			// skip
-			if (n < n1 or trim(line).empty()) {
+			if (n < lineno or trim(line).empty()) {
 				continue;
 			}
 			
@@ -644,8 +733,11 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
 			// start/stop scan lines in lxcat-file
 			if (foundPattern and line.starts_with("-----")) {
 				if (not startScan) {
+					n0 = n;
 					startScan = true;
 					continue;
+				} else {
+					n1 = n;
 				}
 				break; // stop scan
 			}
@@ -683,7 +775,12 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
 			throw bad_arg("didn't find pattern \"{}\" in file \"{}\""\
 			, pattern, fname);
 		}
-		return from_data(std::move(xys), enth, opts);
+		
+		try {
+			return from_data(std::move(xys), enth, opts);
+		} catch (std::exception& e) {
+			throw bad_arg("{} LINES#{}..{}: {}", fname, n0, n1, e.what());
+		}
 	}
 
 	// read from list of pairs, numpy array , etc.
