@@ -87,7 +87,7 @@ def main(args, logger):
 	##############################################################################
 	# declare particle storage
 	nppin = np.prod(grid.units)*args.npunit
-	npmax = int(node_size*args.npunit*(2+args.extra))
+	npmax = int(node_size*args.npunit*(1+args.extra))
 	
 	pstore = ltp.pstore(grid
 	, ptinfo = [
@@ -547,7 +547,6 @@ if __name__ == '__main__':
 	
 	except Exception as err:
 		import colorama
-		msg = f"{colorama.Fore.RED+colorama.Style.BRIGHT+colorama.Back.BLACK}{err}{colorama.Style.RESET_ALL}"
-		logger.exception(msg)
+		logger.exception(f"EXCEPTION CAUGHT: {err}")
 		sys.exit(1)
 #@LISTING:end:two-stream-2d
