@@ -55,10 +55,10 @@ funcs = {
  0.5*np.sum(f.cfg.tindex)*f.cfg.dt * 1e9,
 
 "ENe": lambda f:\
- np.mean(f.ptfluid[...,1]/f.ptfluid[..., 0])*2.842815e-16,
+ np.nanmean(f.ptfluid[...,1]/f.ptfluid[..., 0])*2.842815e-16,
 
 "UXe": lambda f:\
- np.mean(f.ptfluid[...,2]/f.ptfluid[..., 0]),
+ np.nanmean(f.ptfluid[...,2]/f.ptfluid[..., 0]),
 
 "UYe": lambda f:\
  np.mean(f.ptfluid[...,3]/f.ptfluid[..., 0]),
