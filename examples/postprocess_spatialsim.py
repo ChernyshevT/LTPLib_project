@@ -31,6 +31,7 @@ class distro_h:
 			m.hist += hist
 		else:
 			m.hist = hist
+		return m
 	
 	def normalize (m):
 		m.hist = m.hist/np.max(m.hist)
@@ -44,9 +45,55 @@ class distro_h:
 	
 	def get (m, xs, ys):
 		return np.asarray\
-		([m.func(pt) for pt in zip(xs, np.log10(ys))], dtype=np.float32)
+		([m.func(pt) for pt in zip(xs, ys)], dtype=np.float32)
 
+def draw_eVDF(fname, ax, **kwargs):
+	
+	vmx = kwargs.get("vmx", 1e9)
+	
+	xs,ys = np.linspace(-vmx, +vmx, 101), np.linspace(-vmx, +vmx, 101)
+	dist = distro_h(xs, ys)
+	
+	pdata = load_frame(fname)
+	parts = pdata.data[pdata.index[0]: pdata.index[1]]
+	np.random.shuffle(parts)
+	
+	vxs,vys,vzs = parts.T[-3:]
+	dist.add(vxs, vys).normalize()
+	n = min(kwargs.get("n", pdata.index[1]), pdata.index[1])
+	
+	# ~ vmax=1e7, nsh=50000, norm=LogNorm(2, 1e3)
+	
+	cols = dist.get(vxs[:n], vys[:n])
+	
+	ux,uy = np.mean(vxs), np.mean(vys)
 
+	ptcfg = {
+	 "cmap"       : "jet",
+	 "rasterized" : 1,
+	 "marker"     : "s",
+	 "s"          : kwargs.get("msize", 16)*(72./ax.figure.dpi)**2,
+	 "lw"         : 0,
+	 **(dict(norm=kwargs.get("norm")) if "norm" in kwargs else {})
+	}
+	
+	cm = kwargs.get("cmap", "jet")
+	
+	ax.imshow(dist.hist.T*1e3, extent=(-vmx, +vmx, -vmx, +vmx), cmap=cm, origin="lower")
+	# ~ im = ax.scatter(vxs[:n], vys[:n], c="k", **ptcfg)
+	# ~ ax.plot(vxs[:n], vys[:n],",k")
+	# ~ return im
+
+	ax.axhline(0, ls="--", c="w")
+	ax.axvline(0, ls="--", c="w")
+
+	ax.plot(ux, uy, "xw")
+	if u0 := kwargs.get("u0"):
+		ax.axhline(u0, ls="--", c="w")
+		alpha = np.linspace(0,2*np.pi,361)
+		xx,yy = u0*np.sin(alpha), u0+u0*np.cos(alpha)
+		ax.plot(xx,yy,"--w",lw=1)
+	
 
 ################################################################################
 
@@ -86,7 +133,6 @@ def main(args):
 		frame = load_frame(fname).add_funcs(**funcs)
 		stats.append({k:frame[k] for k in funcs})
 		n = n+1
-		
 	stats = pd.DataFrame(stats)
 	
 	fields = ["ENe", "UDRIFTe", "EVENTS/PT"]
@@ -119,31 +165,31 @@ def main(args):
 			print('-'*len(line))
 	print('-'*len(line))
 	
-	################
+	###################################
 	dset = {"cfg": frame.cfg, "avg":{}}
 	for key in keys:
 		entry = np.stack(stats[k_avg:][key])
 		dset["avg"][key] = entry.mean(axis=0), entry.std(axis=0)
 	
-	##############
-	if args.eEDF:
-		bins = np.logspace(-5,10,15*8+1 ,base=2)
-		hist = None
-		numb = 0
+	##########################
+	if args.eVDF:
 		
+		vmax = 2.5e8
+		xbins,ybins = [np.linspace(-vmax, +vmax, 501) for _ in range(2)]
+		dist = distro_h(xbins, ybins)
+		
+		count = 0
 		for k in range(k_avg, n+1):
 			if os.path.exists(fname:=f"{args.fdir}/pdata{k:06d}.zip"):
 				pdata  = load_frame(fname)
-				evs    = np.sum(pdata.data[...,-3:]**2, axis=1)*2.842815e-16
-				F00,*_ = np.histogram(evs, bins, density=True)
-				if hist is None:
-					hist  = F00
-				else:
-					hist += F00
-				numb += 1
-		dset["eEDF"]\
-		= np.stack([[(a+b)/2 for a,b in zip(bins,bins[1:])], hist/numb])
+				vxs,vys,vzs = pdata.data[..., 2:]
+				dist.add(vxs, vys)
+				count += 1
+		
+		dset["eVDFxy"] = dist.hist/count
+		dset["vmax"] = vmax
 	
+	############################################################
 	save_frame(f"{os.path.abspath(args.fdir)}.dset.zip", **dset)
 	
 ################################################################################
@@ -153,7 +199,7 @@ args = {
   "type": str,
   "required": True
  },
- "--eEDF" : {
+ "--eVDF" : {
   "action": argparse.BooleanOptionalAction,
  },
 }
