@@ -263,7 +263,7 @@ In this case scan will start from the desired string and points will be readed f
 Log-log interpolation is used to map points into lookup-table
 $\sigma(\varepsilon) = \exp(a \log\varepsilon)\cdot b$.
 If extrapolation parameter (*exterp*) is bigger than zero
-and condition $\partial\sigma/\partial\varepsilon$ is fulfilled for high-energies, then extrapolation will be build.
+and condition $\partial\sigma/\partial\varepsilon < 0$ is fulfilled for high-energies, then extrapolation will be build.
 Parameter *exterp* controls the range of energies to build extrapolation
 (*exterp* = $\log_{10}\max(\varepsilon)-\log_{10}\varepsilon$).
 Default value is 0.25, *exterp* = 0 turns off extrapolation.
