@@ -182,7 +182,7 @@ def main(args):
 		for k in range(k_avg, n+1):
 			if os.path.exists(fname:=f"{args.fdir}/pdata{k:06d}.zip"):
 				pdata  = load_frame(fname)
-				vxs,vys,vzs = pdata.data[..., 2:]
+				vxs,vys,vzs = pdata.data.T[2:]
 				dist.add(vxs, vys)
 				count += 1
 		
