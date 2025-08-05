@@ -243,7 +243,8 @@ def main(args, logger):
 	logger.info(f"E0       = {E0:e} V/cm")
 	if B0 != 0:
 		logger.info(f"B0       = {B0:e} G")
-		logger.info(f"rce      = {RCE:f} cm") 
+		logger.info(f"rce      = {RCE:f} cm")
+		logger.info(f"δEce     = {E0*RCE:5.2f} eV")
 		logger.info(f"u_drift   = {E0/2.99792458e2 * CLIGHT/B0:e} cm/s")
 		
 	
@@ -538,6 +539,8 @@ if __name__ == '__main__':
 			setup_logging(level=args.loglevel.upper(), root=True\
 			, handler = logging.FileHandler(fname, "a", delay=False))
 		
+		logger.info("run string: "+" ".join(sys.argv))
+		# ~ print()
 		# run program
 		sys.exit(main(args, logger))
 		
