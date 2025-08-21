@@ -30,6 +30,7 @@ struct csection_set_cfg;
 struct pt_entry_t {
 	std::string name;
 	f32 encfft;
+	u16 group_index;
 	
 	pt_entry_t (csection_set_cfg *cfg, py::dict entry);
 };
@@ -37,9 +38,10 @@ struct pt_entry_t {
 struct db_group_t {
 	std::string name;
 	f32 massrate{0.0f};
+	u16 channel_index;
 	//~ u16 pt_uid        = 0;
 	//~ u16 ma_uid        = 0;
-	u16 ch_index[2]{0};
+	
 	//~ u16 ch_xtra       = 0;
 	//~ u16 bg_idx        = 0;
 	//~ u16 bg_therm_mark = 0;

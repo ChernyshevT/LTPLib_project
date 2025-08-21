@@ -94,6 +94,7 @@ struct collision_t {
 		f32 beta, rval, frac;
 		do { /* loop to reject invalid values! */
 			rval = rng.uniform(0.0f, 1.0f);
+			// [TODO: CHECK cosa!]
 			cosa = 1.0f - 2*rval*(1.0f - param)/(1.0f + param - 2.0f*rval*param);
 			sina = sqrtf(1.0f-cosa*cosa);
 			frac = sqrtf(ensys/enel - mrate*(1.0f-cosa));

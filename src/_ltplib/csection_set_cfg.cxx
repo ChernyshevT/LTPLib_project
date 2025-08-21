@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
+#include <ranges>
 #include "def_csection_set.hxx"
 #define  DEFAULT_EXTERP 0.25
 
@@ -23,8 +24,14 @@ u16 add_const (csection_set_cfg *cfg, f32 arg, bool unique=false) {
 
 void update_cfg (csection_set_cfg *cfg) {
 	
-	//~ cfg->_index.push_back();
-	py::print("_index:", cfg->_index);
+	fmt::print("particles:\n");
+	for (const auto& pt : cfg->pt_entries) {
+		fmt::print("{:<10} {}\n", pt.name, pt.group_index);
+	}
+	fmt::print("groups:\n");
+	for (const auto& group : cfg->db_groups) {
+		fmt::print("{:<10} {}\n", group.name, group.channel_index);
+	}
 };
 
 
@@ -44,22 +51,21 @@ pt_entry_t::pt_entry_t (csection_set_cfg* cfg, py::dict entry) {
 			continue;
 	}
 	
-	logger::debug("csection_set: add PARTICLE \"{}\"", this->name);
+	/* check repeat */
+	for (const auto& pt : cfg->pt_entries) {
+		if (this->name == pt.name) {
+			throw bad_arg("PARTICLE blocks for \"KEY\":\"{}\" already defined!", pt.name);
+		}
+	}
+	
+	this->group_index = cfg->db_groups.size();
+	
+	logger::debug("add PARTICLE \"{}\"", this->name);
 };
 
 /******************************************************************************/
 db_group_t::db_group_t (csection_set_cfg* cfg, py::dict entry) {
 
-	if (cfg->pt_entries.empty()) {
-		throw bad_arg("\"PARTICLE\"-block is not defined yet!");;
-	}
-	
-	if (cfg->_index.empty()) {
-		cfg->_index.push_back(0);
-	}
-	
-	cfg->_index.push_back(cfg->db_entries.size());
-	
 	for (auto [key, val] : entry) switch (_hash(key)) {
 		default:
 			throw bad_arg("BACKGROUND: unknown field \"{}\"!"
@@ -74,7 +80,22 @@ db_group_t::db_group_t (csection_set_cfg* cfg, py::dict entry) {
 			continue;
 	}
 	
-	logger::debug("csection_set: add BACKGROUND \"{}\"", this->name);
+	/* check sequence */
+	if (cfg->pt_entries.empty()) {
+		throw bad_arg("\"PARTICLE\"-block is not defined yet!");;
+	}
+	
+	/* check repeat */
+	for (const auto& group : cfg->db_groups) {
+		if (this->name == group.name) {
+			throw bad_arg("BACKGROUND block for \"KEY\":\"{}\" is already defined!"
+			, group.name);
+		}
+	}
+	
+	channel_index = cfg->db_entries.size();
+	
+	logger::debug("add GROUP \"{}+{}\"", cfg->pt_entries.back().name, this->name);
 };
 
 /******************************************************************************/
@@ -91,10 +112,9 @@ enum state : u8 {
 db_entry_t::db_entry_t (csection_set_cfg *cfg, py::dict entry, py::dict opts) {
 	
 	if (cfg->db_groups.empty()) {
-		throw bad_arg("\"BACKGROUND\"-block is not defined yet!");;
+		throw bad_arg("\"BACKGROUND\"-block is not defined yet!");
 	}
-	
-	cfg->_index.back() = cfg->db_entries.size();
+	cfg->db_groups.back().channel_index++;
 	
 	enth = 0.0f;
 	FLAGS.reset();
@@ -242,10 +262,21 @@ db_entry_t::db_entry_t (csection_set_cfg *cfg, py::dict entry, py::dict opts) {
 		};
 	}
 	
-	logger::debug("csection_set: add {}+{} {} {}"
-	, cfg->pt_entries.back().name, cfg->db_groups.back().name
-	, this->descr
-	, py::cast<std::string>(this->extra.attr("get")("comment","")));
+	std::string msg = fmt::format("add CHANNEL \"{}+{}\" {}"
+	, cfg->pt_entries.back().name, cfg->db_groups.back().name, this->descr);
+	
+	if (this->fns.contains("DCS")) {
+		msg += "+DCS";
+	}
+	if (this->extra.contains("comment")) {
+		msg += fmt::format(" {}"
+		, py::cast<std::string>(this->extra.attr("get")("comment","")));
+	}
+	if (this->enth > 0.0f) {
+		msg += fmt::format(" ({:e} eV)", this->enth);
+	}
+	
+	logger::debug("{}", msg);
 }
 /******************************************************************************/
 csection_set_cfg::csection_set_cfg (
@@ -263,6 +294,10 @@ csection_set_cfg::csection_set_cfg (
 	decltype(progs)     pprogs[2];
 	
 	std::set<std::string> ptset, bgset;
+	
+	this->pt_entries.reserve(entries.size());
+	this->db_groups.reserve(entries.size());
+	this->db_entries.reserve(entries.size());
 	
 	/****************************************************************************/
 	if (max_energy < 10.0f) {
@@ -394,7 +429,7 @@ csection_set_cfg::csection_set_cfg (
 	/****************************************************************************/
 	auto add_op = [&] (u8 k, opcode opc, u16 arg=0) -> u16 {
 		pprogs[k].push_back(mprog_t{opc, arg});
-		logger::debug("adding cmd {}{}", MPROG_DESCR[opc], k?'*':'\0');
+		//logger::debug("adding cmd {}{}", MPROG_DESCR[opc], k?'*':'\0');
 		return pprogs[k].size()-1;
 	};
 	/****************************************************************************/
@@ -456,7 +491,7 @@ csection_set_cfg::csection_set_cfg (
 					if (not bgset.insert(key).second) throw bad_arg("background \"{}\" is already set!", key);
 					
 					if (not defbg) {
-						logger::debug("csection_set: add background \"{}\"", key);
+						//logger::debug("csection_set: add background \"{}\"", key);
 						bginfo.push_back(key);
 					}
 					auto pos = std::find(bginfo.begin(), bginfo.end(), key);
@@ -464,7 +499,7 @@ csection_set_cfg::csection_set_cfg (
 						flags.n0_def = 1;
 						flags.n0_idx = pos-bginfo.begin();
 					} else {
-						logger::info("csection_set: skip background \"{}\"", key);
+						//logger::info("csection_set: skip background \"{}\"", key);
 						flags.skip = 1;
 					}
 				} else throw bad_arg("BACKGROUND: \"KEY\" is not defined!");

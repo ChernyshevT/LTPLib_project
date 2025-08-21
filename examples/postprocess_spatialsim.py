@@ -62,8 +62,6 @@ def draw_eVDF(fname, ax, **kwargs):
 	dist.add(vxs, vys).normalize()
 	n = min(kwargs.get("n", pdata.index[1]), pdata.index[1])
 	
-	# ~ vmax=1e7, nsh=50000, norm=LogNorm(2, 1e3)
-	
 	cols = dist.get(vxs[:n], vys[:n])
 	
 	ux,uy = np.mean(vxs), np.mean(vys)
@@ -163,6 +161,11 @@ def main(args):
 		if k_avg is None and errmx is not None and errmx < precision:
 			k_avg = j
 			print('-'*len(line))
+		
+		if k_avg is not None and errmx is not None and errmx >= precision:
+			raise RuntimeError(f"errmx = {errmx:e} >= {precision:e}!")
+	
+	# endline ##########
 	print('-'*len(line))
 	
 	###################################
@@ -171,11 +174,13 @@ def main(args):
 		entry = np.stack(stats[k_avg:][key])
 		dset["avg"][key] = entry.mean(axis=0), entry.std(axis=0)
 	
-	##########################
+	#############
 	if args.eVDF:
+		vmax = float(args.eVDF[0])
+		npts = int(args.eVDF[1])
 		
 		vmax = 2.5e8
-		xbins,ybins = [np.linspace(-vmax, +vmax, 501) for _ in range(2)]
+		xbins,ybins = [np.linspace(-vmax, +vmax, npts) for _ in range(2)]
 		dist = distro_h(xbins, ybins)
 		
 		count = 0
@@ -185,6 +190,9 @@ def main(args):
 				vxs,vys,vzs = pdata.data.T[2:]
 				dist.add(vxs, vys)
 				count += 1
+		
+		if count < 1:
+			raise RuntimeError("no pdata-files were found!")
 		
 		dset["eVDFxy"] = dist.hist/count
 		dset["vmax"] = vmax
@@ -199,8 +207,14 @@ args = {
   "type": str,
   "required": True
  },
+ "--window" : {
+  "type": str,
+  "default": 10,
+  "required": False,
+ },
  "--eVDF" : {
-  "action": argparse.BooleanOptionalAction,
+  "type": lambda s: (int(s.strip("()").split(",")[0]), float(s.strip("()").split(",")[1])),
+  "required": False,
  },
 }
 
