@@ -179,7 +179,6 @@ def main(args):
 		vmax = float(args.eVDF[0])
 		npts = int(args.eVDF[1])
 		
-		vmax = 2.5e8
 		xbins,ybins = [np.linspace(-vmax, +vmax, npts) for _ in range(2)]
 		dist = distro_h(xbins, ybins)
 		
