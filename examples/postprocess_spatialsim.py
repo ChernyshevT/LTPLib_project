@@ -134,7 +134,7 @@ def main(args):
 	stats = pd.DataFrame(stats)
 	
 	fields = ["ENe", "UDRIFTe", "EVENTS/PT"]
-	window, precision = 5, 0.01
+	window, precision = args.window, 0.01
 
 	line = f"| #FRAME| ERRMAX|"\
 	     + "|".join([f"{key:>10}" for key in fields]) + "|"
