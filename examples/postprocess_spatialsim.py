@@ -213,7 +213,7 @@ args = {
   "required": False,
  },
  "--eVDF" : {
-  "type": lambda s: (int(s.strip("()").split(",")[0]), float(s.strip("()").split(",")[1])),
+  "nargs": 2,
   "required": False,
  },
 }
