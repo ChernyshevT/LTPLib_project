@@ -127,7 +127,7 @@ void def_ppush_funcs (py::module &m) {
 			std::string backend = "default";
 			std::string fn_name = fmt::format("ppush{}{}_{}_{}_fn",
 				nd,
-				grid.flags.cylcrd? "c" : "",
+				grid.flags & AXIS_FLAG::CYLINDER ? "CYLINDER" : "",
 				scheme,
 				emfield.order == 1? "LINE" :
 				emfield.order == 2? "QUAD" :
@@ -139,11 +139,10 @@ void def_ppush_funcs (py::module &m) {
 				"pstore.nargs = {} <= {}",pstore.cfg->nargs, (nd+3)*2
 			);
 			
+			auto &&fn = libs[backend].get_function<ppush_fn_t<nd>>(fn_name);
 			logger::debug\
 			("bind {}->{} &grid={}, &pstore={}, &emfield={}, fcode={:#010x}",
 			backend, fn_name, (void*)(&grid), (void*)(&pstore), (void*)(&emfield), fcode);
-			
-			auto &&fn = libs[backend].get_function<ppush_fn_t<nd>>(fn_name);
 			
 			return [&, fcode, fn] (f32 dt) -> void {
 				check_errc(fn(grid, pstore, emfield, dt, fcode));

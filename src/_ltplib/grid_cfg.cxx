@@ -3,6 +3,48 @@
 //https://arne-mertz.de/2018/05/overload-build-a-variant-visitor-on-the-fly/
 //https://medium.com/@nerudaj/std-visit-is-awesome-heres-why-f183f6437932
 
+static
+u8 parse_grid_flags(const char* mode_str) {
+	constexpr struct {
+		const char* key;
+		u8          val;
+	} table[] = {
+		{"CYLINDER", AXIS_FLAG::CYLINDER},
+		{"LOOPX",    AXIS_FLAG::LOOPX},
+		{"LOOPY",    AXIS_FLAG::LOOPY},
+		{"LOOPZ",    AXIS_FLAG::LOOPZ},
+	};
+	constexpr u8 n{sizeof(table)/sizeof(*table)};
+
+	bool matched, used[n]{false};
+	u8 flags = 0;
+	
+	while (*mode_str) {
+		if (std::isspace(*mode_str) or '|' == *mode_str) {
+			mode_str += 1;
+			continue;
+		}
+		matched = false;
+		for (u8 i{0u}; i<n; ++i) {
+			size_t len = std::strlen(table[i].key);
+			if (std::strncmp(mode_str, table[i].key, len) == 0) {
+				if (used[i]) {
+					throw bad_arg("flag duplication: \"{}\"", table[i].key);
+				}
+				used[i] = true;
+				matched = true;
+				flags = flags | table[i].val;
+				mode_str += len;
+				break;
+			}
+		}
+		if (not matched) {
+			throw bad_arg("invalid flag segment: \"{}\"", mode_str);
+		}
+	}
+
+	return flags;
+}
 
 grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 	u8 md=1; for (auto i{0}; i<nd; ++i) md*=3;
@@ -21,7 +63,7 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 	size_t lctr_size{1};
 	for (auto axis : cfg["axes"]) {
 		if (py::len(axis) <= 1) {
-			throw bad_arg("len(axix) = {} <= 1", py::len(axis));
+			throw bad_arg("len(axix)={} <= 1", py::len(axis));
 		}
 		
 		std::vector<u32> axpts;
@@ -40,21 +82,10 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 	lctr.resize(lctr_size, 0);
 	
 	// setup flags
-	flags.insert({"cylcrd", 0});
-	if (cfg.contains("cylcrd")) {
-		if (nd == 2 and py::cast<std::string>(cfg["cylcrd"]) == "x"s) {
-			flags["cylcrd"] = 1;
-		} else {
-			throw bad_arg("grid{} isn't suitable for cylindrical coordinates!", nd);
-		}
-	}
-	flags.insert({"loopax", 0});
-	if (cfg.contains("loopax")) {
-		for (auto c : py::cast<std::string>(cfg["loopax"])) {
-			if (u8(c-'x') >= nd) {
-				throw bad_arg("invalid loop axis: \'{}\'!", c);
-			}
-			flags["loopax"] |= 1<<(c-'x'); //TODO CHECK FİX
+	if (cfg.contains("flags")) {
+		this->flags = parse_grid_flags(py::cast<std::string>(cfg["flags"]).c_str());
+		if (this->flags & AXIS_FLAG::CYLINDER and nd != 2) {
+			throw bad_arg("{}D grid can not be used with CYLINDER flag!", nd);
 		}
 	}
 	
@@ -101,6 +132,12 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 					fn(fn, n+1, shift + j1*info.strides[n]/info.itemsize);
 				}
 			}; fn(fn);
+			
+			/* skip the node if it is fully masked */
+			if (std::all_of(mcache.begin(), mcache.end(), [] (u8 m) {return m>0;})) {
+				continue;
+			}
+			/* copy mask array */
 			if (std::any_of(mcache.begin(), mcache.end(), [] (u8 m) {return m>0;})) {
 				mshift = 1+mask.size();
 				std::copy(mcache.begin(), mcache.end(), std::back_inserter(mask));
@@ -117,8 +154,8 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 		auto &&fn = [&, k=0] (auto &&fn, u8 n, u32 sh=0, u32 w=1) mutable -> void {
 			if (n>0) for (u32 i{1}, m; i<=3; ++i) {
 				m=node.map[n-1]+i%3;
-				if (CHECK_BIT(flags["loopax"], n-1) and m%(1+shape[n-1]) == 0) {
-					m = m!=0? 1 : shape[n-1];
+				if (CHECK_BIT(flags, n) and m%(1+shape[n-1]) == 0) {
+					m = (m != 0)? 1 : shape[n-1];
 				}
 				fn(fn, n-1, sh+w*m, w*(2+shape[n-1]));
 			} else {
@@ -127,6 +164,7 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 				} k++;
 			}
 		}; fn(fn, nd);
+		py::print(node.lnk);
 	}
 
 }

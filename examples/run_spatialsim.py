@@ -82,7 +82,7 @@ def main(args, logger):
 	, step = [dx,dy]
 	, axes = [[*range(0,nx+1,mx)], [*range(0,ny+1,my)]]
 	, nodes = [(x,y) for x in range(nx//mx) for y in range(ny//my)]
-	, loopax = "xy")
+	, flags = "LOOPX|LOOPY")
 	
 	##############################################################################
 	# declare particle storage
@@ -178,15 +178,7 @@ def main(args, logger):
 		pstore.inject({"e": pdata})
 		logger.info(f"{len(pstore)} samples created")
 		
-		if fpath := args.save:
-			fname = f"{fpath}/pdata-init.zip"
-			data, index = pstore.extract()
-			save_frame(fname, "w", **{
-			 "data"  : data,
-			 "index" : index,
-			 "descr" : pstore.ptlist,
-			})
-	
+
 	else: # inject existing distro
 		pdata = load_frame(fpath)
 		for key,a,b in zip(pdata.descr, pdata.index, pdata.index[1:]):
@@ -247,7 +239,7 @@ def main(args, logger):
 		logger.info(f"δEce     = {E0*RCE:5.2f} eV")
 		logger.info(f"u_drift   = {E0/2.99792458e2 * CLIGHT/B0:e} cm/s")
 		
-	
+
 	##############################################################################
 	if args.run == False or not (args.run or input(f"run? [y] ") == "y"):
 		exit(0)
@@ -322,7 +314,6 @@ def main(args, logger):
 		logger.info(f"end frame ({len(pstore):} samples)")
 		
 		# acquire frame-avgeraged values
-		#print(events.remap("out")[...,0])
 		_evtfreq[...] = events.remap("out")[...].astype(np.float32)\
 		* (args.nsub*nppin/np_counter) / (args.npunit*args.dt*args.nsub)
 		
@@ -540,6 +531,7 @@ if __name__ == '__main__':
 			, handler = logging.FileHandler(fname, "a", delay=False))
 		
 		logger.info("run string: "+" ".join(sys.argv))
+		logger.info(f"args: {vars(args)}")
 		# ~ print()
 		# run program
 		sys.exit(main(args, logger))

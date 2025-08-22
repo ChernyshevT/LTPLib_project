@@ -68,11 +68,12 @@ u32 calc_form (f32 *frm, f32 x) {
 template<u8 nd>
 struct grid_t {
 public:
-	// total number of sub-domains
-	u32  size;
+	// total number of sub-domains & axis flags
+	u32  size  : 24;
+	u32  flags : 8;
 	// number of sub-domains along each axis
 	u32  shape [nd];
-	// grid step along each axis
+	// grid step along the each axis
 	f32  step  [nd];
 	// bounds for sub-domains along each axis
 	u32 *axes  [nd];
@@ -91,13 +92,6 @@ public:
 		// mask's shift to identify particle absorbers (or 0 if there is none)
 		u64 mshift;
 	} *nodes;
-	
-	struct {
-		//mark looped axes
-		u8 loopax: 3;
-		//mark 'x' as an axis of symmetry (2d grid only)
-		u8 cylcrd: 1;
-	} flags;
 
 public:
 	

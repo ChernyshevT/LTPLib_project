@@ -71,7 +71,7 @@ def main(args, logger):
 			  for x in range(nx//mx)\
 			  for y in range(ny//my)\
 			 ],
-			 "loopax" : "xy",
+			 flags = "LOOPX|LOOPY",
 			}
 			node_size = mx*my
 			logger.info(f"use default2d preset: {nx}x{ny}")
@@ -93,7 +93,7 @@ def main(args, logger):
 			  for y in range(ny//my)\
 			  for z in range(nz//mz)\
 			 ],
-			 "loopax" : "xyz",
+			 flags = "LOOPX|LOOPY|LOOPZ",
 			}
 			node_size = mx*my*mz
 			logger.info(f"use lowres3d preset: {nx}x{ny}x{nz}")

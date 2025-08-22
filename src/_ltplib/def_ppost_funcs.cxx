@@ -44,7 +44,7 @@ u64 parse_mode_string(const char* mode_str) {
 	};
 	constexpr u8 n{sizeof(table)/sizeof(*table)};
 
-	bool used[n] = {};
+	bool matched, used[n]{false};
 	u64  fcode = 0;
 	u64  count = 0;
 
@@ -53,7 +53,7 @@ u64 parse_mode_string(const char* mode_str) {
 			mode_str += 1;
 			continue;
 		}
-		bool matched = false;
+		matched = false;
 		for (u8 i{0u}; i<n; ++i) {
 			size_t len = std::strlen(table[i].key);
 			if (std::strncmp(mode_str, table[i].key, len) == 0) {
@@ -61,14 +61,14 @@ u64 parse_mode_string(const char* mode_str) {
 					throw bad_arg("token duplication: \"{}\"", table[i].key);
 				}
 				used[i] = true;
+				matched = true;
 				fcode = fcode | (table[i].val << (4*(1+count)));
 				count++;
 				mode_str += len;
-				matched = true;
 				break;
 			}
 		}
-		if (!matched) {
+		if (not matched) {
 			throw bad_arg("invalid descr segment: \"{}\"", mode_str);
 		}
 	}

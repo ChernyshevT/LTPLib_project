@@ -504,7 +504,7 @@ u32 ppush2_IMPLR_CUBE_fn
 }
 /* #19 ************************************************************************/
 extern "C" LIB_EXPORT
-u32 ppush2c_LEAPF_LINE_fn
+u32 ppush2CYLINDER_LEAPF_LINE_fn
 (const grid_t<2> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
@@ -532,7 +532,7 @@ u32 ppush2c_LEAPF_LINE_fn
 }
 /* #20 ************************************************************************/
 extern "C" LIB_EXPORT
-u32 ppush2c_LEAPF_QUAD_fn
+u32 ppush2CYLINDER_LEAPF_QUAD_fn
 (const grid_t<2> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
@@ -560,7 +560,7 @@ u32 ppush2c_LEAPF_QUAD_fn
 }
 /* #21 ************************************************************************/
 extern "C" LIB_EXPORT
-u32 ppush2c_LEAPF_CUBE_fn
+u32 ppush2CYLINDER_LEAPF_CUBE_fn
 (const grid_t<2> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	

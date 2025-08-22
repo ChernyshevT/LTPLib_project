@@ -46,12 +46,12 @@ struct grid_cfg {
 		edges;
 	std::vector<node_cfg>
 		nodes;
-	std::map<std::string, u8>
-		flags;
 	std::vector<u8>
 		mask;
 	std::vector<u32>
 		lctr;
+	u8
+		flags;
 	
 	grid_cfg (u8 nd, py::dict cfg);
 };

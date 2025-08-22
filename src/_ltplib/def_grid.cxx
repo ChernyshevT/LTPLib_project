@@ -52,13 +52,8 @@ struct grid_ctor {
 		for (size_t j{0}; j<holder.cfg->lctr.size(); ++j) {
 			grid.lctr[j] = holder.cfg->lctr[j];
 		}
-		grid.flags.loopax = holder.cfg->flags["loopax"];
-		grid.flags.cylcrd = holder.cfg->flags["cylcrd"];
+		grid.flags        = holder.cfg->flags;
 		grid.size         = holder.cfg->nodes.size();
-		
-		//~ holder.find_node_fn = [&grid] (std::vector<f32>&& pos) {
-			//~ return grid.find_node(&pos[0]);
-		//~ };
 	}
 };
 
@@ -143,15 +138,7 @@ void def_grids (py::module &m) {
 		"loopax": "x",
 	]
 	)pbdoc")
-	
-	.def("find_node", [] (const grid_holder& self, std::vector<f32> pos) -> u32 {
-		
-		return std::visit([&] <u8 nd> (const grid_t<nd> &grid) {
-			return grid.find_node(&pos[0]);
-		}, self);
-		
-	})
-	
+
 	.def_property_readonly("ndim", [] (const grid_holder& self) {
 		return self.cfg->shape.size();
 	})
@@ -174,11 +161,7 @@ void def_grids (py::module &m) {
 		return self.cfg->lctr;
 	})
 	.def_property_readonly("flags", [] (const grid_holder& self) {
-		py::dict dict;
-    for (auto [k,v] : self.cfg->flags) {
-			dict[py::str(k)] = v;
-    }
-		return py::module::import("types").attr("SimpleNamespace")(**dict);
+		return self.cfg->flags;
 	});
 
 }

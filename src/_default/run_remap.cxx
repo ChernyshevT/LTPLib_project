@@ -114,7 +114,7 @@ namespace {
 			data[j0+i] += data[j1+i];
 			data[j1+i]  = data[j0+i];
 		};
-		for ( int i=0; i<nd; ++i ) if ( 1&(grid.flags.loopax>>i) ) {
+		for ( int i=0; i<nd; ++i ) if (CHECK_BIT(grid.flags, i+1)) {
 			loop_over_bound<nd>(fn, i, latt.order, g_offst, g_shape);
 		}
 	}

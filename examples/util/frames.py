@@ -38,25 +38,6 @@ class npEncoder(json.JSONEncoder):
 
 logger = get_logger()
 
-# ~ class unpack_vals:
-	# ~ __slots__ = ("_vdata", "_funcs", "_cache")
-	
-	# ~ def __init__(self, vdata: np.ndarray, funcs: dict[str, object]):
-		# ~ self._vdata = vdata
-		# ~ self._funcs = funcs
-		# ~ self._cache = dict()
-	
-	# ~ def __getitem__(self, key: str):
-		# ~ if key not in self._cache:
-			# ~ if key not in self._funcs:
-				# ~ return None
-			# ~ else:
-				# ~ self._cache[key] = self._funcs[key](vdata)
-		# ~ return self._cache[key]
-	
-	# ~ def __getattr__(self, key: str) -> np.ndarray:
-		# ~ return self[key]
-
 class frame_cls:
 	__slots__ = ("_zipf", "_list", "_cache", "files")
 
@@ -65,7 +46,7 @@ class frame_cls:
 		self._list  = [os.path.splitext(f)[0] for f in self._zipf.namelist()]
 		self._cache = dict()
 		self.files = self._zipf.namelist()
-		logger.info(f"open {fname}")
+		logger.debug(f"open {fname}")
 	
 	def add_funcs (self, **kwargs):
 		for key, func in kwargs.items():
@@ -95,6 +76,8 @@ class frame_cls:
 		return self[key]
 
 	def __contains__(self, key: str):
+		if key in self._cache:
+			return 4
 		if f"{key}.json" in self.files:
 			return 3
 		if f"{key}.npy"  in self.files:

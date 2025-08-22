@@ -31,11 +31,21 @@ enum ERR_CODE : u32 {
 /******************************************************************************/
 template<u8 nd> struct          grid_t;
 
+enum AXIS_FLAG : u8 {
+	CYLINDER = 0x1,
+	LOOPX    = 0x2,
+	LOOPY    = 0x4,
+	LOOPZ    = 0x8,
+};
+
 template<typename DTYPE> struct vcache_t;
 
 struct                          pstore_t;
 
 struct                          csection_set_t;
+
+#define CHECK_BIT(var,pos) (((var)>>(pos))&1u)
+#define SET_BIT(var,pos,x)   ((var)|(x<<pos))
 
 /*******************************************************************************
 ** API for pstore operations **************************************************/

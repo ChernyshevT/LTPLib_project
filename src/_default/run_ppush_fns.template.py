@@ -1,6 +1,6 @@
 text = \
 """extern "C" LIB_EXPORT
-u32 ppush{{nd}}{%if CLCRD %}c{% endif %}_{{MODE}}_{{ORDER}}_fn
+u32 ppush{{nd}}{%if CYLINDER %}CYLINDER{% endif %}_{{MODE}}_{{ORDER}}_fn
 (const grid_t<{{nd}}> &grid, pstore_t &pstore, const vcache_t<f32> &field, f32 dt, u32 fcode) {
 	u32 flags;
 	
@@ -12,7 +12,7 @@ u32 ppush{{nd}}{%if CLCRD %}c{% endif %}_{{MODE}}_{{ORDER}}_fn
 		}
 	}
 	
-	flags = run_ppush<{{nd}}, PUSH_MODE::{{MODE}}, FORM_ORDER::{{ORDER}}, {{CLCRD}}>
+	flags = run_ppush<{{nd}}, PUSH_MODE::{{MODE}}, FORM_ORDER::{{ORDER}}, {{CYLINDER}}>
 	(grid, pstore, field, dt, fcode);
 	if (flags) {
 		return ERR_CODE::PPUSH_ERR | flags;
@@ -29,11 +29,11 @@ u32 ppush{{nd}}{%if CLCRD %}c{% endif %}_{{MODE}}_{{ORDER}}_fn
 """
 
 args = {
-	"nd"    : [1,2,3],
-	"CLCRD" : [0,1],
-	"MODE"  : ["LEAPF", "IMPL0", "IMPLR"],
-	"EMFLD" : [1],
-	"ORDER" : ["LINE", "QUAD", "CUBE"],
+	"nd"       : [1,2,3],
+	"CYLINDER" : [0,1],
+	"MODE"     : ["LEAPF", "IMPL0", "IMPLR"],
+	"EMFLD"    : [1],
+	"ORDER"    : ["LINE", "QUAD", "CUBE"],
 }
 
 ################################################################################
@@ -45,7 +45,7 @@ def generate(args):
 	
 	for vals in itertools.product(*args):
 		entry = {key:val for key,val in zip(keys, vals)}
-		if entry["CLCRD"] and (entry["nd"] != 2 or entry["MODE"] != "LEAPF"):
+		if entry["CYLINDER"] and (entry["nd"] != 2 or entry["MODE"] != "LEAPF"):
 			continue
 		
 		yield entry

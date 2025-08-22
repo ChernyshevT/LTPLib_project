@@ -86,15 +86,20 @@ struct collision_t {
 	}
 	
 	/* conservative collision ***************************************************/
+	/* energy-impulse balance:
+	 * [METHES: A Monte Carlo collision code for the simulation of electron
+	 * transport in low temperature plasma. doi: 10.1016/j.cpc.2016.02.022]
+	 * */
+	/* $\xi \rightarrow \cos\alpha$:
+	 * [Flynn, M., Vialetto, L., Fierro, A., Neuber, A., & Stephens, J. (2024). 
+	 * Benchmark calculations for anisotropic scattering in kinetic models for low 
+	 * temperature plasma. Journal of Physics D: Applied Physics, 57(25), 255204. 
+	 * https://doi.org/10.1088/1361-6463/ad3477]
+	 * */
 	inline void do_conservative (f32 v[]) {
-		/* energy-impulse balance:
-		 * [METHES: A Monte Carlo collision code for the simulation of electron
-		 * transport in low temperature plasma. doi: 10.1016/j.cpc.2016.02.022]
-		 * */
 		f32 beta, rval, frac;
 		do { /* loop to reject invalid values! */
 			rval = rng.uniform(0.0f, 1.0f);
-			// [TODO: CHECK cosa!]
 			cosa = 1.0f - 2*rval*(1.0f - param)/(1.0f + param - 2.0f*rval*param);
 			sina = sqrtf(1.0f-cosa*cosa);
 			frac = sqrtf(ensys/enel - mrate*(1.0f-cosa));

@@ -4,6 +4,7 @@
 	 "MASSRATE": 0.00013714},
 	 
 	{"TYPE": "ELASTIC",
+	 "REF":r"\cite{khrabrov2012}",
 	 "MTCS": (f"{fpath}/He/He_LXCat.txt",
 	 dict(search="E + He -> E + He, Elastic")),
 	 # Khrabrov, A. V., & Kaganovich, I. D. (2012).

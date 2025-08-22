@@ -36,9 +36,6 @@ constexpr auto _type_name() noexcept {
 }
 #define TYPE_STR(X) (_type_name<decltype(X)>())
 
-#define CHECK_BIT(var,pos) (((var)>>(pos))&1)
-#define SET_BIT(var,pos,x)   ((var)|(x<<pos))
-
 /**********************************************************************/
 // here was FMT_HEADER_ONLY...
 #include "fmt/format.h"

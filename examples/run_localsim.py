@@ -97,7 +97,7 @@ def main(args):
 	, step=[1]
 	, axes=[[*range(args.nodes+1)]]
 	, nodes=[[i] for i in range(args.nodes)]
-	, loopax="x")
+	, flags="LOOPX")
 
 	#######################
 	# init particle storage

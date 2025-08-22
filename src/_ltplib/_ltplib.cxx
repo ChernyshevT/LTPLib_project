@@ -122,6 +122,7 @@ void check_errc (u32 errc) {
 	}
 	throw std::runtime_error(msg);
 }
+
 /******************************************************************************/
 const dylib & dylibs_t::operator [] (std::string key) {
 	namespace fs = std::filesystem;
@@ -129,10 +130,11 @@ const dylib & dylibs_t::operator [] (std::string key) {
 	static std::map<std::string, dylib> cache;
 	char                               *descr, *build, *api_v;
 	
-	auto path = std::filesystem::path(py::module::import("_ltplib")\
-	          .attr("__file__")
-	          .cast<std::string>())
-	          .parent_path();
+	auto path = \
+	std::filesystem::path(py::module::import("_ltplib")
+	.attr("__file__")
+	.cast<std::string>())
+	.parent_path();
 	
 	if (not cache.contains(key)) try {
 		cache.emplace(key, dylib(path, key));
