@@ -49,16 +49,16 @@ u8 parse_grid_flags(const char* mode_str) {
 grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 	u8 md=1; for (auto i{0}; i<nd; ++i) md*=3;
 	
-	if (py::len(cfg["step"]) != nd) {
-		throw bad_arg("len(step) = {} != nd({})", py::len(cfg["step"]), nd);
+	if (auto nd_len{py::len(cfg["step"])}; nd_len != nd) {
+		throw bad_arg("len(step)={} != nd({})", nd_len, nd);
 	}
 	for (auto ds : cfg["step"]) {
 		step.push_back(py::cast<f32>(ds));
 	}
 	
 	// setup axes
-	if (py::len(cfg["axes"]) != nd) {
-		throw bad_arg("len(axes) = {} != nd({})", py::len(cfg["axes"]), nd);
+	if (auto nd_len{py::len(cfg["axes"])}; nd_len != nd) {
+		throw bad_arg("len(axes)={} != nd({})", nd_len, nd);
 	}
 	size_t lctr_size{1};
 	for (auto axis : cfg["axes"]) {
@@ -99,27 +99,12 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 		std::vector<u32> lnk; lnk.reserve(md);
 		std::vector<u8 > mcache;
 		
-		/*
-		for (auto x : node["map"]) {
-			map.push_back(py::cast<u32>(x));
-		}
-		*/
 		if (py::len(node) != nd) {
 			throw bad_arg("invalid numer of indexes {} != {}", py::len(node), nd);
 		} for (auto m : node) {
 			map.push_back(py::cast<u32>(m));
 		}
 
-		size_t k{0}, sh{1};
-		for (int i{nd-1}; i >= 0; --i) {
-			if (map[i] >= shape[i]) throw bad_arg("node is out of domain");
-			
-			k  += (map[i]+1)*sh;
-			sh *= shape[i]+2;
-		}
-		if (lctr[k] != 0) throw bad_arg("node is duplicated");
-		lctr[k] = nodes.size()+1;
-		
 		u64 mshift{0};
 		if (cfg.contains("mask") and not cfg["mask"].is_none()) {
 			auto info = (py::cast<py::array_t<u8, py::array::c_style>>(cfg["mask"])).request();
@@ -143,6 +128,17 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 				std::copy(mcache.begin(), mcache.end(), std::back_inserter(mask));
 			}
 		}
+
+		size_t k{0}, sh{1};
+		for (int i{nd-1}; i >= 0; --i) {
+			if (map[i] >= shape[i]) throw bad_arg("node is out of domain");
+			
+			k  += (map[i]+1)*sh;
+			sh *= shape[i]+2;
+		}
+		if (lctr[k] != 0) throw bad_arg("node is duplicated");
+
+		lctr[k] = nodes.size()+1;
 		nodes.push_back({std::move(map), std::move(lnk), mshift});
 	
 	} catch (std::exception &e) {

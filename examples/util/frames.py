@@ -54,7 +54,7 @@ class frame_cls:
 		return self
 	
 	def __dir__(self):
-		return self._list
+		return [*self._list, *self._cache]
 
 	def __getitem__(self, key: str):
 		import io, json
@@ -91,7 +91,7 @@ def load_frame(fname: str) -> frame_cls:
 
 ################################################################################
 
-def save_frame(fname: str, mode:str ="w", **kwargs):
+def save_frame(fname: str, mode: str = "w", **kwargs):
 	fname = os.path.abspath(os.path.expanduser(fname))
 	msg   = f"save \"{fname}\".."
 	try:
@@ -107,14 +107,14 @@ def save_frame(fname: str, mode:str ="w", **kwargs):
 				
 				if   isinstance(arg, np.ndarray):
 					dump = io.BytesIO(); np.save(dump, arg)
-					zipf.writestr(f"{k}.npy",
-						data=dump.getbuffer().tobytes())
+					zipf.writestr(f"{k}.npy"
+					, data=dump.getbuffer().tobytes())
 				elif isinstance(arg, str):
-					zipf.writestr(f"{k}.txt",
-						data=arg.encode("utf-8"))
+					zipf.writestr(f"{k}.txt"
+					, data=arg.encode("utf-8"))
 				else:
-					zipf.writestr(f"{k}.json",
-						data=json.dumps(arg, cls=npEncoder, indent="\t").encode("utf-8"))
+					zipf.writestr(f"{k}.json"
+					, data=json.dumps(arg, cls=npEncoder, indent="\t").encode("utf-8"))
 			#
 			for k,arg in kwargs.items():
 				save_entry(k, arg)
