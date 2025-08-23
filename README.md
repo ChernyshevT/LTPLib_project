@@ -44,6 +44,7 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 	1. [`examples/run_localsim.py`](#run_localsim)
 	1. [`examples/run_spatialsim.py`](#run_spatialsim)
 	1. [`examples/run_two_stream.py`](#run_two_stream)
+1. [TODO roadmap](#roadmap)
 
 ## Build instructions <a name="build"></a>
 The framework uses [pybind11](https://github.com/pybind/pybind11) to create a transparent interface between Python and C++ code. Dependencies are downloaded automatically by CMake FetchContent.
@@ -407,11 +408,10 @@ and returns residual $\delta\phi = \max\left|\phi_{\rm new}-\phi_{\rm old}\right
 
 ### Unit types and boundary conditions
 The helper enum `poisson_eq.uTYPE` should be used to set-up *umap*-configuration.
-There are two special constants:
-- `uTYPE.NONE = 0` is used to mark units that are not considered,
-the marked units will be assigned the NaN (Not a Number) values.
-- `uTYPE.VALUE` is uset to set-up Dirichlet boundary condition,
-these units will keep their original values.
+The special value
+- `uTYPE.NONE = 0` is used to mark units that are not considered.
+Use it to mark empty units or to set-up Dirichlet boundary condition
+(these units will keep their original values).
 
 The next two constants are used to define zero-field (Neumann) boundary condition along the $x$-axis:
 - `uTYPE.XLFOPEN` --- backward finite-difference (against $x$-axis),
@@ -720,3 +720,14 @@ Two-stream instability (under development)
 
 <br>
 <img src="./docs/imgs/two-stream.gif" alt="Two-Stream-Instability" width="768"/>
+
+# TODO roadmap <a name="roadmap"></a>
+1. Stable release and publication (WiP).
+1. Revise `csedtion_set` & `bind_mcsim_fn` to support:
+	- background's flux & thermal velocities,
+	- spawning multiple particles,
+	- search the random sample to interact with,
+	- superelastic collisions.
+1. Migrate to [nanobind](https://github.com/wjakob/nanobind) to utilize PY_STABLE_API.
+1. Add setup.py/conda installers.
+1. Write GPU backend.
