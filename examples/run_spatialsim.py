@@ -531,7 +531,7 @@ if __name__ == '__main__':
 			, handler = logging.FileHandler(fname, "a", delay=False))
 		
 		logger.info("run string: "+" ".join(sys.argv))
-			logger.info(f"args: {vars(args)}")
+		logger.info(f"args: {vars(args)}")
 		# ~ print()
 		# run program
 		sys.exit(main(args, logger))
