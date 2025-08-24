@@ -45,18 +45,23 @@ struct pool_t {
 	size_t npmax, nargs;
 	
 	inline
-	size_t buffer_pos(size_t nadd) const {
-		size_t j1 = npmax-nadd;
+	size_t buffer_pos(u32 nadd) const {
+		u32 j1 = npmax-nadd;
 		return (j1 >= index[0]) ? j1 : 0;
 	}
 };
 ////////////////////////////////////////////////////////////////////////////////
 struct pstore_t {
-	part_t *ppdata; /* particle data [{tag[4], x,y,z,vx,vy,vz,extra}...] */
-	u32    *pindex; /* [num parts, {num leaving}...] */
-	u32    *pflags; /* [num holes, {p-ids}...] */
-	u32    *queue;  /* load balance */
-	f32    *cffts;  /* charge-to-mass ratios */
+	/* particle data [{tag[4], x,y,z,vx,vy,vz,extra}, ...] */
+	part_t *ppdata;
+	/* [num parts, {num leaving}...] */
+	u32    *pindex;
+	/* [num holes, {p-ids}...] */
+	u32    *pflags;
+	/* load balance */
+	u32    *queue;  
+	/* charge-to-mass ratios */
+	f32    *cffts;
 
 	size_t npmax, nargs;
 

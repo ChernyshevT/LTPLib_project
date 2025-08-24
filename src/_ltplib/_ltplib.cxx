@@ -1,12 +1,12 @@
 /* Low Temperature Plasma Library
  * _ltplib.cxx def_*.?xx  io_*.?xx
  * 
- * Copyright 2024 Timofey Chernyshev
+ * Copyright 2025 Timofey Chernyshev
  * <thunarux@protonmail.com, chernyshev.tv@ihed.ras.ru>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  * 
  * This program is distributed in the hope that it will be useful,
@@ -21,11 +21,11 @@
  *
  */
 
-const char *_LTBLIB {
-R"pbdoc(_LTBLib: Low Temperature Plasma LIBrary (former Θ-Hall).
+const char *_LTBLIB_DOC {
+R"pbdoc(_ltplib: Low Temperature Plasma LIBrary (former Θ-Hall).
 A middle-layer tool to construct PiC+MCC (Particles in Cells + Monte Carlo Collisions) codes.
 
-Copyright © 2024 Timofey Chernyshev aka GNU/Hurt
+Copyright © 2025 Timofey Chernyshev aka GNU/Hurt
 <thunarux@protonmail.com, chernyshev.tv@ihed.ras.ru>
 https://www.researchgate.net/profile/Timofey-Chernyshev
 
@@ -54,8 +54,9 @@ PYBIND11_MODULE (_ltplib, m) {
 	
 	namespace py = pybind11;
 	
-	m.attr("__doc__")     = _LTBLIB;
-	m.attr("__version__") = "build: " __DATE__ " " __TIME__;
+	m.attr("__doc__")     = _LTBLIB_DOC;
+	m.attr("__version__") = "v0.1, build: " __DATE__ " " __TIME__;
+	m.attr("__license__") = "GNU LGPL-3.0";
 	
 	m.def("load_backend", [&](std::string backend) {
 		libs[backend];

@@ -207,8 +207,13 @@ args = {
   "required": True
  },
  "--window" : {
-  "type": str,
+  "type": int,
   "default": 10,
+  "required": False,
+ },
+ "--precision": {
+  "type": float,
+  "default": 0.01,
   "required": False,
  },
  "--eVDF" : {

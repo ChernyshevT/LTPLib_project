@@ -92,9 +92,9 @@ def main(args):
 	ltp.load_backend("default")
 	
 	lx,ly = 1.5,3
-	nx,ny = 191,383
+	nx,ny = 63,63
 	
-	# ~ noise_lvl = 0.25
+	noise_lvl = 0.
 	
 	shape = (nx+1,ny+1)
 	step  = [l/(k-1) for k,l in zip(shape,[lx,ly])]
@@ -105,14 +105,13 @@ def main(args):
 	xs,ys = np.meshgrid(*[np.linspace(-l/2,l/2,n) for n,l in zip(shape,[lx,ly])], indexing='ij')
 	_vmap[...] =  np.cos(xs*np.pi*4) * np.cos(ys/ly*np.pi*4) #+ xs/lx
 	
-	U = ltp.poisson_eq.uTYPE
 	# create array to encode finite differences:
-	umap = np.zeros(shape, dtype=np.uint8)
+	_umap = np.zeros(shape, dtype=np.uint8)
 	# set central differences for x and y axes:
-	# ~ umap[... ]    = U.XCN|U.YCN
-	# ~ # set Dirichlet boundary for left and right edges
-	# ~ umap[0, :] = U.VAL
-	# ~ umap[nx,:] = U.VAL
+	_umap[... ] =  ltp.DIFFop("XCN|YCN")
+	# set Dirichlet boundary for left and right edges
+	_umap[0, :] = ltp.DIFFop("VAL");
+	_umap[nx,:] = ltp.DIFFop("VAL")
 	
 	# ~ umap[0, :]   = umap[0, :]   | U.XRTOPEN 
 	# ~ umap[nx,:]   = umap[nx,:]   | U.XLFOPEN
@@ -120,12 +119,14 @@ def main(args):
 	# ~ umap[:, 0]   = umap[:, 0]   | U.YRTOPEN
 	# ~ umap[:,ny]   = umap[:,ny]   | U.YLFOPEN
 	# ~ umap[:,1:ny] = umap[:,1:ny] | U.YCENTER
-	umap.flat[1:] = U.XCENTER|U.YCENTER
-	umap.flat[0 ] = U.VALUE
+	# ~ umap.flat[1:] = U.XCENTER|U.YCENTER
+	# ~ umap.flat[0 ] = U.VALUE
 	
-	# ~ r = 0.5**2
-	# ~ umap[xs**2 + ys**2 < r**2] = U.VALUE
+	r = 0.5**2
+	_umap[xs**2 + ys**2 < r**2] = ltp.DIFFop("VAL")
 	# ~ _vmap[xs**2 + ys**2 < r**2] = 0
+	
+	_vmap[_umap == ltp.DIFFop("VAL")] = 0
 	
 	# ~ for j, w in enumerate(w_chebyshev(umap)):
 		# ~ print(j, w)
@@ -141,13 +142,13 @@ def main(args):
 	_cmap = laplace(_vmap, step)
 	
 	# solver ctor:
-	eq = ltp.poisson_eq(umap, step)
+	eq = ltp.poisson_eq(_umap, step)
 	
 	eq.cmap[...] = _cmap
 	eq.vmap[...] = _vmap
 	
 	#reset values
-	mask = eq.umap!=U.VALUE
+	mask = (eq.umap != ltp.DIFFop("VAL"))
 	eq.vmap[mask] = 0
 	
 	for k in range(10):

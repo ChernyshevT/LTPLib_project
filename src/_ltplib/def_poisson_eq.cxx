@@ -178,37 +178,53 @@ void def_poisson_eq(py::module &m) {
 
 
 	/****************************************************************************/
-	enum uTYPE : u8 { // unit type
-		NONE  = 0,
-		VALUE = SETVALUE,
+	m.def("DIFFop", [] (const char *mode_str) -> u8 {
+		constexpr struct {
+			const char* key;
+			u8          val;
+		} table[] = {
+			{"NIL", 0},
+			{"VAL", SETVALUE},
+			{"XLF", SETAXIS | (LFDIFF<<0)},
+			{"XRT", SETAXIS | (RTDIFF<<0)},
+			{"XCN", SETAXIS | (CNDIFF<<0)},
+			{"YLF", SETAXIS | (LFDIFF<<2)},
+			{"YRT", SETAXIS | (RTDIFF<<2)},
+			{"YCN", SETAXIS | (CNDIFF<<2)},
+			{"ZLF", SETAXIS | (LFDIFF<<4)},
+			{"ZRT", SETAXIS | (RTDIFF<<4)},
+			{"ZCN", SETAXIS | (CNDIFF<<4)},
+		};
+		constexpr u8 n{sizeof(table)/sizeof(*table)};
+
+		bool matched, used[n]{false};
+		u8 flags = 0;
 		
-		XLFOPEN = SETAXIS | (LFDIFF<<0),
-		XRTOPEN = SETAXIS | (RTDIFF<<0),
-		XCENTER = SETAXIS | (CNDIFF<<0),
+		while (*mode_str) {
+			if ('|' == *mode_str) {
+				mode_str += 1;
+				continue;
+			}
+			matched = false;
+			for (u8 i{0u}; i<n; ++i) {
+				size_t len = std::strlen(table[i].key);
+				if (std::strncmp(mode_str, table[i].key, len) == 0) {
+					if (used[i]) {
+						throw bad_arg("flag duplication: \"{}\"", table[i].key);
+					}
+					used[i] = true;
+					matched = true;
+					flags = flags | table[i].val;
+					mode_str += len;
+					break;
+				}
+			}
+			if (not matched) {
+				throw bad_arg("invalid flag segment: \"{}\"", mode_str);
+			}
+		}
 
-		YLFOPEN = SETAXIS | (LFDIFF<<2),
-		YRTOPEN = SETAXIS | (RTDIFF<<2),
-		YCENTER = SETAXIS | (CNDIFF<<2),
-
-		ZLFOPEN = SETAXIS | (LFDIFF<<4),
-		ZRTOPEN = SETAXIS | (RTDIFF<<4),
-		ZCENTER = SETAXIS | (CNDIFF<<4),
-	};
-	
-	py::enum_<uTYPE> (cls, "uTYPE", py::arithmetic())
-	.value("NONE",    uTYPE::NONE)
-	.value("VALUE",   uTYPE::VALUE)
-	.value("XLFOPEN", uTYPE::XLFOPEN)
-	.value("XRTOPEN", uTYPE::XRTOPEN)
-	.value("XCENTER", uTYPE::XCENTER)
-	.value("YLFOPEN", uTYPE::YLFOPEN)
-	.value("YRTOPEN", uTYPE::YRTOPEN)
-	.value("YCENTER", uTYPE::YCENTER)
-	.value("ZLFOPEN", uTYPE::ZLFOPEN)
-	.value("ZRTOPEN", uTYPE::ZRTOPEN)
-	.value("ZCENTER", uTYPE::ZCENTER)
-
-	.export_values()
-	;
+		return flags;
+	});
 }
 

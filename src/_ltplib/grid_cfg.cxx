@@ -20,7 +20,7 @@ u8 parse_grid_flags(const char* mode_str) {
 	u8 flags = 0;
 	
 	while (*mode_str) {
-		if (std::isspace(*mode_str) or '|' == *mode_str) {
+		if ('|' == *mode_str) {
 			mode_str += 1;
 			continue;
 		}
@@ -51,8 +51,7 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 	
 	if (auto nd_len{py::len(cfg["step"])}; nd_len != nd) {
 		throw bad_arg("len(step)={} != nd({})", nd_len, nd);
-	}
-	for (auto ds : cfg["step"]) {
+	} for (auto ds : cfg["step"]) {
 		step.push_back(py::cast<f32>(ds));
 	}
 	
@@ -81,7 +80,7 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 	}
 	lctr.resize(lctr_size, 0);
 	
-	// setup flags
+	/* setup flags ************/
 	if (cfg.contains("flags")) {
 		this->flags = parse_grid_flags(py::cast<std::string>(cfg["flags"]).c_str());
 		if (this->flags & AXIS_FLAG::CYLINDER and nd != 2) {
@@ -92,8 +91,7 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 	// setup nodes
 	if (0 == py::len(cfg["nodes"])) {
 		throw bad_arg("empty nodes list");
-	}
-	for (auto node : cfg["nodes"]) try {
+	} for (auto node : cfg["nodes"]) try {
 		
 		std::vector<u32> map; map.reserve(nd);
 		std::vector<u32> lnk; lnk.reserve(md);
@@ -145,7 +143,7 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 		throw bad_arg("node[{}]: {}", nodes.size(), e.what());
 	}
 	
-	// build links
+	/* build node-links *****/
 	for (auto& node : nodes) {
 		auto &&fn = [&, k=0] (auto &&fn, u8 n, u32 sh=0, u32 w=1) mutable -> void {
 			if (n>0) for (u32 i{1}, m; i<=3; ++i) {
@@ -160,7 +158,7 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 				} k++;
 			}
 		}; fn(fn, nd);
-		py::print(node.lnk);
+		//py::print(node.lnk);
 	}
 
 }
