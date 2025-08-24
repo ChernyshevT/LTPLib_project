@@ -134,7 +134,6 @@ def main(args):
 	stats = pd.DataFrame(stats)
 	
 	fields = ["ENe", "UDRIFTe", "EVENTS/PT"]
-	window, precision = args.window, 0.01
 
 	line = f"| #FRAME| ERRMAX|"\
 	     + "|".join([f"{key:>10}" for key in fields]) + "|"
@@ -144,8 +143,8 @@ def main(args):
 	for j, row in stats.iterrows():
 		
 		errmx = None
-		if j >= window:
-			a, b = j-window+1, j+1
+		if j >= args.window:
+			a, b = j-args.window+1, j+1
 			for field in fields:
 				err = np.std(stats[field][a:b])/np.mean(stats[field][a:b])
 				if errmx:
@@ -158,11 +157,11 @@ def main(args):
 		     +  "|".join([f"{row[key]:>10.3e}" for key in fields]) + "|"
 		print(f"{line}")
 
-		if k_avg is None and errmx is not None and errmx < precision:
+		if k_avg is None and errmx is not None and errmx < args.precision:
 			k_avg = j
 			print('-'*len(line))
 		
-		if k_avg is not None and errmx is not None and errmx >= precision:
+		if k_avg is not None and errmx is not None and errmx >= args.precision:
 			raise RuntimeError(f"errmx = {errmx:e} >= {precision:e}!")
 	
 	# endline ##########
