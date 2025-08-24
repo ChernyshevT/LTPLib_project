@@ -128,9 +128,11 @@ def main(args):
 	stats = []
 	n = 0
 	while os.path.exists(fname:=f"{args.fdir}/frame{n+1:06d}.zip"):
+		print(f"\rread \"{fname}\"", end="")
 		frame = load_frame(fname).add_funcs(**funcs)
 		stats.append({k:frame[k] for k in funcs})
 		n = n+1
+	print("\rdone")
 	stats = pd.DataFrame(stats)
 	
 	fields = ["ENe", "UDRIFTe", "EVENTS/PT"]
