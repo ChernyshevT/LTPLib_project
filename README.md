@@ -381,7 +381,7 @@ It accepts relaxation factor $w$,
 updates `poisson_eq.vmap`,
 and returns residual $\delta\phi = \max\left|\phi_{\rm new}-\phi_{\rm old}\right|$.
 
-### Unit types and boundary conditions
+### Umap configuration
 The helper function `_ltplib.DIFFop(descr: str)` should be used to set-up *umap*-configuration.
 Function accepts string of flag codes, separated by  symbol `'|'`.
 
