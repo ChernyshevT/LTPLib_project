@@ -21,12 +21,6 @@ The project is inspired by [eduPIC](https://github.com/donkozoltan/eduPIC),
 [PIC-skeleton-codes](https://github.com/UCLA-Plasma-Simulation-Group/PIC-skeleton-codes),
 and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 
-[^chernyshev2019]: Chernyshev, T., Son, E., & Gorshkov, O. (2019). _2D3V kinetic simulation of Hall effect thruster, including azimuthal waves and diamagnetic effect_. In Journal of Physics D: Applied Physics (Vol. 52, Issue 44, p. 444002). IOP Publishing. 
-[DOI:10.1088/1361-6463/ab35cb](https://doi.org/10.1088/1361-6463/ab35cb)
-
-[^chernyshev2022]: Chernyshev, T., & Krivoruchko, D. (2022). _On a force balance and role of cathode plasma in Hall effect thrusters._ In Plasma Sources Science and Technology (Vol. 31, Issue 1, p. 015001). IOP Publishing.
-[DOI:10.1088/1361-6595/ac4179](https://doi.org/10.1088/1361-6595/ac4179)
-
 ## Table of contents
 1. [Build instructions](#build)
 1. [Brief introduction into PiC+MCC](#intro)
@@ -116,12 +110,6 @@ grid = ltp.grid(nd = 2,
  loopax = "xy",
 )
 ```
-
-[^decyk2014]: Decyk, V. K., & Singh, T. V. (2014). _Particle-in-Cell algorithms for emerging computer architectures._ In Computer Physics Communications (Vol. 185, Issue 3, pp. 708–719). Elsevier BV. 
-[DOI:10.1016/j.cpc.2013.10.013](https://doi.org/10.1016/j.cpc.2013.10.013)
-
-[^decyk2015]: Decyk, V. K. (2015). _Skeleton Particle-in-Cell Codes on Emerging Computer Architectures._ In Computing in Science & Engineering (Vol. 17, Issue 2, pp. 47–52). Institute of Electrical and Electronics Engineers (IEEE).
-[DOI:10.1109/mcse.2014.131](https://doi.org/10.1109/MCSE.2014.131)
 
 ### [`_ltplib.pstore`](./src/_ltplib/def_pstore.cxx) (particle storage) <a name="pstore"></a>
 This class is used to store pVDF samples (macro-particles). The class constructor accepts following arguments:
@@ -301,12 +289,6 @@ There are three ways to define anisotropic scattering:
 - pass total (`"CSEC"`) cross-section + fitting parameter $\xi(\varepsilon - \varepsilon_{\rm th})$ as a python-function (`"DCSFN"`-field);
 - or pass `"MTCS"` + `"DCSFN"`.
 
-[^janssen2016]: Janssen, J. F. J., Pitchford, L. C., Hagelaar, G. J. M., & van Dijk, J. (2016). _Evaluation of angular scattering models for electron-neutral collisions in Monte Carlo simulations._ In Plasma Sources Science and Technology (Vol. 25, Issue 5, p. 055026). IOP Publishing. 
-[DOI:10.1088/0963-0252/25/5/055026](https://doi.org/10.1088/0963-0252/25/5/055026)
-
-[^flynn2024]: Flynn, M., Vialetto, L., Fierro, A., Neuber, A., & Stephens, J. (2024). _Benchmark calculations for anisotropic scattering in kinetic models for low temperature plasma._ In Journal of Physics D: Applied Physics (Vol. 57, Issue 25, p. 255204). IOP Publishing.
-[DOI:10.1088/1361-6463/ad3477](https://doi.org/10.1088/1361-6463/ad3477)
-
 #### Ionization
 In case of ionization, it is assumed that there is no impulse transfer between incident electron and heavy particle ($m/M$-term is ignored).
 The energy/impulse-balance is determined only by incident and secondary particle(s).
@@ -333,12 +315,6 @@ If it is not given, $\varepsilon_{\rm th}$ will be used instead.
 > [!NOTE] 
 > The current implementation is unfinished and doesn't allow to spawn ions or multiple electrons or ions.
 > This functionality will be added in further versions.
-
-[^opal1971]: Opal, C. B., Peterson, W. K., & Beaty, E. C. (1971). _Measurements of Secondary-Electron Spectra Produced by Electron Impact Ionization of a Number of Simple Gases._ In The Journal of Chemical Physics (Vol. 55, Issue 8, pp. 4100–4106). AIP Publishing.
-[DOI:10.1063/1.1676707](https://doi.org/10.1063/1.1676707)
-
-[^opal1972]: Opal, C. B., Beaty, E. C., & Peterson, W. K. (1972). _Tables of secondary-electron-production cross sections._ In Atomic Data and Nuclear Data Tables (Vol. 4, pp. 209–253). Elsevier BV. 
-[DOI:10.1016/s0092-640x(72)80004-4](https://doi.org/10.1016/s0092-640x(72)80004-4)
 
 #### Entries examples
 1. Elastic collision, anisotropic scattering defined by $\sigma_{\rm m}$:
@@ -453,12 +429,6 @@ open-boundaries and central body with given $\phi$:
 <img src="./docs/imgs/umap_example.png" alt="An example for umap-configuration" width="512"/>
 <br>
 
-[^CS267]: [URL:Solving the Discrete Poisson Equation using Jacobi, SOR, Conjugate Gradients, and the FFT
-(CS267: Lectures 15 and 16, Mar 5 and 7 1996)](https://people.eecs.berkeley.edu/~demmel/cs267/lecture24/lecture24.html)
-
-[^mittal2014]: Mittal, S. (2014). _A study of successive over-relaxation method parallelisation over modern HPC languages._ In International Journal of High Performance Computing and Networking, (Vol. 7, Issue 4, p. 292).
-[DOI:10.1504/ijhpcn.2014.062731](https://doi.org/10.1504/ijhpcn.2014.062731)
-
 ## Function bindings <a name="bindings"></a>
 For user convinience, functions to perform simulatio steps are given as function-bindings.
 Therefore, first the binding (functional object) is created,
@@ -495,11 +465,6 @@ In this scheme samples' coordinates and velocities are shifted by $\delta t/2$:
 ```
 The scheme is encoded by `"LEAPF"`-keyword.
 
-[^birdsall2018]: Birdsall, C. K., & Langdon, A. B. (2018). _Plasma Physics via Computer Simulation._ CRC Press.
-[DOI:10.1201/9781315275048](https://doi.org/10.1201/9781315275048)
-
-[^vxb-rotation]: [Particle Push in Magnetic Field (Boris Method)](https://www.particleincell.com/2011/vxb-rotation)
-
 #### Semi-implicit scheme
 This 2nd-order scheme was introduced by Borodachev and Kolomiets [^borodachev2011].
 Samples' coordinates and velocities are synchronous in this scheme:
@@ -528,12 +493,6 @@ Our implementation caches $t$-moment field contribution for the each sample, so 
 > [!NOTE]
 > This scheme is not supported for cylindrical geometry, yet.
 
-[^borodachev2011]: Borodachev, L. V., & Kolomiets, D. O. (2011). _Calculation of particle dynamics in the nonradiative model of plasma._ In Mathematical Models and Computer Simulations (Vol. 3, Issue 3, pp. 357–364). Pleiades Publishing Ltd.
-[DOI:10.1134/s2070048211030045](https://doi.org/10.1134/S2070048211030045)
-
-[^tajima2018-book]: Tajima, T. (2018). _Computational Plasma Physics._ CRC Press. 
-[DOI:10.1201/9780429501470](https://doi.org/10.1201/9780429501470)
-
 ### [`_ltplib.bind_ppost_fn`](./src/_ltplib/def_ppost_funcs.cxx) (obtain pVDF moments) <a name="bind_ppost"></a>
 This binding is used to calculate raw pVDF moments [^saint-raymond2009]:
 - concentration
@@ -557,9 +516,6 @@ For example, `descr = "C Fx Fy Fz Pxx Pyy Pzz"`.
 
 Resulting functional object has following signature
 `() -> None`.
-
-[^saint-raymond2009]: Saint-Raymond, L. (2009). _Hydrodynamic Limits of the Boltzmann Equation._ In Lecture Notes in Mathematics. Springer Berlin Heidelberg.
-[DOI:10.1007/978-3-540-92847-8](https://doi.org/10.1007/978-3-540-92847-8)
 
 ### [`_ltplib.bind_mcsim_fn`](./src/_ltplib/def_mcsim_funcs.cxx) (collision simulation) <a name="bind_mcsim"></a>
 This binding is used to perform Monte-Carlo simulation.
@@ -632,13 +588,6 @@ The preset with these coss-sections can be found in [`examples/csections_db/CH4.
 <br>
 <img src="./docs/imgs/CH4-rates.png" alt="Internal representation for corresponding cumulative rates" width="768"/>
 
-[^birdsall1991-2]: Birdsall, C. K. (1991). _Particle-in-cell charged-particle simulations, plus Monte Carlo collisions with neutral atoms, PIC-MCC._ In IEEE Transactions on Plasma Science (Vol. 19, Issue 2, pp. 65–85). Institute of Electrical and Electronics Engineers (IEEE).
-[DOI:10.1109/27.106800](https://doi.org/10.1109/27.106800)
-
-[^brennan1991]: Brennan, M. J. (1991). _Optimization of Monte Carlo codes using null collision techniques for experimental simulation at low E/N_. In IEEE Transactions on Plasma Science (Vol. 19, Issue 2, pp. 256–261). Institute of Electrical and Electronics Engineers (IEEE). [DOI:10.1109/27.106822](https://doi.org/10.1109/27.106822)
-
-[^elhafi2021]: El Hafi, M., Blanco, S., Dauchet, J., Fournier, R., Galtier, M., Ibarrart, L., Tregan, J.-M., & Villefranque, N. (2021). _Three viewpoints on null-collision Monte Carlo algorithms._ In Journal of Quantitative Spectroscopy and Radiative Transfer (Vol. 260, p. 107402). Elsevier BV. [DOI:10.1016/j.jqsrt.2020.107402](https://doi.org/10.1016/j.jqsrt.2020.107402)
-
 # Code examples for \_ltplib <a name="code_examples"></a>
 
 All our code examples build with the same template and use shared code snippets from `examples/util`.
@@ -676,12 +625,6 @@ The syntax as follows `--bginfo KEY1:FRACTION1 KEY2:FRACTION2`.
 - *--loglevel* DEBUG|INFO|WARNING|ERROR. 
 
 (To be done...)
-
-[^tejerodelcaz2019]: Tejero-del-Caz, A., Guerra, V., Gonçalves, D., da Silva, M. L., Marques, L., Pinhão, N., Pintassilgo, C. D., & Alves, L. L. (2019). _The LisbOn KInetics Boltzmann solver._ In Plasma Sources Science and Technology (Vol. 28, Issue 4, p. 043001). IOP Publishing.
-[DOI:10.1088/1361-6595/ab0537](https://doi.org/10.1088/1361-6595/ab0537)
-
-[^dias2023]: Dias, T. C., Tejero-del-Caz, A., Alves, L. L., & Guerra, V. (2023). _The LisbOn KInetics Monte Carlo solver._ In Computer Physics Communications (Vol. 282, p. 108554). Elsevier BV. 
-[DOI:10.1016/j.cpc.2022.108554](https://doi.org/10.1016/j.cpc.2022.108554)
 
 ## [`examples/run_spatialsim.py`](./examples/run_spatialsim.py) <a name="run_spatialsim"></a>
 This problem is further expansion of the previous one. Here we consider
@@ -722,6 +665,7 @@ Two-stream instability (under development)
 <img src="./docs/imgs/two-stream.gif" alt="Two-Stream-Instability" width="768"/>
 
 # TODO roadmap <a name="roadmap"></a>
+
 1. Stable release and publication (WiP).
 1. Revise `csedtion_set` & `bind_mcsim_fn` to support:
 	- background's flux & thermal velocities,
@@ -731,3 +675,62 @@ Two-stream instability (under development)
 1. Migrate to [nanobind](https://github.com/wjakob/nanobind) to utilize PY_STABLE_API.
 1. Add setup.py/conda installers.
 1. Write GPU backend.
+
+## References
+
+[^chernyshev2019]: Chernyshev, T., Son, E., & Gorshkov, O. (2019). _2D3V kinetic simulation of Hall effect thruster, including azimuthal waves and diamagnetic effect_. In Journal of Physics D: Applied Physics (Vol. 52, Issue 44, p. 444002). IOP Publishing. 
+[DOI:10.1088/1361-6463/ab35cb](https://doi.org/10.1088/1361-6463/ab35cb)
+
+[^chernyshev2022]: Chernyshev, T., & Krivoruchko, D. (2022). _On a force balance and role of cathode plasma in Hall effect thrusters._ In Plasma Sources Science and Technology (Vol. 31, Issue 1, p. 015001). IOP Publishing.
+[DOI:10.1088/1361-6595/ac4179](https://doi.org/10.1088/1361-6595/ac4179)
+
+[^decyk2014]: Decyk, V. K., & Singh, T. V. (2014). _Particle-in-Cell algorithms for emerging computer architectures._ In Computer Physics Communications (Vol. 185, Issue 3, pp. 708–719). Elsevier BV. 
+[DOI:10.1016/j.cpc.2013.10.013](https://doi.org/10.1016/j.cpc.2013.10.013)
+
+[^decyk2015]: Decyk, V. K. (2015). _Skeleton Particle-in-Cell Codes on Emerging Computer Architectures._ In Computing in Science & Engineering (Vol. 17, Issue 2, pp. 47–52). Institute of Electrical and Electronics Engineers (IEEE).
+[DOI:10.1109/mcse.2014.131](https://doi.org/10.1109/MCSE.2014.131)
+
+[^janssen2016]: Janssen, J. F. J., Pitchford, L. C., Hagelaar, G. J. M., & van Dijk, J. (2016). _Evaluation of angular scattering models for electron-neutral collisions in Monte Carlo simulations._ In Plasma Sources Science and Technology (Vol. 25, Issue 5, p. 055026). IOP Publishing. 
+[DOI:10.1088/0963-0252/25/5/055026](https://doi.org/10.1088/0963-0252/25/5/055026)
+
+[^flynn2024]: Flynn, M., Vialetto, L., Fierro, A., Neuber, A., & Stephens, J. (2024). _Benchmark calculations for anisotropic scattering in kinetic models for low temperature plasma._ In Journal of Physics D: Applied Physics (Vol. 57, Issue 25, p. 255204). IOP Publishing.
+[DOI:10.1088/1361-6463/ad3477](https://doi.org/10.1088/1361-6463/ad3477)
+
+[^opal1971]: Opal, C. B., Peterson, W. K., & Beaty, E. C. (1971). _Measurements of Secondary-Electron Spectra Produced by Electron Impact Ionization of a Number of Simple Gases._ In The Journal of Chemical Physics (Vol. 55, Issue 8, pp. 4100–4106). AIP Publishing.
+[DOI:10.1063/1.1676707](https://doi.org/10.1063/1.1676707)
+
+[^opal1972]: Opal, C. B., Beaty, E. C., & Peterson, W. K. (1972). _Tables of secondary-electron-production cross sections._ In Atomic Data and Nuclear Data Tables (Vol. 4, pp. 209–253). Elsevier BV. 
+[DOI:10.1016/s0092-640x(72)80004-4](https://doi.org/10.1016/s0092-640x(72)80004-4)
+
+[^CS267]: [URL:Solving the Discrete Poisson Equation using Jacobi, SOR, Conjugate Gradients, and the FFT
+(CS267: Lectures 15 and 16, Mar 5 and 7 1996)](https://people.eecs.berkeley.edu/~demmel/cs267/lecture24/lecture24.html)
+
+[^mittal2014]: Mittal, S. (2014). _A study of successive over-relaxation method parallelisation over modern HPC languages._ In International Journal of High Performance Computing and Networking, (Vol. 7, Issue 4, p. 292).
+[DOI:10.1504/ijhpcn.2014.062731](https://doi.org/10.1504/ijhpcn.2014.062731)
+
+[^birdsall2018]: Birdsall, C. K., & Langdon, A. B. (2018). _Plasma Physics via Computer Simulation._ CRC Press.
+[DOI:10.1201/9781315275048](https://doi.org/10.1201/9781315275048)
+
+[^vxb-rotation]: [Particle Push in Magnetic Field (Boris Method)](https://www.particleincell.com/2011/vxb-rotation)
+
+[^borodachev2011]: Borodachev, L. V., & Kolomiets, D. O. (2011). _Calculation of particle dynamics in the nonradiative model of plasma._ In Mathematical Models and Computer Simulations (Vol. 3, Issue 3, pp. 357–364). Pleiades Publishing Ltd.
+[DOI:10.1134/s2070048211030045](https://doi.org/10.1134/S2070048211030045)
+
+[^tajima2018-book]: Tajima, T. (2018). _Computational Plasma Physics._ CRC Press. 
+[DOI:10.1201/9780429501470](https://doi.org/10.1201/9780429501470)
+
+[^saint-raymond2009]: Saint-Raymond, L. (2009). _Hydrodynamic Limits of the Boltzmann Equation._ In Lecture Notes in Mathematics. Springer Berlin Heidelberg.
+[DOI:10.1007/978-3-540-92847-8](https://doi.org/10.1007/978-3-540-92847-8)
+
+[^birdsall1991-2]: Birdsall, C. K. (1991). _Particle-in-cell charged-particle simulations, plus Monte Carlo collisions with neutral atoms, PIC-MCC._ In IEEE Transactions on Plasma Science (Vol. 19, Issue 2, pp. 65–85). Institute of Electrical and Electronics Engineers (IEEE).
+[DOI:10.1109/27.106800](https://doi.org/10.1109/27.106800)
+
+[^brennan1991]: Brennan, M. J. (1991). _Optimization of Monte Carlo codes using null collision techniques for experimental simulation at low E/N_. In IEEE Transactions on Plasma Science (Vol. 19, Issue 2, pp. 256–261). Institute of Electrical and Electronics Engineers (IEEE). [DOI:10.1109/27.106822](https://doi.org/10.1109/27.106822)
+
+[^elhafi2021]: El Hafi, M., Blanco, S., Dauchet, J., Fournier, R., Galtier, M., Ibarrart, L., Tregan, J.-M., & Villefranque, N. (2021). _Three viewpoints on null-collision Monte Carlo algorithms._ In Journal of Quantitative Spectroscopy and Radiative Transfer (Vol. 260, p. 107402). Elsevier BV. [DOI:10.1016/j.jqsrt.2020.107402](https://doi.org/10.1016/j.jqsrt.2020.107402)
+
+[^tejerodelcaz2019]: Tejero-del-Caz, A., Guerra, V., Gonçalves, D., da Silva, M. L., Marques, L., Pinhão, N., Pintassilgo, C. D., & Alves, L. L. (2019). _The LisbOn KInetics Boltzmann solver._ In Plasma Sources Science and Technology (Vol. 28, Issue 4, p. 043001). IOP Publishing.
+[DOI:10.1088/1361-6595/ab0537](https://doi.org/10.1088/1361-6595/ab0537)
+
+[^dias2023]: Dias, T. C., Tejero-del-Caz, A., Alves, L. L., & Guerra, V. (2023). _The LisbOn KInetics Monte Carlo solver._ In Computer Physics Communications (Vol. 282, p. 108554). Elsevier BV. 
+[DOI:10.1016/j.cpc.2022.108554](https://doi.org/10.1016/j.cpc.2022.108554)

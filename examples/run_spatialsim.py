@@ -74,8 +74,8 @@ def main(args, logger):
 
 	# ############################################################################
 	# the problem's base geometry:
-	nx, mx, dx = 384, 32, 1/(2<<9)
-	ny, my, dy = 384, 32, 1/(2<<9)
+	nx, mx, dx = 384, 32, 1/1024
+	ny, my, dy = 384, 32, 1/1024
 	node_size = mx*my
 	# declare grid
 	grid = ltp.grid(2
