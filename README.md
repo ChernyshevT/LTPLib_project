@@ -23,7 +23,6 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 
 ## Table of contents
 1. [Build instructions](#build)
-1. [Brief introduction into PiC+MCC](#intro)
 1. [Main classes](#classes)
 	1. [`_ltplib.grid`](#grid)
 	1. [`_ltplib.pstore`](#pstore)
@@ -34,12 +33,11 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 	1. [`_ltplib.bind_ppush_fn`](#bind_ppush)
 	1. [`_ltplib.bind_ppost_fn`](#bind_ppost)
 	1. [`_ltplib.bind_mcsim_fn`](#bind_mcsim)
+1. [TODO roadmap](#roadmap)
 1. [Code examples](#code_examples)
 	1. [`examples/run_localsim.py`](#run_localsim)
 	1. [`examples/run_spatialsim.py`](#run_spatialsim)
 	1. [`examples/run_two_stream.py`](#run_two_stream)
-1. [TODO roadmap](#roadmap)
-1. [References](#refs)
 
 ## Build instructions <a name="build"></a>
 The framework uses [pybind11](https://github.com/pybind/pybind11) to create a transparent interface between Python and C++ code. Dependencies are downloaded automatically by CMake FetchContent.
@@ -384,32 +382,35 @@ updates `poisson_eq.vmap`,
 and returns residual $\delta\phi = \max\left|\phi_{\rm new}-\phi_{\rm old}\right|$.
 
 ### Unit types and boundary conditions
-The helper enum `poisson_eq.uTYPE` should be used to set-up *umap*-configuration.
-The special value
-- `uTYPE.NONE = 0` is used to mark units that are not considered.
+The helper function `_ltplib.DIFFop(descr: str)` should be used to set-up *umap*-configuration.
+Function accepts string of flag codes, separated by  symbol `'|'`.
+
+The special value `0` is used to mark units that are not considered.
 Use it to mark empty units or to set-up Dirichlet boundary condition
 (these units will keep their original values).
 
 The next two constants are used to define zero-field (Neumann) boundary condition along the $x$-axis:
-- `uTYPE.XLFOPEN` --- backward finite-difference (against $x$-axis),
-- `uTYPE.XRTOPEN` --- forward finite-difference (toward $x$-axis).
+- `"XLF"` --- backward finite-difference
+(against $x$-axis),
+- `"XRT"` --- forward finite-difference
+(toward $x$-axis).
 
 These conditions can be used at the open boundaries or to define dielectric surfaces
 (assuming that there is no charge accumulation).
-The binwise-or encodes $x$-axis central-difference:
-- `uTYPE.CENTER = uTYPE.XLFOPEN|uTYPE.XRTOPEN` --- this value is used for internal units.
+Binwise-or encodes $x$-axis central-difference:
+- `"XCN"` equals `"XLF|XRT"` --- this value is used for internal units.
 
-Constants for $y$- and $z$-axes are defined in a similar way:
-- `uTYPE.YLFOPEN`;
-- `uTYPE.YRTOPEN`;
-- `uTYPE.YCENTER`;
-- `uTYPE.ZLFOPEN`;
-- `uTYPE.ZRTOPEN`;
-- `uTYPE.ZCENTER`.
+Derivatives for $y$- and $z$-axes are defined in a similar way:
+- `"YLF"`;
+- `"YRT"`;
+- `"YCN"`;
+- `"ZLF"`;
+- `"ZCN"`;
+- `"ZRT"`.
 
 For 2d or 3d problems bitwise-or should be used to mark units, i.e.:
-`uTYPE.XCENTER|uTYPE.YCENTER`, `uTYPE.XCENTER|uTYPE.YCENTER|uTYPE.ZCENTER`.s
-If both edges along specific axis are marked with central-differences,
+`"XCN|YCN"`, `"XCN|YCN|ZCN"`.
+If both end of the domain along specific axis are marked with central-differences,
 it will define periodic boundary condition along this axis.
 > [!NOTE]
 > In case of periodic boundary, the number of units along the axis should be even (otherwise race-condition will occur).
@@ -422,7 +423,7 @@ it will define periodic boundary condition along this axis.
 > Not all every configuration correspond to a valid problem.
 > I.e. the system with pure periodic or pure open boundaries
 > has infinite number of solutions and can not be resolved.
-> In this case one arbitary unit should be marked with `uTYPE.VALUE`.
+> In this case one arbitary unit should be marked with `0`-value.
 
 The following example shows the umap-configuration for the problem with
 open-boundaries and central body with given $\phi$:
@@ -442,7 +443,7 @@ This function binds its' arguments to motion equation solver from the backend.
 The function accepts the following arguments:
 - *pstore* --- pVDF samples;
 - *descr* --- string containing description of electromagnetic field
-and type of the solver separated by semicolon symbol (for example `"Ex Ey Bz : [SCHEME]"`, see below);
+and type of the solver separated by semicolon symbol (for example `"ExEyBz: {SCHEME}"`, see below);
 - *emfield* --- value cache for electromagnetic field (`dtype="f32"`).
 
 Resulting functional object has following signature
@@ -589,6 +590,18 @@ The preset with these coss-sections can be found in [`examples/csections_db/CH4.
 <br>
 <img src="./docs/imgs/CH4-rates.png" alt="Internal representation for corresponding cumulative rates" width="768"/>
 
+## TODO roadmap <a name="roadmap"></a>
+
+1. Stable release and publication (WiP).
+1. Revise `csedtion_set` & `bind_mcsim_fn` to support:
+	- background's flux & thermal velocities,
+	- spawning multiple particles,
+	- search the random sample to interact with,
+	- superelastic collisions.
+1. Migrate to [nanobind](https://github.com/wjakob/nanobind) to utilize PY_STABLE_API.
+1. Add setup.py/conda installers.
+1. Write GPU backend.
+
 # Code examples for \_ltplib <a name="code_examples"></a>
 
 All our code examples build with the same template and use shared code snippets from `examples/util`.
@@ -664,20 +677,6 @@ Two-stream instability (under development)
 
 <br>
 <img src="./docs/imgs/two-stream.gif" alt="Two-Stream-Instability" width="768"/>
-
-## TODO roadmap <a name="roadmap"></a>
-
-1. Stable release and publication (WiP).
-1. Revise `csedtion_set` & `bind_mcsim_fn` to support:
-	- background's flux & thermal velocities,
-	- spawning multiple particles,
-	- search the random sample to interact with,
-	- superelastic collisions.
-1. Migrate to [nanobind](https://github.com/wjakob/nanobind) to utilize PY_STABLE_API.
-1. Add setup.py/conda installers.
-1. Write GPU backend.
-
-## References <a name="refs"></a>
 
 [^chernyshev2019]: Chernyshev, T., Son, E., & Gorshkov, O. (2019). _2D3V kinetic simulation of Hall effect thruster, including azimuthal waves and diamagnetic effect_. In Journal of Physics D: Applied Physics (Vol. 52, Issue 44, p. 444002). IOP Publishing. 
 [DOI:10.1088/1361-6463/ab35cb](https://doi.org/10.1088/1361-6463/ab35cb)
