@@ -5,7 +5,7 @@
 # doi: 10.1088/0022-3727/27/9/007, cite: ness1994
 [
 	{"TYPE":"BACKGROUND", "KEY":"RR-ISO-ISO",
-	 "MASSRATE":9.109383e-28/(4*1.660538921e-24)},
+	 "MASSRATE": 1.371450e-04}, # me/(4AMU)
 	
 	{"TYPE":"ELASTIC",
 	 "CSEC":  lambda en, th: 6e-20,

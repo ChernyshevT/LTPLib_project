@@ -5,7 +5,7 @@
 # doi:10.1088/1361-6463/ad3477 , cite: flynn2024
 [
 	{"TYPE":"BACKGROUND", "KEY":"RR-SC-SC",
-	 "MASSRATE":9.109383e-28/(4*1.660538921e-24)},
+	 "MASSRATE": 1.371450e-04}, # me/(4AMU)
 
 	{"TYPE":"ELASTIC",
 	 "MTCS":  lambda en, th: 6e-20,

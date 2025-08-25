@@ -59,6 +59,23 @@ u32 calc_form (f32 *frm, f32 x) {
 		frm[2] = 2.0f/3.0f - a2 + 0.5f*a3;
 		frm[3] = g3/6.0f;
 	}
+	/*
+	if constexpr (order == FORM_ORDER::QUART) { // quartic (5 points)
+		f32 g, g2, g3, g4;
+		k = u32(x);
+
+		g  = x - f32(k) - 2.0f; // center at midpoint of 5-point support
+		g2 = g * g;
+		g3 = g2 * g;
+		g4 = g3 * g;
+
+		// These weights are derived from normalized quartic B-spline basis
+		frm[0] = (1.0f/24.0f) * (1 - g) * (1 - g) * (1 - g) * (1 - g);
+		frm[1] = (1.0f/6.0f)  * (g - 1) * (g - 1) * (g - 1) * (2 - g);
+		frm[2] = (11.0f/12.0f) - g2 + 0.5f * g4;
+		frm[3] = (1.0f/6.0f)  * (g + 1) * (g + 1) * (g + 1) * (2 - g);
+		frm[4] = (1.0f/24.0f) * g * g * g * g;
+	}*/
 	
 	return k;
 }

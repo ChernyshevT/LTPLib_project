@@ -814,7 +814,7 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
 		try {
 			return from_data(std::move(xys), enth, opts);
 		} catch (std::exception& e) {
-			throw bad_arg("{} LINES#{}..{}: {}", fname, n0, n1, e.what());
+			throw bad_arg("{} LINES#{}--{}: {}", fname, n0, n1, e.what());
 		}
 	}
 

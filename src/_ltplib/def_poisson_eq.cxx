@@ -226,5 +226,20 @@ void def_poisson_eq(py::module &m) {
 
 		return flags;
 	});
+	
+	//~ py::enum_<> (cls, "DIFFopENUM", py::arithmetic())
+	//~ .value("NIL", 0)
+	//~ .value("VAL", SETVALUE)
+	//~ .value("XLF", SETAXIS | (LFDIFF<<0))
+	//~ .value("XRT", SETAXIS | (RTDIFF<<0))
+	//~ .value("XCN", SETAXIS | (CNDIFF<<0))
+	//~ .value("YLF", SETAXIS | (LFDIFF<<2))
+	//~ .value("YRT", SETAXIS | (RTDIFF<<2))
+	//~ .value("YCN", SETAXIS | (CNDIFF<<2))
+	//~ .value("ZLF", SETAXIS | (LFDIFF<<4))
+	//~ .value("ZRT", SETAXIS | (RTDIFF<<4))
+	//~ .value("ZCN", SETAXIS | (CNDIFF<<4))
+	//~ .export_values()
+	//~ ;
 }
 

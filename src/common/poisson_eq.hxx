@@ -38,10 +38,6 @@ struct poisson_eq_t {
 		switch CHECK_UNIT(ucode) {
 
 			default:
-				vnew = NAN;
-				break;
-
-			case SETVALUE:
 				vnew = vdata[idpt];
 				break;
 

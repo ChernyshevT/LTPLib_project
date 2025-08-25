@@ -23,21 +23,18 @@
 
 const char *_LTBLIB_DOC {
 R"pbdoc(_ltplib: Low Temperature Plasma LIBrary (former Θ-Hall).
-A middle-layer tool to construct PiC+MCC (Particles in Cells + Monte Carlo Collisions) codes.
+
+A middle-layer tool to construct PiC+MCC (Particles in Cells + Monte Carlo Collisions) codes. [https://github.com/ChernyshevT/LTPSim_project]
 
 Copyright © 2025 Timofey Chernyshev aka GNU/Hurt
 <thunarux@protonmail.com, chernyshev.tv@ihed.ras.ru>
-https://www.researchgate.net/profile/Timofey-Chernyshev
+[https://www.researchgate.net/profile/Timofey-Chernyshev]
 
 «Получаю данные, 18/38.»
 )pbdoc"
 };
 
 /******************************************************************************/
-#pragma GCC diagnostic push 
-#pragma GCC diagnostic ignored "-Wpedantic"
-#include <pybind11/pybind11.h>
-#pragma GCC diagnostic pop
 
 #include "typedefs.hxx"
 #include "api_backend.hxx"
@@ -62,27 +59,16 @@ PYBIND11_MODULE (_ltplib, m) {
 		libs[backend];
 	});
 
-	// define base primitives
-	void def_csections(py::module &);
-	void def_grids(py::module &);
-	void def_pstores(py::module &);
-	void def_vcache(py::module &);
 	def_csections(m);
 	def_grids(m);
 	def_pstores(m);
 	def_vcache(m);
 	
-	// define base functions:
-	void def_remap_funcs(py::module &);
-	void def_ppost_funcs(py::module &);
-	void def_ppush_funcs(py::module &);
-	void def_mcsim_funcs(py::module &);
 	def_remap_funcs(m);
 	def_ppost_funcs(m);
 	def_ppush_funcs(m);
 	def_mcsim_funcs(m);
 	
-	void def_poisson_eq(py::module &);
 	def_poisson_eq(m);
 }
 

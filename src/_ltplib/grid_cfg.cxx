@@ -42,7 +42,7 @@ u8 parse_grid_flags(const char* mode_str) {
 			throw bad_arg("invalid flag segment: \"{}\"", mode_str);
 		}
 	}
-
+	
 	return flags;
 }
 

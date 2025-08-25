@@ -1,7 +1,5 @@
-# database for e+MAXWELL_GAS interaction (benchmark)
+# database for e + MAXWELL gas interaction (benchmark)
 [
-	# ~ {"TYPE":"PARTICLE", "KEY":"e",
-	 # ~ "ENCFFT":299.792458*0.5*9.109383e-28/4.803204e-10}, # speed² -> eV
 	{"TYPE":"BACKGROUND", "KEY":"MAXWELL",
 	 "MASSRATE":5e-1},
 
