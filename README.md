@@ -39,6 +39,7 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 	1. [`examples/run_spatialsim.py`](#run_spatialsim)
 	1. [`examples/run_two_stream.py`](#run_two_stream)
 1. [TODO roadmap](#roadmap)
+1. [References](#refs)
 
 ## Build instructions <a name="build"></a>
 The framework uses [pybind11](https://github.com/pybind/pybind11) to create a transparent interface between Python and C++ code. Dependencies are downloaded automatically by CMake FetchContent.
@@ -58,12 +59,12 @@ Build-in documentation is available as follows:
 ```python
 import _ltplib as ltp
 help(ltp)
+
 ```
-## Brief introduction into PiC+MCC <a name="intro"></a>
+<!-- ## Brief introduction into PiC+MCC <a name="intro"></a> -->
 <!-- {𝐯} {𝐫} {𝐟} {𝐚} {𝐄} {𝐁} {𝐮} -->
 <!-- $f_i\left({𝐫},\,{𝐯},\,t\right)$ -->
-
-(To be done...)
+<!-- (To be done...) -->
 
 The following sections provide a brief overview for **\_ltplib** components.
 
@@ -664,7 +665,7 @@ Two-stream instability (under development)
 <br>
 <img src="./docs/imgs/two-stream.gif" alt="Two-Stream-Instability" width="768"/>
 
-# TODO roadmap <a name="roadmap"></a>
+## TODO roadmap <a name="roadmap"></a>
 
 1. Stable release and publication (WiP).
 1. Revise `csedtion_set` & `bind_mcsim_fn` to support:
@@ -676,7 +677,7 @@ Two-stream instability (under development)
 1. Add setup.py/conda installers.
 1. Write GPU backend.
 
-## References
+## References <a name="refs"></a>
 
 [^chernyshev2019]: Chernyshev, T., Son, E., & Gorshkov, O. (2019). _2D3V kinetic simulation of Hall effect thruster, including azimuthal waves and diamagnetic effect_. In Journal of Physics D: Applied Physics (Vol. 52, Issue 44, p. 444002). IOP Publishing. 
 [DOI:10.1088/1361-6463/ab35cb](https://doi.org/10.1088/1361-6463/ab35cb)
