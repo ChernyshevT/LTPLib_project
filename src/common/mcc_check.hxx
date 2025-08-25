@@ -96,7 +96,7 @@ collision_t inline mcrun
 		goto next;
 		
 		// final check (opcode::END) 
-		default: if (R0 < -0.25f) { // TODO: make this variable
+		default: if (R0 < -0.5f) { // TODO: make this variable
 			cl.type = cltype::ERROR_PTMAXPROBABILITY;
 			cl.chnl = 0;
 		}
