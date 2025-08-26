@@ -11,7 +11,7 @@ collision_t inline mcrun
 	f32 N0dt{0.0f};
 	u16 j{0}; /* current channel id */
 	u16 k;    /* active channel */    
-	u16 n;    /* number of channels in the current set */;
+	u16 n;    /* number of channels in the current group */;
 	
 	// spawn object to return
 	collision_t cl(rng);
@@ -95,8 +95,9 @@ collision_t inline mcrun
 			cmd += 1;
 		goto next;
 		
-		// final check (opcode::END) 
-		default: if (R0 < -0.5f) { // TODO: make this variable
+		/* final check (opcode::END) */
+		/* P < 1, this is valis since it includes null-processes */
+		default: if (R0 < -1.0f) {
 			cl.type = cltype::ERROR_PTMAXPROBABILITY;
 			cl.chnl = 0;
 		}
