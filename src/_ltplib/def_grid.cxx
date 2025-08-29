@@ -87,6 +87,49 @@ grid_holder::~grid_holder (void) {
 	logger::debug("delete grid ({})", (void*)(this));
 };
 
+const char *GRID_INIT_DOC {
+R"pbdoc(Creates grid class --- problem's geometry and base of domain decomposition.
+
+Parameters
+----------
+
+nd : number of spatial dimensions
+
+cfg : dictionary desctibing problem's geometry.
+Here is an example for the 2d problem:
+[
+	# First, let's define spatial-step for each dimension
+	"step": [0.25, 0.25], # x, y
+	
+	# The next two sections describe domain decomposition.
+	# Here, the numbers inbetween define edges of sub-domains:
+	"axes": [
+	 # x-axis, 2 sections
+	 [0, 16, 32],
+	 # y-axis, 3 sections
+	 [0, 20, 40, 60], 
+	],
+	
+	# Now the position of each sub-domain is described relative to the "axes":
+	"nodes": [
+		(0, 0), # (0 <= x < 16), (0  <= y < 20)
+		(0, 1), # (0 <= x < 16), (20 <= y < 40)
+		...
+	]
+	# The links between the nodes will be builded automatically.
+	
+	# It is possible to mark some cells as a particle adsorbers using
+	# following optional parameter:
+	"mask" : [...] # uint8 numpy array, with the same shape as grid axes.
+	
+	# For 2d axisymmetric problems it one axes should be marked:
+	"cylcrd": 'x'
+	
+	# Axes can be marked as looped to their self:
+	"loopax": "x",
+]
+)pbdoc"};
+
 /******************************************************************************/
 void def_grids (py::module &m) {
 
@@ -95,49 +138,9 @@ void def_grids (py::module &m) {
 	It describes problem's geometry, and nodes for parallel computation.
 	)pbdoc"); cls
 	
-	.def(py::init<u8, step_a, axes_a, nodes_a, mask_a, py::kwargs>
-	(), "nd"_a, "step"_a, "axes"_a, "nodes"_a, "mask"_a=std::nullopt,
-	R"pbdoc(Creates grid class --- problem's geometry and base of domain decomposition.
-	
-	Parameters
-	----------
-	
-	nd : number of spatial dimensions
-	
-	cfg : dictionary desctibing problem's geometry.
-	Here is an example for the 2d problem:
-	[
-		# First, let's define spatial-step for each dimension
-		"step": [0.25, 0.25], # x, y
-		
-		# The next two sections describe domain decomposition.
-		# Here, the numbers inbetween define edges of sub-domains:
-		"axes": [
-		 # x-axis, 2 sections
-		 [0, 16, 32],
-		 # y-axis, 3 sections
-		 [0, 20, 40, 60], 
-		],
-		
-		# Now the position of each sub-domain is described relative to the "axes":
-		"nodes": [
-			(0, 0), # (0 <= x < 16), (0  <= y < 20)
-			(0, 1), # (0 <= x < 16), (20 <= y < 40)
-			...
-		]
-		# The links between the nodes will be builded automatically.
-		
-		# It is possible to mark some cells as a particle adsorbers using
-		# following optional parameter:
-		"mask" : [...] # uint8 numpy array, with the same shape as grid axes.
-		
-		# For 2d axisymmetric problems it one axes should be marked:
-		"cylcrd": 'x'
-		
-		# Axes can be marked as looped to their self:
-		"loopax": "x",
-	]
-	)pbdoc")
+	.def(py::init<u8, step_a, axes_a, nodes_a, mask_a, py::kwargs>()
+	, "nd"_a, "step"_a, "axes"_a, "nodes"_a=std::nullopt, "mask"_a=std::nullopt
+	, GRID_INIT_DOC)
 
 	.def_property_readonly("ndim", [] (const grid_holder& self) {
 		return self.cfg->shape.size();

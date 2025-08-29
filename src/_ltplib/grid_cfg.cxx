@@ -17,8 +17,8 @@ u8 parse_grid_flags(const char* mode_str) {
 	constexpr u8 n{sizeof(table)/sizeof(*table)};
 
 	bool matched, used[n]{false};
-	u8 flags = 0;
 	
+	u8 flags = 0;
 	while (*mode_str) {
 		if ('|' == *mode_str) {
 			mode_str += 1;
@@ -45,6 +45,37 @@ u8 parse_grid_flags(const char* mode_str) {
 	
 	return flags;
 }
+/******************************************************************************/
+#include <vector>
+
+std::vector<std::vector<u32>> gen_nodes
+(u8 nd, const std::vector<std::vector<u32>> &axes) {
+    std::vector<std::vector<u32>> nodes;
+
+    std::vector<u32> current(nd);
+
+    // Recursive lambda for generating combinations
+    auto&& fn = [&] (auto &&fn, u8 depth) {
+        if (depth == nd) {
+            nodes.push_back(current);
+            return;
+        }
+
+        for (u8 i{0}; i<axes[depth].size()-1; ++i) {
+            current[depth] = i;
+            fn(fn, depth + 1);
+        }
+    };
+    fn(fn, 0);
+    
+    py::print(axes);
+    py::print(nodes);
+    
+    return nodes;
+}
+
+
+/******************************************************************************/
 
 grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 	u8 md=1; for (auto i{0}; i<nd; ++i) md*=3;
@@ -83,12 +114,20 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 	/* setup flags ************/
 	if (cfg.contains("flags")) {
 		this->flags = parse_grid_flags(py::cast<std::string>(cfg["flags"]).c_str());
-		if (this->flags & AXIS_FLAG::CYLINDER and nd != 2) {
+		if (CHECK_FLAGS(this->flags, AXIS_FLAG::CYLINDER) and nd != 2) {
 			throw bad_arg("{}D grid can not be used with CYLINDER flag!", nd);
+		}
+		if (CHECK_FLAGS(this->flags, AXIS_FLAG::CYLINDER|AXIS_FLAG::LOOPX)) {
+			throw bad_arg("can use LOOPX and CYLINDER flags at the same time!", nd);
 		}
 	}
 	
 	// setup nodes
+	if (cfg["nodes"].is_none()) {
+		py::print("build nodes");
+		cfg["nodes"] = gen_nodes(nd, axes);
+	}
+	
 	if (0 == py::len(cfg["nodes"])) {
 		throw bad_arg("empty nodes list");
 	} for (auto node : cfg["nodes"]) try {
@@ -158,7 +197,7 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 				} k++;
 			}
 		}; fn(fn, nd);
-		//py::print(node.lnk);
+		py::print(node.lnk);
 	}
 
 }

@@ -45,7 +45,11 @@ struct                          pstore_t;
 struct                          csection_set_t;
 
 #define CHECK_BIT(var,pos) (((var)>>(pos))&1u)
+#define CHECK_FLAGS(value, flags) (((value) & (flags)) == (flags))
+
 #define SET_BIT(var,pos,x)   ((var)|(x<<pos))
+
+
 
 /*******************************************************************************
 ** API for pstore operations **************************************************/

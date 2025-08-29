@@ -74,7 +74,9 @@ The code uses sightly modified approach of tile-decomposition described before i
 1. *nd* -- number of spatial dimensions;
 1. *step* -- list containing spatial steps along the each axis;
 1. *axes* -- list describing spatial decomposition along the each axis;
-1. *nodes* -- list containing tuples to map for computing nodes.
+1. *nodes* -- list containing tuples to map computing nodes (optional, will be created automatically if is not presented);
+1. *mask* -- mask to mark adsorbing regions (optional); 
+1. *flags* -- flags to mark periodic boundaries `"LOOPX|LOOPY|LOOPZ"` and/or cylindric axis `"CYLINDER"`.
 
 The next example shows how `_ltplib.grid` can be constructed:
 ```python
@@ -106,7 +108,7 @@ grid = ltp.grid(nd = 2,
  # Any value != 0 will be considered as an adsorbing cell.
  
  # For periodic boundary condition(s) axis(ex) should be marked:
- loopax = "xy",
+ flags = "LOOPX|LOOPY",
 )
 ```
 

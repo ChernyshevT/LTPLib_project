@@ -53,6 +53,7 @@ struct db_group_t {
 struct db_entry_t {
 	opcode         opc;
 	std::bitset<5> FLAGS{0};
+	//std::vector<std::string> products;
 	std::string    descr;
 	f32            enth;
 	f32            rmax;

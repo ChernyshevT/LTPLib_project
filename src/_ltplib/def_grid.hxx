@@ -68,7 +68,7 @@ typedef std::vector<f32>
 	step_a;  
 typedef std::vector<std::vector<u32>>
 	axes_a;
-typedef std::vector<std::vector<u32>>
+typedef std::optional<std::vector<std::vector<u32>>>
 	nodes_a;
 typedef std::optional<py::array_t<u8>>
 	mask_a;

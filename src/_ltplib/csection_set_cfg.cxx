@@ -22,15 +22,19 @@ u16 add_const (csection_set_cfg *cfg, f32 arg, bool unique=false) {
 	}
 }
 
-void update_cfg (csection_set_cfg *cfg) {
+void update_cfg (csection_set_cfg *cfg, py::dict opts) {
 	
-	fmt::print("particles:\n");
-	for (const auto& pt : cfg->pt_entries) {
-		fmt::print("{:<10} {}\n", pt.name, pt.group_index);
-	}
-	fmt::print("groups:\n");
-	for (const auto& group : cfg->db_groups) {
-		fmt::print("{:<10} {}\n", group.name, group.channel_index);
+	auto _debug = py::cast<bool>(opts.attr("get")("debug", false));
+	
+	if (_debug) {
+		fmt::print("particles:\n");
+		for (const auto& pt : cfg->pt_entries) {
+			fmt::print("{:<10} {}\n", pt.name, pt.group_index);
+		}
+		fmt::print("groups:\n");
+		for (const auto& group : cfg->db_groups) {
+			fmt::print("{:<10} {}\n", group.name, group.channel_index);
+		}
 	}
 };
 
@@ -130,9 +134,9 @@ db_entry_t::db_entry_t (csection_set_cfg *cfg, py::dict entry, py::dict opts) {
 				default:
 					throw bad_arg("invalid \"TYPE\" field: \"{}\"!", descr);
 				case "EFFECTIVE"_hash:
-					throw bad_arg("\"EFFECTIVE\" cross-section aren't supported, yet!");
+					throw bad_arg("\"EFFECTIVE\" cross-sections aren't supported, yet!");
 				case "EXCHANGE"_hash:
-					throw bad_arg("\"EXCHANGE\" cross-sections aren't supported, yet!");
+					throw bad_arg("\"EXCHANGE\" cross-sectionns aren't supported, yet!");
 				case "ELASTIC"_hash:
 					opc = opcode::ELASTIC;
 					continue;
@@ -173,8 +177,10 @@ db_entry_t::db_entry_t (csection_set_cfg *cfg, py::dict entry, py::dict opts) {
 			extra["OPBPARAM"] = py::cast<f32>(entry["OPBPARAM"]);
 			FLAGS.set(OPBPARAM_DEF);
 			continue;
-		case "SPAWN"_hash:
-			throw bad_arg("\"SPAWN\" is not implemented yet!");
+		case "PRODUCTS"_hash:
+			extra["products"] = py::cast<std::string>(entry["PRODUCTS"]);
+			//products = parse_products(py::cast<std::string>())
+			continue;
 		case "TRANSFORM"_hash:
 			throw bad_arg("\"TRANSFORM\" is not implemented yet!");
 		case "COMMENT"_hash: try {
@@ -603,7 +609,7 @@ csection_set_cfg::csection_set_cfg (
 		++k;
 	}
 
-	update_cfg(this);
+	update_cfg(this, opts);
 }
 
 /******************************************************************************/
@@ -626,7 +632,7 @@ csfunc_t from_data
 		}
 		
 		if ((j ? xys[j-1][0] : -INFINITY) >= x) {
-			throw bad_arg("point#{} unsorted values in x-column", j);
+			throw bad_arg("point#{} unsorted arguments!", j);
 		}
 		
 		// collect  extrapolation coeffs.
@@ -728,8 +734,8 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
 	            * py::cast<f32>(opts.attr("get")("rescale", 1.0f));
 	
 		return [scale, enth, fn=py::cast<py::function>(obj)] (f32 x) -> f32 {
-			x = x>0.0f? x : FLT_EPSILON; 
-			return scale*py::cast<f32>(fn(x, enth));
+			f32 val{py::cast<f32>(fn(x>0.0f? x : FLT_EPSILON, enth))};
+			return scale*(val>=0? val : 0.0f);
 		};
 	}
 

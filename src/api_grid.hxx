@@ -45,7 +45,7 @@ u32 calc_form (f32 *frm, f32 x) {
 	}
 	
 	if constexpr (order == FORM_ORDER::CUBE) { // cubic (4 points)
-		f32 g, g2,g3, a, a2, a3;
+		f32 g, g2, g3, a, a2, a3;
 		k = u32(x);
 
 		g  = x-f32(k);
@@ -59,24 +59,7 @@ u32 calc_form (f32 *frm, f32 x) {
 		frm[2] = 2.0f/3.0f - a2 + 0.5f*a3;
 		frm[3] = g3/6.0f;
 	}
-	/*
-	if constexpr (order == FORM_ORDER::QUART) { // quartic (5 points)
-		f32 g, g2, g3, g4;
-		k = u32(x);
 
-		g  = x - f32(k) - 2.0f; // center at midpoint of 5-point support
-		g2 = g * g;
-		g3 = g2 * g;
-		g4 = g3 * g;
-
-		// These weights are derived from normalized quartic B-spline basis
-		frm[0] = (1.0f/24.0f) * (1 - g) * (1 - g) * (1 - g) * (1 - g);
-		frm[1] = (1.0f/6.0f)  * (g - 1) * (g - 1) * (g - 1) * (2 - g);
-		frm[2] = (11.0f/12.0f) - g2 + 0.5f * g4;
-		frm[3] = (1.0f/6.0f)  * (g + 1) * (g + 1) * (g + 1) * (2 - g);
-		frm[4] = (1.0f/24.0f) * g * g * g * g;
-	}*/
-	
 	return k;
 }
 //@LISTING{end:forms}
@@ -85,20 +68,20 @@ u32 calc_form (f32 *frm, f32 x) {
 template<u8 nd>
 struct grid_t {
 public:
-	// total number of sub-domains & axis flags
+	// total number of nodes & axis flags
 	u32  size  : 24;
 	u32  flags : 8;
-	// number of sub-domains along each axis
+	// number of nodes along the each axis
 	u32  shape [nd];
 	// grid step along the each axis
 	f32  step  [nd];
-	// bounds for sub-domains along each axis
+	// nodes' bounds along each axis
 	u32 *axes  [nd];
-	// edges for sub-domains along each axis
+	// nodes' edges along each axis
 	f32 *edges [nd];
 	// mask to identify particle absorbers
 	u8  *mask;
-	// search for node by position
+	// locator to search for node by position
 	u32 *lctr;
 
 	struct {
@@ -168,12 +151,12 @@ public:
 				} else if (pt[i] <  edgel[i]) {
 					if      (pt[i] <  facel[i]) {
 						pt[i] += sdist[i];
-						// check for overflow
+						/* check for overflow */
 						if    (pt[i] <  facer[i]) {
 							if (sh) sh[i] += sdist[i];
 							idir  += b;
 						} else {
-						// fix overflow
+						/* fix overflow */
 							pt[i]  = facel[i];
 						}
 					} else {
@@ -185,13 +168,13 @@ public:
 		}
 		
 		inline u8 check_mask (u32 ptidx[]) {
-			if (mask) {
-				u32 k{0}, m{1}; for (u8 i{1}; i <= nd; ++i) {
+			if (mask) [[unlikely]] {
+				u32 k{0}, m{1};
+				for (u8 i{1}; i <= nd; m *= shape[nd-i], ++i) {
 					k += ptidx[nd-i] * m;
-					m *= shape[nd-i];
 				}
 				return mask[k];
-			} else {
+			} else [[likely]] {
 				return 0;
 			}
 		}
@@ -200,12 +183,10 @@ public:
 		inline u32 get_form (form_t<nd, order> *form, f32 pos[]) {
 			u32 flag{0};
 			for (u8 i{0}; i<nd; ++i) {
-				form->idx[i] \
-				= calc_form<order>(form->vals+i*(order+1), (pos[i]-edgel[i])/step[i]);
-				
+				form->idx[i] = calc_form<order>\
+				               (form->vals+i*(order+1), (pos[i]-edgel[i])/step[i]);
 				flag |= (form->idx[i] >= shape[i])*ERR_CODE::PTOUTOFRANGE;
 			}
-			
 			return flag;
 		}
 	};

@@ -31,8 +31,7 @@ Copyright © 2025 Timofey Chernyshev aka GNU/Hurt
 [https://www.researchgate.net/profile/Timofey-Chernyshev]
 
 «Получаю данные, 18/38.»
-)pbdoc"
-};
+)pbdoc"};
 
 /******************************************************************************/
 

@@ -14,5 +14,8 @@ typedef int16_t     i16; static_assert(sizeof(i16) == 2);
 typedef int32_t     i32; static_assert(sizeof(i32) == 4);
 typedef int64_t     i64; static_assert(sizeof(i64) == 8);
 
+typedef size_t      uSIZE;
+typedef ssize_t     iSIZE;      
+
 typedef float       f32; static_assert(sizeof(f32) == 4);
 typedef double      f64; static_assert(sizeof(f64) == 8);
