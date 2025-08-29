@@ -1,20 +1,20 @@
-_[document version: 20250713]_
+_[document version: 20250830]_
 <!-- {𝐯} {𝐫} {𝐟} {𝐚} {𝐄} {𝐁} {𝐮} -->
 > [!NOTE]
-> The project is still under active development, so changes and midifications are possible.
-> Some features are missing, some features are not tested properly, yet.
+>The project is still under active development, so changes and modifications are possible.
+>Some features are missing, and other features haven't been tested properly, yet.
 
 # \_ltplib: <ins>L</ins>ow <ins>T</ins>emperature <ins>P</ins>lasma <ins>Lib</ins>rary
-This is middle-layer framework that provides a simple Python solution to construct PiC+MCC simulations ([Particles-in-Cells](https://en.wikipedia.org/wiki/Particle-in-cell) + [Monte Carlo Collisions](https://www.particleincell.com/2011/mcc/)).
-The framework offers a range of functions and primitives to facilitate a broad range of low-temperature (non-relativistic) plasma kinetic problems.
-By creating a high-level user-friendly python-API, **\_ltplib** aims to enable researchers and engineers to formulate and solve both simple and complex PiC+MCC problems in a flexible manner with the aid of modern computational techniques.
+This is a middle-layer framework that provides a simple Python solution to construct PiC+MCC simulations ([Particles-in-Cells](https://en.wikipedia.org/wiki/Particle-in-cell) + [Monte Carlo Collisions](https://www.particleincell.com/2011/mcc/)).
+The framework offers a range of functions and primitives to facilitate a broad set of low-temperature (non-relativistic) plasma kinetic problems.
+By creating a high-level, user-friendly Python API, **\_ltplib** aims to enable researchers and engineers to formulate and solve both simple and complex PiC+MCC problems via modern computational techniques.
 
 Features:
 - one-, two-, and three-dimensional problems with periodic or absorptive boundary conditions;
 - high-order form factors (up to 3);
 - explicit or semi-implicit particle movers;
 - fast and flexible Monte Carlo module allowing to simulate arbitrary mixtures of active and background components, taking into account anisotropic scattering,
-- universal data-driven solver for Poisson equation.
+- universal data-driven solver for the Poisson equation.
 
 The code is based on the former Θ-Hall [^chernyshev2019][^chernyshev2022], but it has been heavily modified and rewritten from scratch.
 The project is inspired by [eduPIC](https://github.com/donkozoltan/eduPIC),
@@ -41,7 +41,7 @@ and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 
 ## Build instructions <a name="build"></a>
 The framework uses [pybind11](https://github.com/pybind/pybind11) to create a transparent interface between Python and C++ code. Dependencies are downloaded automatically by CMake FetchContent.
-Make shure that you have python3 development files installed
+Make sure that you have Python development files installed
 ([python3-dev](https://packages.debian.org/stable/python3-dev) package on deb-based distros)
 ```sh
 cmake -S src -B build && cmake --build build --target install
@@ -53,7 +53,7 @@ As a result, two libraries will be generated in the `examples` directory:
 Native Python installation via pip is not yet supported, so just copy both binaries into your project's directory (or use `-DCMAKE_INSTALL_PREFIX`).
 It is highly recommended to have [numpy](https://github.com/numpy/numpy) installed.
 It is not necessary to run **\_ltplib**, but [numpy.ndarray](https://numpy.org/doc/stable/reference/arrays.ndarray.html) is used as a main interface between userspace python-code and **\_ltplib**.
-Build-in documentation is available as follows:
+Built-in documentation is available as follows:
 ```python
 import _ltplib as ltp
 help(ltp)
@@ -64,29 +64,29 @@ help(ltp)
 <!-- $f_i\left({𝐫},\,{𝐯},\,t\right)$ -->
 <!-- (To be done...) -->
 
-The following sections provide a brief overview for **\_ltplib** components.
+The following sections provide a brief overview of **\_ltplib** components.
 
 ## Main classes <a name="classes"></a>
 ### [`_ltplib.grid`](./src/_ltplib/def_grid.cxx) (problem's geometry) <a name="grid"></a>
-The gird is a primary class for every simulation.
-It describes geometry of the problem, boundary conditions, and spatial-decomposition for parallel computation.
-The code uses sightly modified approach of tile-decomposition described before in [^decyk2014][^decyk2015]. The class constructor accepts following arguments:
+The grid is a primary class for every simulation.
+It describes the geometry of the problem, boundary conditions, and spatial decomposition for parallel computation.
+The code uses a slightly modified approach of tile decomposition described in the papers [^decyk2014][^decyk2015]. The class constructor accepts the following arguments:
 1. *nd* -- number of spatial dimensions;
-1. *step* -- list containing spatial steps along the each axis;
-1. *axes* -- list describing spatial decomposition along the each axis;
-1. *nodes* -- list containing tuples to map computing nodes (optional, will be created automatically if is not presented);
-1. *mask* -- mask to mark adsorbing regions (optional); 
-1. *flags* -- flags to mark periodic boundaries `"LOOPX|LOOPY|LOOPZ"` and/or cylindric axis `"CYLINDER"`.
+1. *step* -- list containing spatial steps along each axis;
+1. *axes* -- list describing spatial decomposition along each axis;
+1. *nodes* (optional) -- list containing tuples to map computing nodes (will be created automatically if not given);
+1. *mask* (optional) -- mask to mark adsorbing regions; 
+1. *flags* (optional)-- flags to mark periodic boundaries (`"LOOPX|LOOPY|LOOPZ"`) and/or $x$-axis for axial-symmetric geometry (`"CYLINDER"`).
 
 The next example shows how `_ltplib.grid` can be constructed:
 ```python
 grid = ltp.grid(nd = 2,
 
- # First, let's define spatial-step for the each dimension
+ # First, let's define the spatial step for each dimension:
  step = [0.25, 0.25], # dx, dy
 
  # The next two sections describe domain decomposition.
- # Here, the numbers inbetween define edges of sub-domains:
+ # Here, the numbers in between define the edges of sub-domains:
  axes = [
   # x-axis, 2 slices
   [0, 16, 32],
@@ -103,21 +103,22 @@ grid = ltp.grid(nd = 2,
  # Links between the nodes will be built automatically.
  
  # It is possible to mark some points as particle absorbers
- # using the following optional parameter:
- mask = [...], # numpy.uint8-array, with the same shape as grid axes.
+ # using the optional "mask" parameter:
+ mask = [...], # numpy.uint8-array, with the same shape as the grid axes.
  # Any value != 0 will be considered as an adsorbing cell.
  
- # For periodic boundary condition(s) axis(ex) should be marked:
+ # Axes can be marked with flags:
  flags = "LOOPX|LOOPY",
 )
 ```
 
 ### [`_ltplib.pstore`](./src/_ltplib/def_pstore.cxx) (particle storage) <a name="pstore"></a>
-This class is used to store pVDF samples (macro-particles). The class constructor accepts following arguments:
+This class is used to store pVDF samples (macro-particles).
+The class constructor accepts the following arguments:
 1. *grid* -- existing grid;
 1. *ptinfo* -- description of active components to store;
 1. *npmax* -- the capacity (maximum number of samples per node);
-1. *nargs* -- (optional, `1+grid.nd+3` by default) number of components.
+1. *nargs* (optional) -- number of components, `1+grid.nd+3` by default.
 
 See the example:
 ```python
@@ -126,34 +127,34 @@ pstore = ltp.pstore(grid, # existing grid
   {"KEY":"e",   "CHARGE/MASS": -5.272810e+17}, # electron
   {"KEY":"Ar+", "CHARGE/MASS": +7.240801e+12}, # argon ion
  ],
- npmax = 100000, # the limit is 16777216 samples/node
+ npmax = 100000, # the limit is 16777216 samples per node
  nargs = 1+2*(grid.nd+3), # in case of using with implicit mover
 )
 ```
-#### Methods
 
+#### Methods
 To **inject** samples into the class `pstore.inject({...})` method should be called.
-Method accepts dictionary, where keys correspond to component keys from `"ptinfo"`,
-and values are numpy-arrays to load.
-The shape of input array should match `[npp, grid.nd+3]`, where `npp` is the number of samples to add.
+Method accepts a dictionary, where keys correspond to component keys from `"ptinfo"`,
+and values are numpy arrays to load.
+The shape of the input array should match `[npp, grid.nd+3]`, where `npp` is the number of samples to add.
 The components of sample's vector are $\{x\,\dots\,v_x\,v_y\,v_z\}$.
 
-In order to **extract** the samples `pstore.extract()` should be used.
+To **extract** the samples, `pstore.extract()` should be used.
 Method accepts no arguments and returns the pair:
 1. numpy-arrays containing all the samples,
-1. list of indexes defining the sample-range for each component
+1. list of indices defining the sample range for each component
 (the components' order is the same as in ptinfo).
 
-To **reset** (clean) the storage use `pstore.reset()`.
+To **reset** (clean) the storage, use `pstore.reset()`.
 Also, calling `len(pstore)` will return the total number of samples.
 
 ### [`_ltplib.vcache`](./src/_ltplib/def_vcache.cxx) (value cache) <a name="vcache"></a>
-This class is used as a universal node-local cache for grid-based values. For example, it can be used to store electromagnetic field, pVDF moments, background densities, collision frequencies.
-Class constructor accepts following arguments:
-1. *grid* --- existing grid.
-1. *dtype* --- the string describing type (`"f32"` or `"u32"`).
-1. *vsize* --- number of components per grid unit (optional, default `1`).
-1. *order* --- form-factor's order (optional, default `0`).
+This class is used as a universal node-local cache for grid-based values. For example, it can be used to store electromagnetic fields, pVDF moments, background densities, and collision frequencies.
+Class constructor accepts the following arguments:
+1. *grid* -- existing grid.
+1. *dtype* -- the string describing type (`"f32"` or `"u32"`).
+1. *vsize* (optional) -- number of components per grid unit, default `1`.
+1. *order* (optional) -- form-factor's order, default is `0`.
 
 Use `vcache[...]` to read/write values into numpy buffer.
 Method `vcache.remap(str: mode)` should be used to transfer data between
@@ -161,25 +162,29 @@ node-local cache and numpy buffer:
 `mode="in"`, to copy data *from* the buffer into the cache;
 `mode="out"`, to copy data from the cache *into* the buffer.
 
-There are following useful properties:
+There are the following useful properties:
 - `vcache.dtype` -- python-type,
 - `vcache.shape` -- shape of representing array,
 - `vcache.order` -- form-factor's order,
 - `vcache.cfg` -- helper to construct numpy-arrays: `numpy.empty(**vcache.cfg)`.
 
 ### [`_ltplib.csection_set`](./src/_ltplib/def_csection_set.cxx) (cross-section set) <a name="csection_set"></a>
-This class stores cross-section database for Monte-Carlo simulation.
+This class stores the cross-section database for Monte-Carlo simulation.
 Input cross-sections can be defined by the function or by the points.
-In both cases they will be recalculated into cumulative rates and cached into the lookup-table on log-scaled energy-grid $\varepsilon = \varepsilon_{\rm th} + 2^{j/2-4}-0.0625,~j\in\mathbb{N}$, where $\varepsilon_{\rm th}$ is reaction's threshold. This allows to store large amount of cross-sections in a very compact way. Constructor parameters for the class are:
-1. *cfg* --- configuration sequence (see below);
-1. *max_energy* --- energy limit defining lookup-table's size;
-1. *ptdescr* --- string containing keys for active components, separated by spaces.
-This argument **must** exactly match with components from `pstore`.
-1. *bgdescr* --- string containing keys for background components, separated by spaces.
-Optional argument, if given the class will ignore all other backgrounds from the configuration sequence.
+In both cases, they will be recalculated into cumulative rates and cached into the lookup table on a log-scaled energy grid
+$\varepsilon = \varepsilon_{\rm th} + 2^{j/2-4}-0.0625,~j\in\mathbb{N}$,
+where $\varepsilon_{\rm th}$ is reaction's threshold.
+This allows the store a large number of cross-sections in a very compact way.
+Constructor parameters for the class are:
+1. *cfg* -- configuration sequence (see below);
+1. *max_energy* -- energy limit defining lookup-table's size;
+1. *ptdescr* -- string containing keys for active components, separated by spaces.
+This argument **must** exactly match the components from `pstore`.
+1. *bgdescr* (optional) -- string containing keys for background components, separated by spaces.
+If given, the class will ignore all other backgrounds from the configuration sequence.
 
-There are optional keywords arguments:
-- *rescale* -- global scale factor for cross-section value.
+There are optional keyword arguments:
+- *rescale* -- global scale factor for cross-section values.
 - *exterp* -- global extrapolation factor (see below).
 
 #### Configuration sequence
@@ -187,21 +192,23 @@ All processes are described in a list of dict-entries.
 There are three types of entries. Firstly, the active component should be selected (`"TYPE":"PARTICLE"`).
 For example
 ```python
-{"TYPE":"PARTICLE", "KEY":"e",
- "ENCFFT": 2.842815e-16, # coefficient to transform speed^2 -> energy
+{"TYPE": "PARTICLE", "KEY": "e",
+ "ENCFFT": 2.842815e-16, # coefficient to transform speed$^2$ -> energy
 },
 ```
 Secondly, the background should be described (`"TYPE":"BACKGROUND"`)
 ```python
-{"TYPE":"BACKGROUND", "KEY":"CH4",
- "MASSRATE":3.420074282530393e-05, # m/(m+M) coefficient
+{"TYPE": "BACKGROUND", "KEY": "CH4",
+ "MASSRATE":3.420074282530393e-05, # m/M coefficient
 },
 ```
 > [!NOTE]
 > The current version of **\_ltplib** doesn't support flux & thermal thermal velocities for the background.
-> Such functionality will be added later. Now it is considered frozen in laboratory frame of reference.
+> Such functionality will be added later.
+> Now it is considered frozen in the laboratory frame of reference.
 
-Processes' description follow next. For these entries `"TYPE"` could be
+The processes' description follows next.
+For these entries, `"TYPE"` could be
 - `"ELASTIC"`
 - `"EXCITATION"`
 - `"VIBRATIONAL"`
@@ -210,28 +217,28 @@ Processes' description follow next. For these entries `"TYPE"` could be
 - `"IONIZATION"`
 - `"ATTACHMENT"`
 
-For inelastic processes energy threshold $\varepsilon_{\rm th}$ should be defined by field `"THRESHOLD"`.
+For inelastic processes, the energy threshold $\varepsilon_{\rm th}$
+should be defined by the field `"THRESHOLD"`.
 
-Then the first set of processes is finished, the next background (or active particle) can be selected.
-> [!TIP]
-> It is allowed for same `"TYPE":"PARTICLE"` to repeat for each background.
-> Extra entries will be ignored.
-> It was made this way because it is pretty useful to store the conf.seq. as a preset for the each type of the gas.
+Then, the first set of processes is finished, and the next background
+(or active particle) can be selected.
 
 > [!TIP]
 > [LXCat data parser](https://pypi.org/project/lxcat_data_parser/) may be used
 > to convert [LXCat](https://lxcat.net)-database into configuration sequence.
 
-There are two forms of how process cross-section can be passed:
-directly `"CSEC": cs_data` or as a tuple with additional parameters
-`"CSEC" : (cs_data, {"scale" : 1e4, "exterp": 1})`.
-The *scale* parameter works together with *rescale*, and *exterp* overwrites the global value.
-Cross-section can be defined analytically as a python-function of two arguments
+There are two ways in which the process cross-section can be passed:
+directly `"CSEC": ...` or as a tuple with additional parameters
+`"CSEC" : (..., {"scale" : 1e4, "exterp": 1})`.
+The *scale* parameter works together with *rescale*
+(resulting scale is ${\tt scale}~\cdot~{\tt rescale}$),
+and *exterp* overwrites the global value.
+The cross-section can be defined analytically as a Python function of two arguments
 $\sigma(\varepsilon,\ \varepsilon_{\rm th})$, for example:
 ```python
  "CSEC" : lambda en, th: 1e-15*(en-th)/((en-th)**2+1),
 ```
-Or else, cross-section can be defined by list of points:
+Or else, the cross-section can be defined by the list of points:
 ```python
  "CSEC" : [
   (1.20e+01,1.00e-21),(2.00e+01,1.00e-20),(4.00e+01,1.70e-20),
@@ -239,27 +246,31 @@ Or else, cross-section can be defined by list of points:
   (2.00e+02,1.00e-20),(6.00e+02,5.00e-21),(1.10e+03,2.00e-21),
  ],
 ```
-It is possible to read points from the text file:
+Or, it is possible to read points from the text file:
 ```python
- "CSEC": "CH4_momentum_CommunityDB.txt",
+ "CSEC": "filename.txt",
 ```
 > [!TIP]
 > Lines started with ``'#'``, ``'!'``, ``'%'``, ``'//'`` are ignored.
 
-If it is necessary, first line to start scanning can be specified by parameter *lineno*.
-It is also possible to read data directly from [LXCat](https://lxcat.net)-file using *search*-parameter.
-In this case scan will start from the desired string and points will be readed from the nearest data-block nestled between `"-----"`-lines.
+If it is necessary, the first line to start scanning can be specified
+by the parameter *lineno*.
+It is also possible to read data directly from [LXCat](https://lxcat.net)-file
+using *search*-parameter.
+In this case, the scan will start from the desired string,
+and points will be loaded from the nearest data-block
+nestled between `"-----"`-lines.
 
-Log-log interpolation is used to map points into lookup-table
+Log-log interpolation is used to map points into the lookup table
 $\sigma(\varepsilon) = \exp(a \log\varepsilon)\cdot b$.
 If extrapolation parameter (*exterp*) is bigger than zero
-and condition $\partial\sigma/\partial\varepsilon < 0$ is fulfilled for high-energies, then extrapolation will be build.
-Parameter *exterp* controls the range of energies to build extrapolation
+and condition $\partial\sigma/\partial\varepsilon < 0$ is fulfilled for high energies, then extrapolation will be built.
+Parameter *exterp* controls the range of energies to build the extrapolation
 (*exterp* = $\log_{10}\max(\varepsilon)-\log_{10}\varepsilon$).
 Default value is 0.25, *exterp* = 0 turns off extrapolation.
 
 #### Approximation for anisotropic scattering
-In general, scattering is described by differential cross-section
+In general, scattering is described by the differential cross-section
 $\sigma(\varepsilon,\ \alpha)$, where
 $\sigma(\varepsilon)
 =2\pi\int_0^\pi \sin\alpha\ \sigma(\varepsilon,\ \alpha)\ {\rm d}\alpha$,
@@ -270,7 +281,8 @@ Framework **\_ltplib** includes first-order approximation for $\sigma(\varepsilo
 	\left[1-\cos\alpha\sqrt{1-\frac{\varepsilon_{\rm th}}{\varepsilon}}\right]
 	\sigma(\varepsilon,\ \alpha)\ {\rm d}\alpha.
 ```
-Internally, fitting-parameter $\xi(\varepsilon)$ [^janssen2016][^flynn2024] is used:
+Internally, the fitting parameter $\xi(\varepsilon)$ [^janssen2016][^flynn2024]
+is used:
 ```math
 	\frac{\sigma_{\rm m}}{\sigma}
 	= 1+\sqrt{1-\frac{\varepsilon_{\rm th}}{\varepsilon}} \cdot
@@ -278,22 +290,23 @@ Internally, fitting-parameter $\xi(\varepsilon)$ [^janssen2016][^flynn2024] is u
 		1 - \frac{1-\xi}{\xi^2} \left( \frac{1+\xi}{2} \log\left(\frac{1+\xi}{1-\xi}\right) - \xi\right)
 	\right].
 ```
-By default, scattering considered to be isotropic, i.e.
+By default, scattering is considered to be isotropic, i.e.
 $\xi\equiv 0$ and $\sigma_{\rm m}=\sigma$.
-For $\xi \rightarrow +1$ small-angle collisions dominate (forward-scattering),
-and $\xi \rightarrow -1$ correspond to large-angle collisions (back-scattering).
+For $\xi \rightarrow +1$, small-angle collisions dominate (forward-scattering),
+and $\xi \rightarrow -1$ corresponds to large-angle collisions (back-scattering).
 > [!NOTE] 
 > $\sigma_{\rm m}/\sigma \leq 2$.
 
 There are three ways to define anisotropic scattering:
 - pass total (`"CSEC"`) + momentum-transfer cross-section (`"MTCS"`-field, the syntax is identical to `"CSEC"`);
-- pass total (`"CSEC"`) cross-section + fitting parameter $\xi(\varepsilon - \varepsilon_{\rm th})$ as a python-function (`"DCSFN"`-field);
+- pass total (`"CSEC"`) cross-section + fitting parameter $\xi(\varepsilon - \varepsilon_{\rm th})$ as a Python function (`"DCSFN"`-field);
 - or pass `"MTCS"` + `"DCSFN"`.
 
 #### Ionization
-In case of ionization, it is assumed that there is no impulse transfer between incident electron and heavy particle ($m/M$-term is ignored).
-The energy/impulse-balance is determined only by incident and secondary particle(s).
-This division is arbitrary, we consider particle secondary if it has smaller resulting energy, i.e. $\varepsilon_2<\varepsilon_1$.
+In case of ionization, it is assumed that there is no impulse transfer between
+the incident electron and heavy particle ($m/M$ term is ignored).
+The energy/impulse balance is determined only by incident and secondary particle(s).
+This division is arbitrary, we consider a particle secondary if it has a smaller resulting energy, i.e. $\varepsilon_2<\varepsilon_1$.
 From energy and impulse conservation
 ```math
 \begin{align}
@@ -309,16 +322,17 @@ From energy and impulse conservation
 where $\beta_{1}$ & $\beta_{2}$ are polar scattering angles for incident and secondary electrons.
 As a result, ionization collisions are always considered anisotropic.
 
-The energy-spectrum for secondary electrons uses Opal-Peterson-Beaty approximation (OPB-approximation, [^opal1971][^opal1972]).
+The energy spectrum for secondary electrons uses the Opal-Peterson-Beaty approximation (OPB-approximation, [^opal1971][^opal1972]).
 The spectrum is defined by a single parameter
 $\varepsilon_{\rm OPB}\sim\varepsilon_{\rm th}$ (field `"OPBPARAM"`).
 If it is not given, $\varepsilon_{\rm th}$ will be used instead.
 > [!NOTE] 
-> The current implementation is unfinished and doesn't allow to spawn ions or multiple electrons or ions.
+> The current implementation is unfinished and doesn't allow
+the spawning of ions or multiple electrons or ions.
 > This functionality will be added in further versions.
 
 #### Entries examples
-1. Elastic collision, anisotropic scattering defined by $\sigma_{\rm m}$:
+1. Elastic collision, anisotropic scattering is defined by $\sigma_{\rm m}$:
 ```python
 {"TYPE":"ELASTIC",
  "CSEC":("H2O/ELASTIC-ICS.song2021.txt"
@@ -327,7 +341,7 @@ If it is not given, $\varepsilon_{\rm th}$ will be used instead.
  , {"scale":1e-16}),
 },
 ```
-2. Electron excitation, anisotropic scattering defined by $\xi(\varepsilon - \varepsilon_{\rm th})$:
+2. Electron excitation, anisotropic scattering is defined by $\xi(\varepsilon - \varepsilon_{\rm th})$:
 ```python
 {"TYPE":"EXCITATION", "THRESHOLD":8.0,
  "CSEC":  lambda en, th=8.0: 1e-17*(en-th)/((en-th)**(7/4)+1),
@@ -353,13 +367,13 @@ Other examples can be found in
 [`examples/csections_db`](./examples/csections_db)
 
 ## [`_ltplib.poisson_eq`](./src/_ltplib/def_poisson_eq.cxx) (solver for Poisson equation) <a name="poisson_eq"></a>
-This class implements universal data-driven solver for Poisson equation:
+This class implements a universal data-driven solver for the Poisson equation.
 ```math
 \nabla^2 \phi\left({𝐫}\right) = q\left({𝐫}\right),
 ```
-where $\phi$ is scalar potential, $q$ is charge density.
-The solver is based on iterative SOR-method (Succesive Over-Relaxation)
-with rad-black decomposition for parallel calculation[^CS267][^mittal2014]:
+where $\phi$ is scalar potential, $q = -4\pi\sum_j Z_j n_j$ is charge density.
+The solver is based on the iterative SOR method (Successive Over-Relaxation)
+with red-black decomposition for parallel calculation[^CS267][^mittal2014]:
 ```math
 \phi_{\rm new} = w\phi_{\rm iter} - \left(1-w\right)\phi_{\rm old},
 ```
@@ -369,7 +383,7 @@ The class constructor accepts two arguments:
 - *umap*: `numpy.ndarray[numpy.uint8]` --- <ins>u</ins>nit <ins>map</ins> is an array to encode type of each unit (see below);
 - *step*: `list[float]` --- grid step along the each axis.
 
-The following properties are acessible:
+The following properties are accessible:
 - `poisson_eq.umap` --- just a read-only copy of *umap*-argument;
 - `poisson_eq.cmap` --- <ins>c</ins>harge <ins>map</ins>, $q$;
 - `poisson_eq.vmap` --- <ins>v</ins>oltage <ins>map</ins>, $\phi$.
@@ -384,14 +398,15 @@ updates `poisson_eq.vmap`,
 and returns residual $\delta\phi = \max\left|\phi_{\rm new}-\phi_{\rm old}\right|$.
 
 ### Umap configuration
-The helper function `_ltplib.DIFFop(descr: str)` should be used to set-up *umap*-configuration.
-Function accepts string of flag codes, separated by  symbol `'|'`.
+The helper function `_ltplib.DIFFop(descr: str)` should be used to set up *umap*-configuration.
+Function accepts a string of codes, separated by the symbol `'|'`.
 
-The special value `0` is used to mark units that are not considered.
-Use it to mark empty units or to set-up Dirichlet boundary condition
+The special value 0 is used to mark units that are not considered.
+Use it to mark empty units or to set up the Dirichlet boundary conditions
 (these units will keep their original values).
 
-The next two constants are used to define zero-field (Neumann) boundary condition along the $x$-axis:
+The next two codes are used to define zero-field (Neumann) boundary conditions
+along the $x$-axis:
 - `"XLF"` --- backward finite-difference
 (against $x$-axis),
 - `"XRT"` --- forward finite-difference
@@ -399,63 +414,58 @@ The next two constants are used to define zero-field (Neumann) boundary conditio
 
 These conditions can be used at the open boundaries or to define dielectric surfaces
 (assuming that there is no charge accumulation).
-Binwise-or encodes $x$-axis central-difference:
+Binwise-or encodes $x$-axis central difference:
 - `"XCN"` equals `"XLF|XRT"` --- this value is used for internal units.
 
-Derivatives for $y$- and $z$-axes are defined in a similar way:
-- `"YLF"`;
-- `"YRT"`;
-- `"YCN"`;
-- `"ZLF"`;
-- `"ZCN"`;
-- `"ZRT"`.
-
-For 2d or 3d problems bitwise-or should be used to mark units, i.e.:
+Derivatives for $y$- and $z$-axes are defined in a similar way.
+For 2d or 3d problems, bitwise-or should be used to mark units, i.e.:
 `"XCN|YCN"`, `"XCN|YCN|ZCN"`.
 If both end of the domain along specific axis are marked with central-differences,
 it will define periodic boundary condition along this axis.
 > [!NOTE]
-> In case of periodic boundary, the number of units along the axis should be even (otherwise race-condition will occur).
+> In the case of a periodic boundary,
+> the number of units along the axis should be even
+> (otherwise, a race condition will occur).
 
 > [!NOTE]
-> The current version of **\_ltplib** doesn't support this solver for cylindrical geometry.
-> This functionality will be added later.
+> The current version of **\_ltplib** doesn't support this solver
+> for cylindrical geometry. This functionality will be added later.
 
 > [!TIP]
-> Not all every configuration correspond to a valid problem.
-> I.e. the system with pure periodic or pure open boundaries
-> has infinite number of solutions and can not be resolved.
-> In this case one arbitary unit should be marked with `0`-value.
+> Not every configuration corresponds to a valid problem.
+> I.e., the system with pure periodic or pure open boundaries
+> has an infinite number of solutions and can not be resolved.
+> In this case, one arbitrary unit should be marked with `0`-value.
 
 The following example shows the umap-configuration for the problem with
-open-boundaries and central body with given $\phi$:
+periodic and open boundaries and the central body with given $\phi$:
 <br>
 <img src="./docs/imgs/umap_example.png" alt="An example for umap-configuration" width="512"/>
 <br>
 
 ## Function bindings <a name="bindings"></a>
-For user convinience, functions to perform simulatio steps are given as function-bindings.
-Therefore, first the binding (functional object) is created,
-then it can be called during the calculation.
-Exceptions could be raised in case of problems (overflow, energy limit, etc;
+For user convenience, functions to perform simulation steps are given as
+function-bindings. Therefore, first the binding (functional object) is created,
+then it can be called during the calculation. Exceptions could be raised in case
+of problems (overflow, energy limit, etc;
 see [error codes](./src/api_backend.hxx#L14)).
 
 ### [`_ltplib.bind_ppush_fn`](./src/_ltplib/def_ppush_funcs.cxx) (motion equation solver) <a name="bind_ppush"></a>
-This function binds its' arguments to motion equation solver from the backend.
+This function binds its arguments to the motion equation solver from the backend.
 The function accepts the following arguments:
 - *pstore* --- pVDF samples;
 - *descr* --- string containing description of electromagnetic field
 and type of the solver separated by semicolon symbol (for example `"ExEyBz: {SCHEME}"`, see below);
 - *emfield* --- value cache for electromagnetic field (`dtype="f32"`).
 
-Resulting functional object has following signature
+The resulting functional object has the following signature
 `(dt : float) -> None`,
-where `dt` is time step. Two solvers are available.
+where `dt` is the time step. Two solvers are available.
 
 #### Explicit scheme
-This is 2nd-order integrator utilizes Leap-Frog algorithm with Boris splitting scheme [^birdsall2018].
-This scheme is is widely known and it is *de-facto standard* in context of plasma simulation [^vxb-rotation]. 
-In this scheme samples' coordinates and velocities are shifted by $\delta t/2$:
+This is a 2nd-order integrator that utilizes the Leap-Frog algorithm with Boris splitting scheme [^birdsall2018].
+This scheme is widely known and it is *de facto standard* in the context of plasma simulation [^vxb-rotation]. 
+In this scheme, the samples' coordinates and velocities are shifted by $\delta t/2$:
 ```math
 	\left\{\begin{align}
 	& {𝐯}(t+{\delta t/2})
@@ -487,15 +497,15 @@ Samples' coordinates and velocities are synchronous in this scheme:
 ```
 The scheme is solvable for ${𝐯}(t+\delta t)$-term [^tajima2018-book].
 As a result, only ${𝐄}$ & ${𝐁}$ fields at time moment $t+\delta t$ are unknown.
-The system can be solved as iterative predictor-corrector process.
+The system can be solved as an iterative predictor-corrector process.
 - Initial rough approximation (predictor step) assumes ${𝐚}(t+\delta t) = {𝐚}(t)$.
-- Following corrector step adjusts approximation using updated field values.
+- The following corrector step adjusts the approximation using updated field values.
 The scheme is encoded by `"IMPL0"` & `"IMPLR"` keywords.
 
-Usually, $\lesssim 3$ additional iterations are enough to minimize  an error of closure.
-Our implementation caches $t$-moment field contribution for the each sample, so one should set double *nargs*-parameter for *pstore*.
+Usually, $\lesssim 3$ additional iterations are enough to minimize the error of closure.
+Our implementation caches $t$-moment field contribution for each sample, so one should set the double *nargs*-parameter for *pstore*.
 > [!NOTE]
-> This scheme is not supported for cylindrical geometry, yet.
+> This scheme is not supported for cylindrical geometry yet.
 
 ### [`_ltplib.bind_ppost_fn`](./src/_ltplib/def_ppost_funcs.cxx) (obtain pVDF moments) <a name="bind_ppost"></a>
 This binding is used to calculate raw pVDF moments [^saint-raymond2009]:
@@ -514,44 +524,44 @@ The function accepts the following arguments:
 	- `"P[xx|xy|xz|yy|yz|zz]"` --- <ins>p</ins>ressure/stress tensor components;
 	- `"KEn"` --- <ins>k</ins>inetic <ins>en</ins>ergy ($p_{xx}+p_{yy}+p_{zz}$);
 - *ptfluid* --- value cache for the result (`dtype="f32"`).
-The rules for *descr*-string are the same as for previous case,
-i.e. tokens can be separated by spaces and should not repeat.
+The rules for *descr*-string are the same as for the previous case,
+i.e., tokens can be separated by spaces and should not repeat.
 For example, `descr = "C Fx Fy Fz Pxx Pyy Pzz"`.
 
-Resulting functional object has following signature
+The resulting functional object has the following signature
 `() -> None`.
 
 ### [`_ltplib.bind_mcsim_fn`](./src/_ltplib/def_mcsim_funcs.cxx) (collision simulation) <a name="bind_mcsim"></a>
 This binding is used to perform Monte-Carlo simulation.
 The arguments are:
 - *pstore* --- pVDF samples;
-- *cfreq* --- value cache to count successful collision events (`dtype="u32"`, `order=0`);
+- *events* --- value cache to count successful collision events (`dtype="u32"`, `order=0`);
 - *cset* --- cross-sections set;
-- *bgrnd* --- value cache containing background densities (`dtype="f32"`, `order=0`).
+- *bgfluid* --- value cache containing background densities (`dtype="f32"`, `order=0`).
 
-Functional object's signature is
+A functional object's signature is
 `(dt: float, seed: int) -> None`,
-where `dt` is time step and `seed` is a random number
+where `dt` is the time step and `seed` is a random number
 (`seed` + node id will be used to initialize
-[KISS-rng](https://github.com/sleeepyjack/kiss_rng)-based source for the each *node*).
+[KISS-rng](https://github.com/sleeepyjack/kiss_rng)-based source for each *node*).
 
 #### Search algorithm
 To simulate the collisions, **\_ltplib** uses Poisson's flow of random events[^birdsall1991-2],
-where collision probability during fixed time-step $\delta t$ is
+where the collision probability during a fixed time-step $\delta t$ is
 ```math
 P = 1 - \exp\left(-n_0\vartheta\delta t\right)
-\simeq n_0\vartheta \delta t \ll 1,
+\simeq n_0\vartheta \delta t < 1,
 ```
-where $n_0$ is background's component concentration,
+where $n_0$ is the background's component concentration,
 $\vartheta = \sigma\left|{𝐯}\right|$ (differential reaction rate),
 $\sigma$ & $\left|{𝐯}\right|$ are reaction's cross-section and relative velocity.
-The search procedure is based on null-collision (rejection-sampling) technique[^brennan1991][^elhafi2021].
+The search procedure is based on the null-collision (rejection-sampling) technique[^brennan1991][^elhafi2021].
 Each k-th differential reaction rate is supplemented with counter-term $\tilde{\vartheta}$ such that
 ```math
 \vartheta_{\rm [k]}(\varepsilon) + \tilde{\vartheta}_{\rm [k]}(\varepsilon)
 = \max(\vartheta_{\rm [k]} ~ \forall\varepsilon) = Const,
 ```
-then cumulative rates are introduced
+then, the cumulative rates are introduced
 ```math
 \left\{\begin{align}
 	& \bar{\vartheta}_{\rm [0]}
@@ -563,7 +573,7 @@ then cumulative rates are introduced
 	& \bar{\vartheta}_{\rm [k-1]} + \max(\vartheta_{\rm [k]} ~ \forall\varepsilon).
 \end{align}\right.
 ```
-The simulation is organized as a binary search and simple check for each pair of components:
+The simulation is organized as a binary search and a ssimple check for each pair of components:
 ```math
 \left\{\begin{align}
 	& \bar{\vartheta}_{\rm [k]}
@@ -580,11 +590,11 @@ The simulation is organized as a binary search and simple check for each pair of
 \end{align}\right.
 ```
 where $\vartheta^{\ast} = {R^{\ast} / n_0 \delta t}$,
-and $R^{\ast}\in(0,~1)$ is a random value with uniform distribution generated for the each sample.
+and $R^{\ast}\in(0,~1)$ is a random value with uniform distribution generated for each sample.
 
-The next two figures illustrates this approach.
-Here the first image shows cross-section set for electron-methane interactions and
-the second image shows internal representation for corresponding cumulative rates that are used in search algorithm.
+The next two figures illustrate this approach.
+Here, the first image shows the cross-section set for electron-methane interactions and
+the second image shows an internal representation for corresponding cumulative rates that are used in the search algorithm.
 Color-flooded regions correspond to successful reactions.
 The preset with these coss-sections can be found in [`examples/csections_db/CH4.py`](./examples/csections_db/CH4.py).
 <br>
@@ -602,7 +612,7 @@ The preset with these coss-sections can be found in [`examples/csections_db/CH4.
 	- superelastic collisions.
 1. Migrate to [nanobind](https://github.com/wjakob/nanobind) to utilize PY_STABLE_API.
 1. Add setup.py/conda installers.
-1. Write GPU backend.
+1. Write the GPU backend.
 
 # Code examples for \_ltplib <a name="code_examples"></a>
 
