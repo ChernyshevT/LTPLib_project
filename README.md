@@ -17,7 +17,7 @@ Features:
 - universal data-driven solver for the Poisson equation.
 
 The code is based on the former Θ-Hall [^chernyshev2019][^chernyshev2022], but it has been heavily modified and rewritten from scratch.
-The project is inspired by [eduPIC](https://github.com/donkozoltan/eduPIC),
+The project was inspired by [eduPIC](https://github.com/donkozoltan/eduPIC),
 [PIC-skeleton-codes](https://github.com/UCLA-Plasma-Simulation-Group/PIC-skeleton-codes),
 and [LoKI-MC](https://github.com/IST-Lisbon/LoKI-MC).
 
@@ -71,12 +71,12 @@ The following sections provide a brief overview of **\_ltplib** components.
 The grid is a primary class for every simulation.
 It describes the geometry of the problem, boundary conditions, and spatial decomposition for parallel computation.
 The code uses a slightly modified approach of tile decomposition described in the papers [^decyk2014][^decyk2015]. The class constructor accepts the following arguments:
-1. *nd* -- number of spatial dimensions;
-1. *step* -- list containing spatial steps along each axis;
-1. *axes* -- list describing spatial decomposition along each axis;
-1. *nodes* (optional) -- list containing tuples to map computing nodes (will be created automatically if not given);
-1. *mask* (optional) -- mask to mark adsorbing regions; 
-1. *flags* (optional)-- flags to mark periodic boundaries (`"LOOPX|LOOPY|LOOPZ"`) and/or $x$-axis for axial-symmetric geometry (`"CYLINDER"`).
+1. *nd* --- number of spatial dimensions;
+1. *step* --- list containing spatial steps along each axis;
+1. *axes* --- list describing spatial decomposition along each axis;
+1. *nodes* (optional) --- list containing tuples to map computing nodes (will be created automatically if not given);
+1. *mask* (optional) --- mask to mark adsorbing regions; 
+1. *flags* (optional) --- flags to mark periodic boundaries (`"LOOPX|LOOPY|LOOPZ"`) and/or $x$-axis for axial-symmetric geometry (`"CYLINDER"`).
 
 The next example shows how `_ltplib.grid` can be constructed:
 ```python
@@ -115,10 +115,10 @@ grid = ltp.grid(nd = 2,
 ### [`_ltplib.pstore`](./src/_ltplib/def_pstore.cxx) (particle storage) <a name="pstore"></a>
 This class is used to store pVDF samples (macro-particles).
 The class constructor accepts the following arguments:
-1. *grid* -- existing grid;
-1. *ptinfo* -- description of active components to store;
-1. *npmax* -- the capacity (maximum number of samples per node);
-1. *nargs* (optional) -- number of components, `1+grid.nd+3` by default.
+1. *grid* --- existing grid;
+1. *ptinfo* --- description of active components to store;
+1. *npmax* --- the capacity (maximum number of samples per node);
+1. *nargs* (optional) --- number of components, `1+grid.nd+3` by default.
 
 See the example:
 ```python
@@ -151,10 +151,10 @@ Also, calling `len(pstore)` will return the total number of samples.
 ### [`_ltplib.vcache`](./src/_ltplib/def_vcache.cxx) (value cache) <a name="vcache"></a>
 This class is used as a universal node-local cache for grid-based values. For example, it can be used to store electromagnetic fields, pVDF moments, background densities, and collision frequencies.
 Class constructor accepts the following arguments:
-1. *grid* -- existing grid.
-1. *dtype* -- the string describing type (`"f32"` or `"u32"`).
-1. *vsize* (optional) -- number of components per grid unit, default `1`.
-1. *order* (optional) -- form-factor's order, default is `0`.
+1. *grid* --- existing grid.
+1. *dtype* --- the string describing type (`"f32"` or `"u32"`).
+1. *vsize* (optional) --- number of components per grid unit, default `1`.
+1. *order* (optional) --- form-factor's order, default is `0`.
 
 Use `vcache[...]` to read/write values into numpy buffer.
 Method `vcache.remap(str: mode)` should be used to transfer data between
@@ -163,10 +163,10 @@ node-local cache and numpy buffer:
 `mode="out"`, to copy data from the cache *into* the buffer.
 
 There are the following useful properties:
-- `vcache.dtype` -- python-type,
-- `vcache.shape` -- shape of representing array,
-- `vcache.order` -- form-factor's order,
-- `vcache.cfg` -- helper to construct numpy-arrays: `numpy.empty(**vcache.cfg)`.
+- `vcache.dtype` --- python-type,
+- `vcache.shape` --- shape of representing array,
+- `vcache.order` --- form-factor's order,
+- `vcache.cfg` --- helper to construct numpy-arrays: `numpy.empty(**vcache.cfg)`.
 
 ### [`_ltplib.csection_set`](./src/_ltplib/def_csection_set.cxx) (cross-section set) <a name="csection_set"></a>
 This class stores the cross-section database for Monte-Carlo simulation.
@@ -176,16 +176,16 @@ $\varepsilon = \varepsilon_{\rm th} + 2^{j/2-4}-0.0625,~j\in\mathbb{N}$,
 where $\varepsilon_{\rm th}$ is reaction's threshold.
 This allows the store a large number of cross-sections in a very compact way.
 Constructor parameters for the class are:
-1. *cfg* -- configuration sequence (see below);
-1. *max_energy* -- energy limit defining lookup-table's size;
-1. *ptdescr* -- string containing keys for active components, separated by spaces.
+1. *cfg* --- configuration sequence (see below);
+1. *max_energy* --- energy limit defining lookup-table's size;
+1. *ptdescr* --- string containing keys for active components, separated by spaces.
 This argument **must** exactly match the components from `pstore`.
-1. *bgdescr* (optional) -- string containing keys for background components, separated by spaces.
+1. *bgdescr* (optional) --- string containing keys for background components, separated by spaces.
 If given, the class will ignore all other backgrounds from the configuration sequence.
 
 There are optional keyword arguments:
-- *rescale* -- global scale factor for cross-section values.
-- *exterp* -- global extrapolation factor (see below).
+- *rescale* --- global scale factor for cross-section values.
+- *exterp* --- global extrapolation factor (see below).
 
 #### Configuration sequence
 All processes are described in a list of dict-entries.
@@ -274,7 +274,7 @@ In general, scattering is described by the differential cross-section
 $\sigma(\varepsilon,\ \alpha)$, where
 $\sigma(\varepsilon)
 =2\pi\int_0^\pi \sin\alpha\ \sigma(\varepsilon,\ \alpha)\ {\rm d}\alpha$,
-$\alpha$ -- azimuthal scattering angle (relative to the incident direction).
+$\alpha$ --- azimuthal scattering angle (relative to the incident direction).
 Framework **\_ltplib** includes first-order approximation for $\sigma(\varepsilon,\ \alpha)$ using momentum-transfer cross-section:
 ```math
 	\sigma_{\rm m} = 2\pi\int_{0}^{\pi}
