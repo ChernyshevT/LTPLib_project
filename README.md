@@ -573,7 +573,7 @@ then, the cumulative rates are introduced
 	& \bar{\vartheta}_{\rm [k-1]} + \max(\vartheta_{\rm [k]} ~ \forall\varepsilon).
 \end{align}\right.
 ```
-The simulation is organized as a binary search and a ssimple check for each pair of components:
+The simulation is organized as a binary search and a simple check for each pair of components:
 ```math
 \left\{\begin{align}
 	& \bar{\vartheta}_{\rm [k]}
@@ -683,8 +683,8 @@ The syntax as follows `--bginfo KEY1:FRACTION1 KEY2:FRACTION2`.
 (To be done...)
 
 ## [`examples/run_two_stream.py`](./examples/run_two_stream.py) <a name="run_two_stream"></a>
-Two-stream instability (under development)
-
+<!--[Two-stream instability](https://www.particleincell.com/2015/two-stream-instability/)--->
+<!--[see](https://www.particleincell.com/2018/intro-to-vlasov-solvers/)--->
 (To be done...)
 
 <br>
