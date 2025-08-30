@@ -443,6 +443,10 @@ open boundaries and the central body with given $\phi$:
 <br>
 <img src="./docs/imgs/umap_example.png" alt="An example for umap-configuration" width="512"/>
 <br>
+And the next figure shows an [example](./examples/test_poisson_eq.py) for SOR solver usage:
+<br>
+<img src="./docs/imgs/poisson_eq_example.png" alt="An example for SOR solver usage" width="512"/>
+<br>
 
 ## Function bindings <a name="bindings"></a>
 For user convenience, functions to perform simulation steps are given as

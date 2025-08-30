@@ -91,9 +91,9 @@ def main(args):
 	ltp.load_backend("default")
 	
 	lx,ly = 2,2
-	nx,ny = 31,31
+	nx,ny = 191,191
 	
-	noise_lvl = 0.
+	noise_lvl = 0.1
 	
 	shape = (nx+1,ny+1)
 	step  = [l/(k-1) for k,l in zip(shape,[lx,ly])]
@@ -102,7 +102,7 @@ def main(args):
 	_vmap = np.zeros(shape, dtype=np.float32)
 	# set-up test distribution
 	xs,ys = np.meshgrid(*[np.linspace(-l/2,l/2,n) for n,l in zip(shape,[lx,ly])], indexing='ij')
-	_vmap[...] =  np.cos(xs*np.pi*4) * np.cos(ys/ly*np.pi*4) #+ xs/lx
+	_vmap[...] =  np.cos(xs/lx*np.pi*4) * np.cos(ys/ly*np.pi*4) #+ xs/lx
 	
 	# create array to encode finite differences:
 	_umap = np.zeros(shape, dtype=np.uint8)
@@ -151,7 +151,7 @@ def main(args):
 	
 	#reset values
 	mask = (eq.umap != ltp.DIFFop("VAL"))
-	eq.vmap[mask] = 0
+	# ~ eq.vmap[mask] = 0
 	
 	for k in range(10):
 		# SOR-iterations
@@ -171,7 +171,7 @@ def main(args):
 	cmap = laplace(eq.vmap, step)
 	
 	##############################################################################
-	fig,axs = mk_subplots([0.25,5,0.25,0.25],[0.25,5,0.75,0.75]
+	fig,axs = mk_subplots([0.25,4,0.25,0.25],[0.25,4,0.75,0.75]
 	, ncols=3, nrows=2, dpi=200, sharex="all", sharey="all")
 	for ax in axs.flat:
 		ax.set_xticks([])
@@ -181,21 +181,25 @@ def main(args):
 	vopts = {"vmin":-vlim,"vmax":+vlim,"cmap":"jet"} 
 	copts = {"vmin":-clim,"vmax":+clim,"cmap":"seismic"}
 	
+	title_opts = dict(loc="left", size=10)
 	ext = (-lx/2,lx/2,-ly/2,ly/2)
-	axs[0].set_title(r"$\psi_{\rm orig}$", loc="left")
+	axs[0].set_title(r"$\phi$", **title_opts)
 	show_field(axs[0], (_vmap, ext), **vopts)
-	axs[1].set_title(r"$\psi_{\rm calc}\ \leftarrow\ q_{\rm orig} \pm \delta q_{\rm noise}$", loc="left")
+	axs[1].set_title(r"$\phi_{\rm calc}\ \leftarrow\ q \pm \delta q_{\rm noise}$", **title_opts)
 	show_field(axs[1], (eq.vmap, ext), **vopts)
-	axs[2].set_title(r"$\psi_{\rm calc}-\psi_{\rm orig}$", loc="left")
+	axs[2].set_title(r"$\phi_{\rm calc}-\phi$", **title_opts)
 	show_field(axs[2], (eq.vmap-_vmap, ext), **vopts)
 	
-	axs[3].set_title(r"$q_{\rm orig}=\nabla^2\psi_{\rm orig}$", loc="left")
+	axs[3].set_title(r"$q=\nabla^2\phi$", **title_opts)
 	show_field(axs[3], (_cmap, ext), **copts)
-	axs[4].set_title(r"$q_{\rm orig}\pm\delta q_{\rm noise}$", loc="left")
+	axs[4].set_title(r"$q\pm\delta q_{\rm noise}$", **title_opts)
 	show_field(axs[4], (eq.cmap, ext), **copts)
-	axs[5].set_title(r"$\nabla^2\psi_{\rm calc}-\left(q_{\rm orig}\pm\delta q_{\rm noise}\right)$", loc="left")
+	axs[5].set_title(r"$\nabla^2\phi_{\rm calc}-\left(q\pm\delta q_{\rm noise}\right)$", **title_opts)
 	
 	show_field(axs[5], (laplace(eq.vmap, step)-eq.cmap, ext), **copts)
+	
+	fig.name = "../docs/imgs/poisson_example"
+	save_fig(fig, dpi=200, fmt="png")
 	
 	plt.show()
 	
