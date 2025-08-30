@@ -385,11 +385,12 @@ The class constructor accepts two arguments:
 
 The following properties are accessible:
 - `poisson_eq.umap` — just a read-only copy of *umap*-argument;
-- `poisson_eq.cmap` — <ins>c</ins>harge <ins>map</ins>, $q$;
-- `poisson_eq.vmap` — <ins>v</ins>oltage <ins>map</ins>, $\phi$.
+- `poisson_eq.cmap` — <ins>c</ins>harge <ins>map</ins>, $q$ (used as an input);
+- `poisson_eq.vmap` — <ins>v</ins>oltage <ins>map</ins>, $\phi$ (will be updated).
 
 Here *cmap* acts as a problem's input,
-and *vmap* should contain appropriate initial approximation for $\phi_{\rm old}$.
+and *vmap* should contain appropriate boundary values and
+initial approximation for $\phi_{\rm old}$ (could be zero).
 
 ### Iteration
 The method `poisson_eq.iter(w_relax: float) -> float` performs one SOR iteration.

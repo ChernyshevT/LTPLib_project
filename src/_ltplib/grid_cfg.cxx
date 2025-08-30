@@ -68,8 +68,8 @@ std::vector<std::vector<u32>> gen_nodes
     };
     fn(fn, 0);
     
-    py::print(axes);
-    py::print(nodes);
+    //py::print(axes);
+    //py::print(nodes);
     
     return nodes;
 }
@@ -124,7 +124,7 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 	
 	// setup nodes
 	if (cfg["nodes"].is_none()) {
-		py::print("build nodes");
+		//py::print("build nodes");
 		cfg["nodes"] = gen_nodes(nd, axes);
 	}
 	
@@ -144,8 +144,15 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 
 		u64 mshift{0};
 		if (cfg.contains("mask") and not cfg["mask"].is_none()) {
+			
+			/* check mask */ /* TODO: move it out of node pass! */
 			auto info = (py::cast<py::array_t<u8, py::array::c_style>>(cfg["mask"])).request();
-
+			for (u8 i{0}; i<nd; ++i) {
+				if (nd != info.ndim or axes[i].back()-axes[i][0] != info.shape[i]) {
+					throw bad_arg("invalid mask.shape!");
+				}
+			}
+			
 			auto fn = [&] (auto && fn, ssize_t n=0, ssize_t shift=0) -> void {
 				if (n == nd) {
 					u8 var{static_cast<u8*>(info.ptr)[shift]};
@@ -154,6 +161,8 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 					fn(fn, n+1, shift + j1*info.strides[n]/info.itemsize);
 				}
 			}; fn(fn);
+			
+			//py::print(mcache.size(), mcache);
 			
 			/* skip the node if it is fully masked */
 			if (std::all_of(mcache.begin(), mcache.end(), [] (u8 m) {return m>0;})) {
@@ -197,7 +206,7 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 				} k++;
 			}
 		}; fn(fn, nd);
-		py::print(node.lnk);
+		//py::print(node.lnk);
 	}
 
 }

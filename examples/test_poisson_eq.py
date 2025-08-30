@@ -8,9 +8,8 @@ from util.plots   import *
 from util.loggers import *
 
 def show_umap(umap):
-	U = ltp.poisson_eq.uTYPE
-	
-	fig,ax = mk_subplots([0,8,2.75],[0,8,0], dpi=200)
+
+	fig,ax = mk_subplots([0,8,1.75],[0,8,0], dpi=200)
 	
 	ax.set_xlim(-0.5, umap.shape[0]-0.5)
 	ax.set_ylim(-0.5, umap.shape[1]-0.5)
@@ -20,32 +19,32 @@ def show_umap(umap):
 	for x in range(umap.shape[0]):
 		for y in range(umap.shape[1]):
 			ucode = umap[x,y]
-			if ucode == U.VALUE:
+			if 0 == ucode:
 				vals.append((x,y))
 			else:
-				match ucode & U.XCENTER:
-					case U.XLFOPEN:
+				match ucode & 0b00_00_00_11:
+					case 0b00_00_00_01:
 						xlfs.append((x,y))
-					case U.XRTOPEN:
+					case 0b00_00_00_10:
 						xrts.append((x,y))
-					case U.XCENTER:
+					case 0b00_00_00_11:
 						xcns.append((x,y))
-				match ucode & U.YCENTER:
-					case U.YLFOPEN:
+				match ucode & 0b00_00_11_00:
+					case 0b00_00_01_00:
 						ylfs.append((x,y))
-					case U.YRTOPEN:
+					case 0b00_00_10_00:
 						yrts.append((x,y))
-					case U.YCENTER:
+					case 0b00_00_11_00:
 						ycns.append((x,y))
 	
 	############################################################
-	ax.plot(*zip(*vals), ls="", c="k", marker="s", markersize=2, label=r"{\tt VALUE}")
-	ax.plot(*zip(*xlfs), ls="", c="k", marker=0,   markersize=4, label=r"{\tt XLFOPEN}")
-	ax.plot(*zip(*xrts), ls="", c="k", marker=1,   markersize=4, label=r"{\tt XRTOPEN}")
-	ax.plot(*zip(*xcns), ls="", c="k", marker="_", markersize=8, label=r"{\tt XCENTER}")
-	ax.plot(*zip(*ylfs), ls="", c="k", marker=3,   markersize=4, label=r"{\tt YLFOPEN}")
-	ax.plot(*zip(*yrts), ls="", c="k", marker=2,   markersize=4, label=r"{\tt YRTOPEN}")
-	ax.plot(*zip(*ycns), ls="", c="k", marker="|", markersize=8, label=r"{\tt YCENTER}")
+	ax.plot(*zip(*vals), ls="", c="k", marker=".", markersize=1, label=r"{\tt 0}")
+	ax.plot(*zip(*xlfs), ls="", c="k", marker=0,   markersize=3, label=r"{\tt XLF}")
+	ax.plot(*zip(*xrts), ls="", c="k", marker=1,   markersize=3, label=r"{\tt XRT}")
+	ax.plot(*zip(*xcns), ls="", c="k", marker="_", markersize=6, label=r"{\tt XCN}")
+	ax.plot(*zip(*ylfs), ls="", c="k", marker=3,   markersize=3, label=r"{\tt YLF}")
+	ax.plot(*zip(*yrts), ls="", c="k", marker=2,   markersize=3, label=r"{\tt YRT}")
+	ax.plot(*zip(*ycns), ls="", c="k", marker="|", markersize=6, label=r"{\tt YCN}")
 	
 	legend_conf = {
 		"bbox_to_anchor":(1,0,1,1),
@@ -91,8 +90,8 @@ def main(args):
 	
 	ltp.load_backend("default")
 	
-	lx,ly = 1.5,3
-	nx,ny = 63,63
+	lx,ly = 2,2
+	nx,ny = 31,31
 	
 	noise_lvl = 0.
 	
@@ -108,10 +107,12 @@ def main(args):
 	# create array to encode finite differences:
 	_umap = np.zeros(shape, dtype=np.uint8)
 	# set central differences for x and y axes:
-	_umap[... ] =  ltp.DIFFop("XCN|YCN")
+	# ~ _umap[... ] =  ltp.DIFFop("XCN|YCN")
 	# set Dirichlet boundary for left and right edges
-	_umap[0, :] = ltp.DIFFop("VAL");
-	_umap[nx,:] = ltp.DIFFop("VAL")
+	_umap[:nx, :] |= ltp.DIFFop("XRT")
+	_umap[1:,  :] |= ltp.DIFFop("XLF")
+	_umap[:, :ny] |= ltp.DIFFop("YRT")
+	_umap[:,1:  ] |= ltp.DIFFop("YLF")
 	
 	# ~ umap[0, :]   = umap[0, :]   | U.XRTOPEN 
 	# ~ umap[nx,:]   = umap[nx,:]   | U.XLFOPEN
@@ -123,19 +124,20 @@ def main(args):
 	# ~ umap.flat[0 ] = U.VALUE
 	
 	r = 0.5**2
-	_umap[xs**2 + ys**2 < r**2] = ltp.DIFFop("VAL")
+	_umap[xs**2 + ys**2 < r**2] = 0
 	# ~ _vmap[xs**2 + ys**2 < r**2] = 0
 	
-	_vmap[_umap == ltp.DIFFop("VAL")] = 0
+	_vmap[_umap == 0] = 0
 	
 	# ~ for j, w in enumerate(w_chebyshev(umap)):
 		# ~ print(j, w)
 		# ~ if j>100:
 			# ~ exit()
 		
-	# ~ fig = show_umap(umap)
-	# ~ fig.name = "../docs/imgs/umap_example"
-	# ~ save_fig(fig, dpi=200, fmt="png")
+	fig = show_umap(_umap)
+	plt.show()
+	fig.name = "../docs/imgs/umap_example"
+	save_fig(fig, dpi=200, fmt="png")
 	# ~ exit()
 	
 	# create and fill array with charge-densities
