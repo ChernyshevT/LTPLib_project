@@ -179,7 +179,7 @@ def main(args):
 	
 	show_field(axs[5], (laplace(eq.vmap, step)-eq.cmap, ext), **copts)
 	
-	fig.name = "../docs/imgs/poisson_example"
+	fig.name = "../docs/imgs/poisson_eq_example"
 	save_fig(fig, dpi=200, fmt="png")
 	
 	plt.show()
