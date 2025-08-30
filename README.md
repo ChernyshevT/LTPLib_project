@@ -439,7 +439,7 @@ it will define periodic boundary condition along this axis.
 > In this case, one arbitrary unit should be marked with `0`-value.
 
 The following example shows the umap-configuration for the problem with
-periodic and open boundaries and the central body with given $\phi$:
+open boundaries and the central body with given $\phi$:
 <br>
 <img src="./docs/imgs/umap_example.png" alt="An example for umap-configuration" width="512"/>
 <br>
