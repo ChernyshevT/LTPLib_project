@@ -39,12 +39,12 @@ def show_umap(umap):
 	
 	############################################################
 	ax.plot(*zip(*vals), ls="", c="k", marker=".", markersize=1, label=r"{\tt 0}")
-	ax.plot(*zip(*xlfs), ls="", c="k", marker=0,   markersize=3, label=r"{\tt XLF}")
-	ax.plot(*zip(*xrts), ls="", c="k", marker=1,   markersize=3, label=r"{\tt XRT}")
-	ax.plot(*zip(*xcns), ls="", c="k", marker="_", markersize=6, label=r"{\tt XCN}")
-	ax.plot(*zip(*ylfs), ls="", c="k", marker=3,   markersize=3, label=r"{\tt YLF}")
-	ax.plot(*zip(*yrts), ls="", c="k", marker=2,   markersize=3, label=r"{\tt YRT}")
-	ax.plot(*zip(*ycns), ls="", c="k", marker="|", markersize=6, label=r"{\tt YCN}")
+	ax.plot(*zip(*xlfs), ls="", c="k", marker=0,   markersize=1.5, label=r"{\tt XLF}")
+	ax.plot(*zip(*xrts), ls="", c="k", marker=1,   markersize=1.5, label=r"{\tt XRT}")
+	ax.plot(*zip(*xcns), ls="", c="k", marker="_", markersize=3, label=r"{\tt XCN}")
+	ax.plot(*zip(*ylfs), ls="", c="k", marker=3,   markersize=1.5, label=r"{\tt YLF}")
+	ax.plot(*zip(*yrts), ls="", c="k", marker=2,   markersize=1.5, label=r"{\tt YRT}")
+	ax.plot(*zip(*ycns), ls="", c="k", marker="|", markersize=3, label=r"{\tt YCN}")
 	
 	legend_conf = {
 		"bbox_to_anchor":(1,0,1,1),
@@ -91,7 +91,7 @@ def main(args):
 	ltp.load_backend("default")
 	
 	lx,ly = 2,2
-	nx,ny = 191,191
+	nx,ny = 47,47
 	
 	noise_lvl = 0.1
 	
@@ -112,7 +112,7 @@ def main(args):
 	_umap[:, :ny] |= ltp.DIFFop("YRT")
 	_umap[:,1:  ] |= ltp.DIFFop("YLF")
 	# set up central body
-	r = 0.5**2
+	r = 0.66**2
 	_umap[xs**2 + ys**2 < r**2] = 0
 	_vmap[_umap == 0] = 0
 	
