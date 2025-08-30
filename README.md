@@ -445,7 +445,7 @@ open boundaries and the central body with given $\phi$:
 <br>
 And the next figure shows an [example](./examples/test_poisson_eq.py) for SOR solver usage:
 <br>
-<img src="./docs/imgs/poisson_eq_example.png" alt="An example for SOR solver usage" width="512"/>
+<img src="./docs/imgs/poisson_eq_example.png" alt="An example for SOR solver usage" width="768"/>
 <br>
 
 ## Function bindings <a name="bindings"></a>
