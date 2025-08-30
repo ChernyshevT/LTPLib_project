@@ -112,7 +112,7 @@ def main(args):
 	_umap[:, :ny] |= ltp.DIFFop("YRT")
 	_umap[:,1:  ] |= ltp.DIFFop("YLF")
 	# set up central body
-	r = 0.66**2
+	r = 0.25
 	_umap[xs**2 + ys**2 < r**2] = 0
 	_vmap[_umap == 0] = 0
 	
