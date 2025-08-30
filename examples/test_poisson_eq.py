@@ -106,40 +106,21 @@ def main(args):
 	
 	# create array to encode finite differences:
 	_umap = np.zeros(shape, dtype=np.uint8)
-	# set central differences for x and y axes:
-	# ~ _umap[... ] =  ltp.DIFFop("XCN|YCN")
-	# set Dirichlet boundary for left and right edges
+	# set up differences for x and y axes:
 	_umap[:nx, :] |= ltp.DIFFop("XRT")
 	_umap[1:,  :] |= ltp.DIFFop("XLF")
 	_umap[:, :ny] |= ltp.DIFFop("YRT")
 	_umap[:,1:  ] |= ltp.DIFFop("YLF")
-	
-	# ~ umap[0, :]   = umap[0, :]   | U.XRTOPEN 
-	# ~ umap[nx,:]   = umap[nx,:]   | U.XLFOPEN
-	# ~ umap[1:nx,:] = umap[1:nx,:] | U.XCENTER
-	# ~ umap[:, 0]   = umap[:, 0]   | U.YRTOPEN
-	# ~ umap[:,ny]   = umap[:,ny]   | U.YLFOPEN
-	# ~ umap[:,1:ny] = umap[:,1:ny] | U.YCENTER
-	# ~ umap.flat[1:] = U.XCENTER|U.YCENTER
-	# ~ umap.flat[0 ] = U.VALUE
-	
+	# set up central body
 	r = 0.5**2
 	_umap[xs**2 + ys**2 < r**2] = 0
-	# ~ _vmap[xs**2 + ys**2 < r**2] = 0
-	
 	_vmap[_umap == 0] = 0
 	
-	# ~ for j, w in enumerate(w_chebyshev(umap)):
-		# ~ print(j, w)
-		# ~ if j>100:
-			# ~ exit()
-		
 	fig = show_umap(_umap)
 	plt.show()
 	fig.name = "../docs/imgs/umap_example"
 	save_fig(fig, dpi=200, fmt="png")
-	# ~ exit()
-	
+
 	# create and fill array with charge-densities
 	_cmap = laplace(_vmap, step)
 	
@@ -150,8 +131,8 @@ def main(args):
 	eq.vmap[...] = _vmap
 	
 	#reset values
-	mask = (eq.umap != ltp.DIFFop("VAL"))
-	# ~ eq.vmap[mask] = 0
+	mask = (eq.umap != 0)
+	eq.vmap[mask] = 0
 	
 	for k in range(10):
 		# SOR-iterations
@@ -171,7 +152,7 @@ def main(args):
 	cmap = laplace(eq.vmap, step)
 	
 	##############################################################################
-	fig,axs = mk_subplots([0.25,4,0.25,0.25],[0.25,4,0.75,0.75]
+	fig,axs = mk_subplots([0.125,6,0.125,0.125],[0.25,6,0.5,0.75]
 	, ncols=3, nrows=2, dpi=200, sharex="all", sharey="all")
 	for ax in axs.flat:
 		ax.set_xticks([])
