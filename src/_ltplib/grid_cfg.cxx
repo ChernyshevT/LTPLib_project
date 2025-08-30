@@ -46,32 +46,28 @@ u8 parse_grid_flags(const char* mode_str) {
 	return flags;
 }
 /******************************************************************************/
-#include <vector>
 
+static
 std::vector<std::vector<u32>> gen_nodes
 (u8 nd, const std::vector<std::vector<u32>> &axes) {
-    std::vector<std::vector<u32>> nodes;
+	std::vector<std::vector<u32>> nodes;
+	std::vector<u32>              node(nd);
 
-    std::vector<u32> current(nd);
-
-    // Recursive lambda for generating combinations
-    auto&& fn = [&] (auto &&fn, u8 depth) {
-        if (depth == nd) {
-            nodes.push_back(current);
-            return;
-        }
-
-        for (u8 i{0}; i<axes[depth].size()-1; ++i) {
-            current[depth] = i;
-            fn(fn, depth + 1);
-        }
-    };
-    fn(fn, 0);
-    
-    //py::print(axes);
-    //py::print(nodes);
-    
-    return nodes;
+	/* gen combinations */
+	auto&& fn = [&] (auto &&fn, u8 md=0) -> void {
+		if (md < nd) for (u8 i{0}; i<axes[md].size()-1; ++i) {
+			node[md] = i;
+			fn(fn, md + 1);
+		} else {
+			nodes.push_back(node);
+		}
+	};
+	fn(fn);
+	
+	//py::print(axes);
+	//py::print(nodes);
+	
+	return nodes;
 }
 
 
