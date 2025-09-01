@@ -231,7 +231,7 @@ There are two ways in which the process cross-section can be passed:
 directly `"CSEC": ...` or as a tuple with additional parameters
 `"CSEC" : (..., {"scale" : 1e4, "exterp": 1})`.
 The *scale* parameter works together with *rescale*
-(resulting scale is ${\tt scale}~\cdot~{\tt rescale}$),
+(resulting scale is ${\tt scale} \cdot {\tt rescale}$),
 and *exterp* overwrites the global value.
 The cross-section can be defined analytically as a Python function of two arguments
 $\sigma(\varepsilon,\ \varepsilon_{\rm th})$, for example:
