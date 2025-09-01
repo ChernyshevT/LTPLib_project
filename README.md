@@ -344,7 +344,7 @@ the spawning of ions or multiple electrons or ions.
 2. Electron excitation, anisotropic scattering is defined by $\xi(\varepsilon - \varepsilon_{\rm th})$:
 ```python
 {"TYPE":"EXCITATION", "THRESHOLD":8.0,
- "CSEC":  lambda en, th=8.0: 1e-17*(en-th)/((en-th)**(7/4)+1),
+ "CSEC":  lambda en, th: 1e-17*(en-th)/((en-th)**(7/4)+1),
  "DCSFN": lambda en, es=4.5: (4*en/es)/(1+4*en/es), # screened Coulomb
 },
 ```
