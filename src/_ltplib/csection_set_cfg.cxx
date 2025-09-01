@@ -3,287 +3,31 @@
 #include <cmath>
 #include <filesystem>
 #include <ranges>
+
+#include "api_backend.hxx"
 #include "def_csection_set.hxx"
-#define  DEFAULT_EXTERP 0.25
+#include "csection_set_utils.cxx"
+#include "csection_set_entries.cxx"
 
-csfunc_t read_csect (py::handle arg, f32 enth, py::dict opts);
 
-f32 DCS_from_MTCS (f32 sm, f32 s0, f32 ef);
-
-f32 MTCS_from_DCS (f32 x, f32 ef);
-
-u16 add_const (csection_set_cfg *cfg, f32 arg, bool unique=false) {
-	auto it = std::find (cfg->_consts.begin(), cfg->_consts.end(), arg);
-	if (it != cfg->_consts.end() and not unique) {
-		return u16(it - cfg->_consts.begin());
-	} else {
-		cfg->_consts.push_back(arg);
-		return u16(cfg->_consts.size() - 1);
-	}
-}
 
 void update_cfg (csection_set_cfg *cfg, py::dict opts) {
 	
-	auto _debug = py::cast<bool>(opts.attr("get")("debug", false));
+	//auto _debug = py::cast<bool>(opts.attr("get")("debug", false));
 	
-	if (_debug) {
-		fmt::print("particles:\n");
-		for (const auto& pt : cfg->pt_entries) {
-			fmt::print("{:<10} {}\n", pt.name, pt.group_index);
-		}
-		fmt::print("groups:\n");
+	if (true) {
+		py::print(cfg->consts);
+		py::print(cfg->pt_list);
+		py::print(cfg->bg_list);
+		fmt::print("GROUPS:\n");
 		for (const auto& group : cfg->db_groups) {
-			fmt::print("{:<10} {}\n", group.name, group.channel_index);
+			fmt::print("\t{:<15} PT#[{:03d}] BG#[{:03d}] CH#[{:03d}, {:03d}]\n"
+			, group.descr, group.pt_index, group.bg_index
+			, group.ch_index[0], group.ch_index[1]);
 		}
 	}
 };
 
-
-/******************************************************************************/
-pt_entry_t::pt_entry_t (csection_set_cfg* cfg, py::dict entry) {
-	
-	for (auto [key, val] : entry) switch (_hash(key)) {
-		default:
-			throw bad_arg("PARTICLE: unknown field \"{}\"!", py::cast<std::string>(key));
-		case "TYPE"_hash:
-			continue;
-		case "KEY"_hash:
-			this->name = py::cast<std::string>(val);
-			continue;
-		case "ENCFFT"_hash:
-			this->encfft = py::cast<f32>(val);
-			continue;
-	}
-	
-	/* check repeat */
-	for (const auto& pt : cfg->pt_entries) {
-		if (this->name == pt.name) {
-			throw bad_arg("PARTICLE blocks for \"KEY\":\"{}\" already defined!", pt.name);
-		}
-	}
-	
-	this->group_index = cfg->db_groups.size();
-	
-	logger::debug("add PARTICLE \"{}\"", this->name);
-};
-
-/******************************************************************************/
-db_group_t::db_group_t (csection_set_cfg* cfg, py::dict entry) {
-
-	for (auto [key, val] : entry) switch (_hash(key)) {
-		default:
-			throw bad_arg("BACKGROUND: unknown field \"{}\"!"
-			, py::cast<std::string>(key));
-		case "TYPE"_hash:
-			continue;
-		case "KEY"_hash:
-			this->name = py::cast<std::string>(val);
-			continue;
-		case "MASSRATE"_hash:
-			this->massrate = py::cast<f32>(val);
-			continue;
-	}
-	
-	/* check sequence */
-	if (cfg->pt_entries.empty()) {
-		throw bad_arg("\"PARTICLE\"-block is not defined yet!");;
-	}
-	
-	/* check repeat */
-	for (const auto& group : cfg->db_groups) {
-		if (this->name == group.name) {
-			throw bad_arg("BACKGROUND block for \"KEY\":\"{}\" is already defined!"
-			, group.name);
-		}
-	}
-	
-	channel_index = cfg->db_entries.size();
-	
-	logger::debug("add GROUP \"{}+{}\"", cfg->pt_entries.back().name, this->name);
-};
-
-/******************************************************************************/
-enum state : u8 {
-	ENTH_DEF=0,
-	CSEC_DEF,
-	MTCS_DEF,
-	DCSFN_DEF,
-	OPBPARAM_DEF,
-	NONCONS,
-};
-
-/******************************************************************************/
-db_entry_t::db_entry_t (csection_set_cfg *cfg, py::dict entry, py::dict opts) {
-	
-	if (cfg->db_groups.empty()) {
-		throw bad_arg("\"BACKGROUND\"-block is not defined yet!");
-	}
-	cfg->db_groups.back().channel_index++;
-	
-	enth = 0.0f;
-	FLAGS.reset();
-
-	// check fields
-	for (auto [key, val] : entry) switch (_hash(key)) {
-		
-		default:
-			throw bad_arg("unknown field \"{}\"!", py::cast<std::string>(key));
-		case "TYPE"_hash:
-			descr = py::cast<std::string>(val);
-			switch (_hash(val)) {
-				default:
-					throw bad_arg("invalid \"TYPE\" field: \"{}\"!", descr);
-				case "EFFECTIVE"_hash:
-					throw bad_arg("\"EFFECTIVE\" cross-sections aren't supported, yet!");
-				case "EXCHANGE"_hash:
-					throw bad_arg("\"EXCHANGE\" cross-sectionns aren't supported, yet!");
-				case "ELASTIC"_hash:
-					opc = opcode::ELASTIC;
-					continue;
-				case "EXCITATION"_hash:
-					opc = opcode::EXCITATION;
-					continue;
-				case "VIBRATIONAL"_hash:
-					opc = opcode::VIBRATIONAL;
-					continue;
-				case "ROTATIONAL"_hash:
-					opc = opcode::ROTATIONAL;
-					continue;
-				case "DISSOCIATION"_hash:
-					opc = opcode::DISSOCIATION;
-					continue;
-				case "IONIZATION"_hash:
-					opc = opcode::IONIZATION;
-					continue;
-				case "ATTACHMENT"_hash:
-					opc = opcode::ATTACHMENT;
-					continue;
-			}
-			continue;
-		case "THRESHOLD"_hash:
-			enth = py::cast<f32>(entry["THRESHOLD"]);
-			FLAGS.set(ENTH_DEF);
-			continue; 
-		case "CSEC"_hash:
-			FLAGS.set(CSEC_DEF);
-			continue; 
-		case "MTCS"_hash:
-			FLAGS.set(MTCS_DEF);
-			continue; 
-		case "DCSFN"_hash:
-			FLAGS.set(DCSFN_DEF);
-			continue; 
-		case "OPBPARAM"_hash:
-			extra["OPBPARAM"] = py::cast<f32>(entry["OPBPARAM"]);
-			FLAGS.set(OPBPARAM_DEF);
-			continue;
-		case "PRODUCTS"_hash:
-			extra["products"] = py::cast<std::string>(entry["PRODUCTS"]);
-			//products = parse_products(py::cast<std::string>())
-			continue;
-		case "TRANSFORM"_hash:
-			throw bad_arg("\"TRANSFORM\" is not implemented yet!");
-		case "COMMENT"_hash: try {
-				extra["comment"] = py::cast<std::string>(entry["COMMENT"]);
-			} catch (...) {}
-			continue;
-		case "REF"_hash: try {
-				extra["ref"] = py::cast<std::string>(entry["REF"]);
-			} catch (...) {}
-			continue;
-	}
-	//fmt::print("entry {}: ", info); std::cout<<FLAGS<<"\n";
-	
-	if (enth < 0 \
-	or (enth != 0 and opc == opcode::ELASTIC) \
-	or (enth == 0 and opc != opcode::ELASTIC and opc != opcode::ATTACHMENT)) {
-		throw bad_arg("{}/THRESHOLD = {} makes no sense!", descr, enth);
-	}
-	/****************************************************************************/
-	if (opc >= opcode::IONIZATION and (FLAGS[MTCS_DEF] | FLAGS[DCSFN_DEF])) {
-		throw bad_arg("{}/MTCS makes no sense!", descr);
-	}
-	if (opc != opcode::IONIZATION and FLAGS[OPBPARAM_DEF]) {
-		throw bad_arg("{}/OPBPARAM makes no sense!", descr);
-	}
-	/****************************************************************************/
-	if (FLAGS[CSEC_DEF]) {
-		fns["CS0"] = read_csect(entry["CSEC"], enth, py::dict{**opts});
-	}
-	/****************************************************************************/
-	if (FLAGS[MTCS_DEF]) {
-		if (not (FLAGS[CSEC_DEF] or FLAGS[DCSFN_DEF])) {
-			throw bad_arg("\"MTCS\" & [\"CSEC\" or \"DCSFN\"] should be defined!");
-		}
-		fns["CS1"] = read_csect(entry["MTCS"], enth, py::dict{**opts});
-	}
-	/****************************************************************************/
-	if (FLAGS[DCSFN_DEF]) {
-		if (FLAGS[CSEC_DEF] and FLAGS[MTCS_DEF]) {
-			throw bad_arg("can not use all three of: \"CSEC\" & \"MTCS\" & \"DCSFN\"!");
-		}
-		fns["DCS"] = \
-		[enth=enth, fn=py::cast<py::function>(entry["DCSFN"])] (f32 enel) -> f32 {
-			return enel >= enth ? py::cast<f32>(fn(enel-enth)) : NAN;
-		};
-	}
-	/****************************************************************************/
-	if (not (FLAGS[CSEC_DEF] or FLAGS[MTCS_DEF] or FLAGS[DCSFN_DEF])) {
-		throw bad_arg("cross-section is not defined!");
-	}
-	/****************************************************************************/
-	if (FLAGS[CSEC_DEF] and FLAGS[MTCS_DEF]) {
-		fns["DCS"] = \
-		[enth=enth, fn0=fns["CS0"], fn1=fns["CS1"]] (f32 enel) -> f32 {
-			if (enel >= enth) {
-				f32 s0{fn0(enel)};
-				f32 s1{fn1(enel)};
-				f32 ef{enth > 0 ? enel/enth : 0.0f};
-				return DCS_from_MTCS(s1, s0, ef);
-			} else return NAN;
-		};
-	}
-	/****************************************************************************/
-	if (FLAGS[CSEC_DEF] and FLAGS[DCSFN_DEF]) {
-		fns["CS1"] = \
-		[enth=enth, fn0=fns["CS0"], fnX=fns["DCS"]] (f32 enel) -> f32 {
-			if (enel >= enth) {
-				f32 s0{fn0(enel)};
-				f32 xi{fnX(enel)};
-				f32 ef{enth > 0 ? enel/enth : 0.0f};
-				return s0*MTCS_from_DCS(xi, ef);
-			} else return NAN;
-		};
-	}
-	/****************************************************************************/
-	if (FLAGS[MTCS_DEF] and FLAGS[DCSFN_DEF]) {
-		fns["CS0"] = \
-		[enth=enth, fn1=fns["CS1"], fnX=fns["DCS"]] (f32 enel) -> f32 {
-			if (enel >= enth) {
-				f32 s1{fn1(enel)};
-				f32 xi{fnX(enel)};
-				f32 ef{enth > 0 ? enel/enth : 0.0f};
-				return s1/MTCS_from_DCS(xi, ef);
-			} else return NAN;
-		};
-	}
-	
-	std::string msg = fmt::format("add CHANNEL \"{}+{}\" {}"
-	, cfg->pt_entries.back().name, cfg->db_groups.back().name, this->descr);
-	
-	if (this->fns.contains("DCS")) {
-		msg += "+DCS";
-	}
-	if (this->extra.contains("comment")) {
-		msg += fmt::format(" {}"
-		, py::cast<std::string>(this->extra.attr("get")("comment","")));
-	}
-	if (this->enth > 0.0f) {
-		msg += fmt::format(" ({:e} eV)", this->enth);
-	}
-	
-	logger::debug("{}", msg);
-}
 /******************************************************************************/
 csection_set_cfg::csection_set_cfg (
 	std::vector<py::dict> entries,
@@ -301,7 +45,6 @@ csection_set_cfg::csection_set_cfg (
 	
 	std::set<std::string> ptset, bgset;
 	
-	this->pt_entries.reserve(entries.size());
 	this->db_groups.reserve(entries.size());
 	this->db_entries.reserve(entries.size());
 	
@@ -467,7 +210,8 @@ csection_set_cfg::csection_set_cfg (
 		/* select particle and background *****************************************/
 		switch (_hash(entry["TYPE"])) {
 			case "PARTICLE"_hash: {
-				this->pt_entries.emplace_back(this, entry);
+				add_particle(this, entry);
+				
 				std::string key;
 				if (entry.contains("KEY") and entry.contains("ENCFFT")) {
 					key = py::cast<std::string>(entry["KEY"]);
@@ -485,7 +229,7 @@ csection_set_cfg::csection_set_cfg (
 			} continue;
 			
 			case "BACKGROUND"_hash: {
-				this->db_groups.emplace_back(this, entry);
+				add_db_group(this, entry);
 				
 				if (not TYPE_isdefined) throw bad_arg
 				("\"PARTICLE\" entry is not defined!");
@@ -494,7 +238,7 @@ csection_set_cfg::csection_set_cfg (
 				std::string key;
 				if (entry.contains("KEY")) {
 					key = py::cast<std::string>(entry["KEY"]);
-					if (not bgset.insert(key).second) throw bad_arg("background \"{}\" is already set!", key);
+					//if (not bgset.insert(key).second) throw bad_arg("background \"{}\" is already set!", key);
 					
 					if (not defbg) {
 						//logger::debug("csection_set: add background \"{}\"", key);
@@ -539,7 +283,8 @@ csection_set_cfg::csection_set_cfg (
 		if (not flags.n0_def) {
 			throw bad_arg("background is not defined yet!");
 		}
-		db_entries.emplace_back(this, entry, opts);
+		add_db_entry(this, entry, opts);
+		//db_entries.emplace_back(this, entry, opts);
 		auto& db_entry{db_entries.back()};
 		
 		chinfo.push_back\
@@ -610,284 +355,4 @@ csection_set_cfg::csection_set_cfg (
 	}
 
 	update_cfg(this, opts);
-}
-
-/******************************************************************************/
-csfunc_t from_data
-(std::vector<std::array<f32,2>>&& xys, f32 enth, py::dict opts) {
-	
-	if (xys.size() < 3) throw bad_arg("no enough data points");
-
-	f32 exterp = py::cast<f32>(opts.attr("get")("exterp", DEFAULT_EXTERP));
-	f32 scale  = py::cast<f32>(opts.attr("get")("scale", 1.0f)) \
-	           * py::cast<f32>(opts.attr("get")("rescale", 1.0f));
-	size_t j{0}, n{xys.size()}, nex{0};
-	
-	// check data
-	f32 a{0.0}, b{0.0}, mx{0.0}, my{0.0}, mxx{0.0}, mxy{0.0};
-	for (auto [x, y] : xys) {
-		
-		if (not (std::isfinite(x) or std::isfinite(y) or x >= 0)) {
-			throw bad_arg("point#{} invalid data ({}, {})!", j, x, y);
-		}
-		
-		if ((j ? xys[j-1][0] : -INFINITY) >= x) {
-			throw bad_arg("point#{} unsorted arguments!", j);
-		}
-		
-		// collect  extrapolation coeffs.
-		if (x > 0.0f and exterp >= log10f(xys[n-1][0]) - log10f(x)) {
-			mx  += logf(x);
-			my  += logf(y);
-			mxx += logf(x)*logf(x);
-			mxy += logf(x)*logf(y);
-			++nex;
-		}
-		++j;
-	}
-	// calculate extrapolation coeffs.
-	if (exterp > 0.0f) {
-		mx  = mx /f32(nex);
-		my  = my /f32(nex);
-		mxx = mxx/f32(nex);
-		mxy = mxy/f32(nex);
-		
-		a = (mxy - mx*my)/(mxx - mx*mx);
-		b = expf(my - a*mx);
-
-		if (nex == 1) {
-			throw bad_arg("can not extrapolate: no enough points!");
-		}
-		if (not (isfinite(a) or isfinite(b))) {
-			throw bad_arg("can not extrapolate: invalid values!");
-		}
-		if (a > 0.0f) {
-			throw bad_arg("can not extrapolate: growing function!");
-		}
-
-		logger::debug(
-		"build extrapolation using {} points"
-		" ({:8.2e}, {:8.2e} eV): a={:+9.2e}, b={:+9.2e}"
-		, nex, xys[n-nex][0], xys[n-1][0], a, b);
-	}
-	
-	return [=] (f32 x) -> f32 {
-		
-		if (x < enth) return NAN;
-		
-		size_t j{0}, j1{n};
-		while (j < j1) {
-			size_t md{(j+j1)/2};
-			if (x < xys[md][0]) {
-				j1 = md;
-			} else {
-				j  = md+1;
-			}
-		}
-
-		f32 v, c, lx, rx, ly, ry;
-		if (j < n) {
-			j1 = j? j : j+1; 
-			
-			lx = xys[j1-1][0];
-			ly = xys[j1-1][1];
-			rx = xys[j1][0];
-			ry = xys[j1][1];
-
-			if (j and x > 0.0f and lx > 0.0f and ly > 0.0f and ry > 0.0f) {
-			// log-log interpolation
-				lx = logf(lx);
-				ly = logf(ly);
-				rx = logf(rx);
-				ry = logf(ry);
-				c = (ry-ly)/(rx-lx);
-				v = expf(c*logf(x) + (ry - c*rx));
-			} else {
-			// fallback linear interpolation
-				c = (ry-ly)/(rx-lx);
-				v = c*x + (ry - c*rx);
-				if (v < 0.0f) v = 0.0f;
-			}
-		} else if (exterp > 0) {
-			// log-log extrapolation
-			v = expf(a*logf(x))*b;
-		} else {
-			v = NAN;
-		}
-		return v*scale;
-	};
-}
-
-/******************************************************************************/
-csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
-	
-	// update opts
-	if (py::isinstance<py::tuple>(obj)) {
-		py::dict xtra;
-		std::tie(obj, xtra) = py::cast<std::tuple<py::handle, py::dict>>(obj); 
-		opts.attr("update")(xtra);
-	}
-	
-	// transform from function
-	if (py::isinstance<py::function>(obj)) {
-		f32 scale = py::cast<f32>(opts.attr("get")("scale", 1.0f)) \
-	            * py::cast<f32>(opts.attr("get")("rescale", 1.0f));
-	
-		return [scale, enth, fn=py::cast<py::function>(obj)] (f32 x) -> f32 {
-			f32 val{py::cast<f32>(fn(x>0.0f? x : FLT_EPSILON, enth))};
-			return scale*(val>=0? val : 0.0f);
-		};
-	}
-
-	// read from file
-	if (py::isinstance<py::str>(obj)) {
-		std::string line, fname = py::cast<std::string>(obj);
-		
-		auto fp = std::ifstream(std::filesystem::path(fname));
-		if (not fp.is_open()) {
-			throw bad_arg("error opening file \"{}\"", fname);
-		} else {
-			logger::debug("reading \"{}\"", fname);
-		}
-		
-		std::vector<std::array<f32, 2>> xys;
-		auto pattern = py::cast<std::string>(opts.attr("get")("search", ""));
-		auto lineno  = py::cast<u32>(opts.attr("get")("lineno", 0));
-		bool foundPattern = pattern.empty();
-		bool startScan    = pattern.empty();
-		u32  n0=0, n1=0;
-		// scan lines
-		for (u32 n{1u}; std::getline(fp, line); n++) try {
-			
-			// skip
-			if (n < lineno or trim(line).empty()) {
-				continue;
-			}
-			
-			// if pattern is founded in lxcat-file
-			if (not (foundPattern or startScan)
-			    and (line.find(pattern) != std::string::npos)) {
-				foundPattern = true;
-				continue;
-			}
-			
-			// start/stop scan lines in lxcat-file
-			if (foundPattern and line.starts_with("-----")) {
-				if (not startScan) {
-					n0 = n;
-					startScan = true;
-					continue;
-				} else {
-					n1 = n;
-				}
-				break; // stop scan
-			}
-			
-			// skip if comment
-			if (startScan and (line.starts_with("!")
-			 or line.starts_with("#")
-			 or line.starts_with("%")
-			 or line.starts_with("//")
-			)) {
-				continue;
-			}
-			
-			//parse lines
-			if (startScan) {
-				auto [x, y] = parse_vals<f32, f32>(line);
-				// check values
-				if (not (std::isfinite(x) or std::isfinite(y) or x >= 0)) {
-					throw bad_arg("invalid data-point ({}, {})!", x, y);
-				}
-				// check sorted
-				if (xys.size() > 0 and xys[xys.size()-1][0] >= x) {
-					throw bad_arg("unsorted values in energy-column, ({} >= {})!"\
-					, xys[xys.size()-1][0], x);
-				}
-				xys.push_back({x, y});
-				continue;
-			}
-
-		} catch (std::exception& e) {
-			throw bad_arg("{} LINE#{}: {}", fname, n, e.what());
-		}
-		
-		if (not foundPattern and not pattern.empty()) {
-			throw bad_arg("didn't find pattern \"{}\" in file \"{}\""\
-			, pattern, fname);
-		}
-		
-		try {
-			return from_data(std::move(xys), enth, opts);
-		} catch (std::exception& e) {
-			throw bad_arg("{} LINES#{}--{}: {}", fname, n0, n1, e.what());
-		}
-	}
-
-	// read from list of pairs, numpy array , etc.
-	if (py::isinstance<py::iterable>(obj)) {
-		std::vector<std::array<f32, 2>> xys;
-		for (auto xy : obj) {
-			xys.push_back(py::cast<std::array<f32, 2>>(xy));
-		}
-		return from_data(std::move(xys), enth, opts);
-	}
-	
-	throw bad_arg("invalid entry type {}"\
-	, py::cast<std::string>(py::type::of(obj).attr("__name__")));
-}
-
-/******************************************************************************* 
- * Method to obtain anosotropic parameter $\xi$ from MTCS/TCS ratio, see
- * [M Flynn et al 2024 J. Phys. D: Appl. Phys. 57 255204.
- * Benchmark calculations for anisotropic scattering in  kinetic models for
- * low temperature plasma. doi: 10.1088/1361-6463/ad3477]
- ******************************************************************************/
-
-f32 MTCS_from_DCS (f32 x, f32 ef) {
-	/* x{ξ}, ef{ε/εₜ or 0} -> σₘ/σ */
-	if (fabsf(x) >= 1.0f) {
-		throw bad_arg("invalid DCS value: |{}| >= 1!", fabsf(x));
-	}
-	
-	f32 f0, v0;
-	if (fabsf(x) >= FLT_EPSILON) {
-		f0 = (ef != 0) ? sqrtf(1.0-1.0/ef) : 1.0;
-		v0 = f0*(1.0 - (0.5*(1.0+x) * (log(1.0+x)-log(1.0-x)) - x) * (1.0-x)/x/x);
-	} else {
-		v0 = 0.0f;
-	};
-	return 1.0f - v0;
-}
-
-f32 DCS_from_MTCS (f32 sm, f32 s0, f32 ef) {
-	/* sm{σₘ}, s0{σ}, ef{ε/εₜ or 0} -> ξ */
-	if (s0 == 0.0f or fabsf(ef-1.0f) <= FLT_EPSILON) {
-		return 0.0f;
-	}
-	
-	f64 x, xs[]{0.0, 1.0}, vm, v0{fabs(1.0-sm/s0)}, f0{1.0};
-	
-	if (ef != 0) {
-		f0 = sqrtf(1.0-1.0/ef);
-	}
-	
-	if (v0 >= f0) {
-		throw bad_arg("invalid MTCS/ICS ratio: |1-σₘ/σ| >= √(1-ε/εₜ), "
-		"(1 - {:5.2e}/{:5.2e} = {:f} >= {:f})!", sm, s0, v0, f0);
-	}
-	
-	do {
-		x = 0.5*(xs[0]+xs[1]);
-		if (x >= FLT_EPSILON) {
-			// (x -> 1, vm -> 1)
-			vm = f0*(1.0 - (0.5*(1.0+x) * (log(1.0+x)-log(1.0-x)) - x) * (1.0-x)/x/x);
-		} else {
-			// (x -> 0, vm -> 0)
-			vm  = 0.0;
-		}
-		xs[v0 < vm] = x;
-	} while (fabs(vm-v0) > FLT_EPSILON);
-	
-	return copysignf(x, s0-sm);
 }

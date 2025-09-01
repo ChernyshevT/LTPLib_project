@@ -22,43 +22,49 @@ namespace py = pybind11; using namespace pybind11::literals;
 
 typedef std::function<f32(f32)> csfunc_t;
 
-struct pt_entry_t;
 struct db_group_t;
 struct db_entry_t;
 struct csection_set_cfg;
 
-struct pt_entry_t {
-	std::string name;
-	f32 encfft;
-	u16 group_index;
-	
-	pt_entry_t (csection_set_cfg *cfg, py::dict entry);
+enum db_group_flags : u8 {
+	DESCR_DEF = 0,
+	MRATE_DEF,
+	VTERM_DEF,
+	VFLUX_DEF,
+	GROUP_FLAGSNUM,
 };
+typedef std::bitset<GROUP_FLAGSNUM> group_flags_t;
 
 struct db_group_t {
-	std::string name;
-	f32 massrate{0.0f};
-	u16 channel_index;
-	//~ u16 pt_uid        = 0;
-	//~ u16 ma_uid        = 0;
-	
-	//~ u16 ch_xtra       = 0;
-	//~ u16 bg_idx        = 0;
-	//~ u16 bg_therm_mark = 0;
-	//~ u16 bg_flux_mark  = 0;
-	
+	std::string    descr;
+	f32            massrate{0.0f};
+	u16            pt_index;
+	u16            bg_index;
+	u16            ch_index[2];
+	group_flags_t  flags;
+
 	db_group_t (csection_set_cfg *cfg, py::dict entry);
 };
 
+enum db_entry_flags : u8 {
+	ENTH_DEF = 0,
+	CSEC_DEF,
+	MTCS_DEF,
+	DCSFN_DEF,
+	OPBPARAM_DEF,
+	PRODUCTS_DEF,
+	ENTRY_FLAGSNUM,
+};
+typedef std::bitset<ENTRY_FLAGSNUM> entry_flags_t;
+
 struct db_entry_t {
 	opcode         opc;
-	std::bitset<5> FLAGS{0};
-	//std::vector<std::string> products;
 	std::string    descr;
 	f32            enth;
 	f32            rmax;
 	py::dict       extra;
 	std::unordered_map<std::string, csfunc_t> fns; 
+	entry_flags_t  flags;
 	
 	db_entry_t (csection_set_cfg *cfg, py::dict entry, py::dict opts);
 };
@@ -76,17 +82,26 @@ struct csection_set_cfg {
 	u16                      ncsect, nxtra;
 	
 	//~ std::unordered_map<std::string>
-	std::vector<f32>              _consts;
+	std::vector<f32>              consts;
 	std::vector<f32>              _tabs;
 	std::vector<u16>              _index;
-	std::vector<pt_entry_t>       pt_entries;
 	std::vector<db_group_t>       db_groups;
 	std::vector<db_entry_t>       db_entries;
 	
+	std::vector<std::string>
+		pt_list,
+		bg_list;
+	std::map<std::string, group_flags_t>
+		bg_conf;
+	
 	csection_set_cfg
 	(std::vector<py::dict>, f32, py::str, py::str, py::dict);
-
 };
+
+void add_particle(csection_set_cfg *cfg, py::dict obj);
+void add_db_group(csection_set_cfg *cfg, py::dict obj);
+void add_db_entry(csection_set_cfg *cfg, py::dict obj, py::dict opts);
+u16  add_constant(csection_set_cfg *cfg, f32 arg);
 
 /******************************************************************************/
 class csection_set_holder : public csection_set_t {
