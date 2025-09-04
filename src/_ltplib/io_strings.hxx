@@ -8,6 +8,7 @@ namespace py = pybind11;
 #include <string>
 #include <sstream>
 #include <string_view>
+#include <ranges>
 #include <memory>
 #include <map>
 using namespace std::string_literals;
@@ -71,7 +72,7 @@ std::tuple<ts...> parse_vals (const std::string& line) {
 inline constexpr size_t _hash (const char *str, size_t n=0) {
 	// FNV-1a
 	size_t res{0xcbf29ce484222325}, prime{0x00000100000001b3};
-	for (size_t i{0}; i < n or str[i]; ++i) {
+	for (size_t i{0}; i<n or (n==0 and str[i]!='\0'); ++i) {
 		res = res ^ str[i];
 		res = res * prime;
 	}
@@ -80,6 +81,10 @@ inline constexpr size_t _hash (const char *str, size_t n=0) {
 
 inline constexpr size_t operator ""_hash (const char *str, size_t n) {
 	return _hash (str, n);
+}
+
+inline constexpr size_t _hash (std::string_view strv) {
+	return _hash (strv.data(), strv.size());
 }
 
 inline size_t _hash (py::handle str) {

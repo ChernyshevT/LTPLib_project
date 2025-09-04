@@ -26,7 +26,7 @@ struct db_group_t;
 struct db_entry_t;
 struct csection_set_cfg;
 
-enum db_group_flags : u8 {
+	enum db_group_flags : u8 {
 	DESCR_DEF = 0,
 	MRATE_DEF,
 	VTERM_DEF,
@@ -36,6 +36,7 @@ enum db_group_flags : u8 {
 typedef std::bitset<GROUP_FLAGSNUM> group_flags_t;
 
 struct db_group_t {
+	std::string    bgkey;
 	std::string    descr;
 	f32            massrate{0.0f};
 	u16            pt_index;
@@ -66,7 +67,7 @@ struct db_entry_t {
 	std::unordered_map<std::string, csfunc_t> fns; 
 	entry_flags_t  flags;
 	
-	db_entry_t (csection_set_cfg *cfg, py::dict entry, py::dict opts);
+	db_entry_t (const csection_set_cfg *cfg, py::dict entry, py::dict opts);
 };
 
 /******************************************************************************/
@@ -92,7 +93,7 @@ struct csection_set_cfg {
 		pt_list,
 		bg_list;
 	std::map<std::string, group_flags_t>
-		bg_conf;
+		bg_flags;
 	
 	csection_set_cfg
 	(std::vector<py::dict>, f32, py::str, py::str, py::dict);

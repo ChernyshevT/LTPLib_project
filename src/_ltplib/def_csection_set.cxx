@@ -173,6 +173,9 @@ void def_csections(py::module &m) {
 	py::class_<db_entry_t> entry_cls (cs_cls, "db_entry",
 	"cross-section database entry");
 	
+	py::class_<db_group_t> group_cls (cs_cls, "db_group",
+	"cross-section database entry");
+	
 	/* start cross-section database class */ cs_cls
 	
 	.def(py::init<std::vector<py::dict>, f32, py::str, py::str, py::kwargs>
@@ -273,6 +276,30 @@ void def_csections(py::module &m) {
 	, py::keep_alive<0, 1>())
 	
 	/* end cross-section class */;
+
+	
+	
+	/* start database group class */ group_cls
+	.def_readonly("descr", &db_group_t::descr
+	, "group description")
+	
+	.def ("__str__", [] (const db_group_t& self) -> std::string {
+		return self.descr;
+	})
+
+	//~ .def("__len__", [] (const db_group_t& self) -> size_t {
+		//~ return self.index[1]-self.index[0];
+	//~ }, "number of reaction channels")
+	
+	//~ .def("__iter__", [] (const db_group_t& self) {
+		//~ return py::make_iterator(
+			//~ self.cfg->db_entries.begin(), self.cfg->db_entries.end()
+		//~ );
+	//~ }, "iterate over db_entries"
+	//~ , py::keep_alive<0, 1>())
+	
+	/* end database group class */;
+	
 	
 	
 	/* start database entry class */ entry_cls

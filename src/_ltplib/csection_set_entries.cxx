@@ -47,71 +47,59 @@ void add_particle(csection_set_cfg* cfg, py::dict entry) {
 	logger::debug("add PARTICLE \"{}\"", name);
 };
 
-void add_db_group(csection_set_cfg* cfg, py::dict entry) {
-	if (cfg->pt_list.empty()) {
-		throw bad_arg("\"PARTICLE\" block is not defined yet!");;
-	}
-	cfg->db_groups.emplace_back(cfg, entry);
-};
-
-void add_db_entry(csection_set_cfg* cfg, py::dict entry, py::dict opts) {
-	if (cfg->db_groups.empty()) {
-		throw bad_arg("\"BACKGROUND\" block is not defined yet!");
-	}
-	cfg->db_entries.emplace_back(cfg, entry, opts);
-	cfg->db_groups.back().ch_index[1] = cfg->db_entries.size();
-};
-
 /******************************************************************************/
 db_group_t::db_group_t (csection_set_cfg* cfg, py::dict entry) {
 	
 	flags.reset();
-
+	
 	/* parse vals */
 	for (auto [key, val] : entry) switch (_hash(key)) {
 		default:
-			throw bad_arg("BACKGROUND: unknown field \"{}\"!"
-			, py::cast<std::string>(key));
+			throw bad_arg
+			("BACKGROUND: unknown field \"{}\"!", py::cast<std::string>(key));
 		case "TYPE"_hash:
 			continue;
 		case "KEY"_hash:
 			flags.set(DESCR_DEF);
+			bgkey = py::cast<std::string>(entry["KEY"]);
+			descr = fmt::format("{} + {}", cfg->pt_list.back(), bgkey);
 			continue;
 		case "MASSRATE"_hash:
 			flags.set(MRATE_DEF);
+			massrate = py::cast<f32>(entry["MASSRATE"]);
 			continue;
 	}
-
-	/* set particle */
-	pt_index = cfg->pt_list.size()-1;
 	
-	/* set channels (the second one will be updated) */
-	ch_index[0] = cfg->db_entries.size();
-	ch_index[1] = cfg->db_entries.size();
-
-	/* set background */
-	if (flags[DESCR_DEF]) {
-		auto key = py::cast<std::string>(entry["KEY"]);
-		auto ptr = std::find(cfg->bg_list.begin(), cfg->bg_list.end(), key);
-		if (ptr == cfg->bg_list.end()) {
-			cfg->bg_list.push_back(key);
-		}
-		descr = fmt::format("{} + {}", cfg->pt_list[pt_index], key);
-	} else throw bad_arg("BACKGROUND: \"KEY\" is not defined!");
-	
-	/* set m/M rate */
-	if (flags[MRATE_DEF]) {
-		massrate = py::cast<f32>(entry["MASSRATE"]);
-	} else {
+	if (not flags[DESCR_DEF]) {
+		throw bad_arg("BACKGROUND: \"KEY\" is not defined!");
+	}
+	if (not flags[MRATE_DEF]) {
 		massrate = 0.0f;
 		logger::warning("BACKGROUND: \"MASSRATE\" is not defined!");
 	}
 
-	logger::debug("add GROUP \"{}\" {}", descr, flags.to_string('-','*'));
+	/* set particle */
+	pt_index = cfg->pt_list.size()-1;
+
+	/* set background */
+	bg_index = std::ranges::find(cfg->bg_list, bgkey) - cfg->bg_list.begin();
+
+	/* set channels (the second one will be updated) */
+	ch_index[0] = cfg->db_entries.size();
+	ch_index[1] = cfg->db_entries.size();
 };
 
 /******************************************************************************/
-db_entry_t::db_entry_t (csection_set_cfg *cfg, py::dict entry, py::dict opts) {
+//~ void add_db_entry(csection_set_cfg* cfg, py::dict entry, py::dict opts) {
+	//~ if (cfg->db_groups.empty()) {
+		//~ throw bad_arg("\"BACKGROUND\" block is not defined yet!");
+	//~ }
+	//~ cfg->db_entries.emplace_back(cfg, entry, opts);
+	//~ cfg->db_groups.back().ch_index[1] = cfg->db_entries.size();
+//~ };
+
+db_entry_t::db_entry_t
+(const csection_set_cfg *cfg, py::dict entry, py::dict opts) {
 	
 	flags.reset();
 

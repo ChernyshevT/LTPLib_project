@@ -3,12 +3,63 @@
 #include <cmath>
 #include <filesystem>
 #include <ranges>
+#include <string_view>
 
 #include "api_backend.hxx"
 #include "def_csection_set.hxx"
 #include "csection_set_utils.cxx"
 #include "csection_set_entries.cxx"
 
+/******************************************************************************/
+
+auto to_string_view = [] (auto &&r) -> std::string_view {
+return std::string_view(r.begin(), std::ranges::distance(r));
+};
+
+auto not_empty = [](auto x) -> bool {
+	return not x.empty();
+};
+
+std::map<std::string, group_flags_t> parse_bg_flags(py::handle str) {
+	
+	using std::views::split, std::views::filter, std::views::transform, std::views::drop;
+	
+
+	std::map<std::string, group_flags_t> bg_flags;
+	for (auto row : str.cast<std::string_view>()
+	              | split(' ')
+	              | filter(not_empty)
+	              | transform([] (auto&& entry) {
+	                return entry | split(':') | transform(to_string_view);
+	              })) {
+	
+		auto key = std::string(row.front());
+		if (not key.empty()) {
+			bg_flags[key] = 0;
+		} else {
+			throw bad_arg("");
+		}
+
+		for (auto flag : row | drop(1) | transform(to_string_view)) {
+			switch (_hash(flag)) {
+				default:
+					throw bad_arg("");
+				case "VTERM"_hash:
+					bg_flags[key].set(VTERM_DEF);
+					continue;
+				case "VFLUX"_hash:
+					bg_flags[key].set(VFLUX_DEF);
+					continue;
+			}
+		}
+	}
+	
+	for (auto [k,v] : bg_flags) {
+		std::cout<<fmt::format("{:<10} {}\n", k, v.to_string());
+	}
+
+	return bg_flags;
+}
 
 
 void update_cfg (csection_set_cfg *cfg, py::dict opts) {
@@ -21,9 +72,11 @@ void update_cfg (csection_set_cfg *cfg, py::dict opts) {
 		py::print(cfg->bg_list);
 		fmt::print("GROUPS:\n");
 		for (const auto& group : cfg->db_groups) {
-			fmt::print("\t{:<15} PT#[{:03d}] BG#[{:03d}] CH#[{:03d}, {:03d}]\n"
+			fmt::print("\t{:<15} PT#[{:03d}] BG#[{:03d}] CH#[{:03d}, {:03d}] {}\n"
 			, group.descr, group.pt_index, group.bg_index
-			, group.ch_index[0], group.ch_index[1]);
+			, group.ch_index[0], group.ch_index[1]
+			, group.flags.to_string('-','*')
+			);
 		}
 	}
 };
@@ -47,6 +100,10 @@ csection_set_cfg::csection_set_cfg (
 	
 	this->db_groups.reserve(entries.size());
 	this->db_entries.reserve(entries.size());
+	
+	if (opts.contains("bginfo")) {
+		this->bg_flags = parse_bg_flags(opts["bginfo"]);
+	}
 	
 	/****************************************************************************/
 	if (max_energy < 10.0f) {
@@ -195,14 +252,14 @@ csection_set_cfg::csection_set_cfg (
 	
 	std::map<u16, std::tuple<std::string, u16>> einfo;
 	
-	u16 defbg=bginfo.size();
+	//~ u16 defbg=bginfo.size();
 	
 	u16 DCS_NUM{0};
 	
 	// first pass -- parse entries into configuration sequence
 	flags.jset=0;
 	
-	bool TYPE_isdefined{false};
+	//~ bool TYPE_isdefined{false};
 	
 	u16 k2{0}, tag{0};
 	for (const auto& entry : entries) try {
@@ -219,7 +276,7 @@ csection_set_cfg::csection_set_cfg (
 					if (pos != ptinfo.end() and tag <= pos-ptinfo.begin()) {
 						tag = pos-ptinfo.begin();
 						cffts[tag] = py::cast<f32>(entry["ENCFFT"]);
-						TYPE_isdefined = true;
+						//TYPE_isdefined = true;
 					} else {
 						throw bad_arg("invalid order of active components (\"{}\")!", key);
 					}
@@ -228,67 +285,68 @@ csection_set_cfg::csection_set_cfg (
 				}
 			} continue;
 			
-			case "BACKGROUND"_hash: {
-				add_db_group(this, entry);
-				
-				if (not TYPE_isdefined) throw bad_arg
-				("\"PARTICLE\" entry is not defined!");
-				
-				flags.reset();
-				std::string key;
-				if (entry.contains("KEY")) {
-					key = py::cast<std::string>(entry["KEY"]);
-					//if (not bgset.insert(key).second) throw bad_arg("background \"{}\" is already set!", key);
+			case "BACKGROUND"_hash:
+				if (pt_list.empty()) {
+					throw bad_arg ("\"PARTICLE\" block is not defined yet!");
+				} else {
+					flags.reset(); //TODO REMOVE
 					
-					if (not defbg) {
-						//logger::debug("csection_set: add background \"{}\"", key);
-						bginfo.push_back(key);
+					db_group_t db_group(this, entry);
+					/* skip the group if it is not active */
+					if (not (bg_flags.contains(db_group.bgkey) or bg_flags.contains("*"))) {
+						logger::debug("skip GROUP \"{}\"", db_group.descr);
+						flags.skip = true;
+						continue;
 					}
-					auto pos = std::find(bginfo.begin(), bginfo.end(), key);
-					if (pos != bginfo.end()) {
-						flags.n0_def = 1;
-						flags.n0_idx = pos-bginfo.begin();
-					} else {
-						//logger::info("csection_set: skip background \"{}\"", key);
-						flags.skip = 1;
+					if (bg_flags.contains("*")) {
+						db_group.flags |= bg_flags["*"];
 					}
-				} else throw bad_arg("BACKGROUND: \"KEY\" is not defined!");
-
-				if (not flags.skip and entry.contains("MASSRATE")) {
-					flags.massrate_def = 1;
-					f32 mrate{py::cast<f32>(entry["MASSRATE"])};
-					if (mrate > 0.0f and mrate < 1.0f) {
-						flags.massrate_idx = add_cf(2.0f*mrate);
+					if (bg_flags.contains(db_group.bgkey)) {
+						db_group.flags |= bg_flags[db_group.bgkey];
+					}
+					
+					/* register background if it is newone */
+					if (db_group.bg_index == bg_list.size()) {
+						bg_list.push_back(db_group.bgkey);
+					}
+					/* register m/M ratio const */ //TODO REMOVE
+					if (db_group.flags[MRATE_DEF]) {
+						flags.massrate_def = 1;
+						flags.massrate_idx = add_cf(2.0f*db_group.massrate);
 						add_op(0, opcode::MASSRATE, flags.massrate_idx);
-					} else {
-						throw bad_arg("\"MASSRATE\": {}!", mrate);
 					}
-				}
 
-				if (not flags.skip) {
-					add_op(0, opcode::SELECTBG, flags.n0_idx);
+					add_op(0, opcode::SELECTBG, db_group.bg_index);
 					// null-collision search cmd
 					if (k2) {
 						pprogs[0][k2].arg = flags.jset;
 					}
 					flags.jset = 0;
-					k2 = add_op(0, opcode::SEARCH); 
+					k2 = add_op(0, opcode::SEARCH);
+					
+					logger::debug("add GROUP \"{}\" {}"
+					, db_group.descr
+					, db_group.flags.to_string('-','*'));
+					
+					db_groups.push_back(std::move(db_group));
 				}
-			} continue;
+				continue;
 		
-			default: if (flags.skip) continue;
+			default:
+				if (flags.skip) continue;
 		}
 		
 		/* add processess *********************************************************/
-		if (not flags.n0_def) {
-			throw bad_arg("background is not defined yet!");
+		if (db_groups.empty()) {
+			throw bad_arg("\"BACKGROUND\" block is not defined yet!");
 		}
-		add_db_entry(this, entry, opts);
-		//db_entries.emplace_back(this, entry, opts);
+		db_entries.emplace_back(this, entry, opts);
+		db_groups.back().ch_index[1] = db_entries.size();
+		
+		//auto& db_group{db_groups.back()};
 		auto& db_entry{db_entries.back()};
 		
-		chinfo.push_back\
-		(fmt::format("{}+{} {}", ptinfo[tag], bginfo[flags.n0_idx], db_entry.descr));
+		chinfo.push_back(db_entry.descr);
 
 		add_cs(tag, flags.jset>0, db_entry);
 		add_op(0, db_entry.opc);

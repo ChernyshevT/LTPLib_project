@@ -38,13 +38,20 @@ def show_umap(umap):
 						ycns.append((x,y))
 	
 	############################################################
-	ax.plot(*zip(*vals), ls="", c="k", marker=".", markersize=1, label=r"{\tt 0}")
-	ax.plot(*zip(*xlfs), ls="", c="k", marker=0,   markersize=1.5, label=r"{\tt XLF}")
-	ax.plot(*zip(*xrts), ls="", c="k", marker=1,   markersize=1.5, label=r"{\tt XRT}")
-	ax.plot(*zip(*xcns), ls="", c="k", marker="_", markersize=3, label=r"{\tt XCN}")
-	ax.plot(*zip(*ylfs), ls="", c="k", marker=3,   markersize=1.5, label=r"{\tt YLF}")
-	ax.plot(*zip(*yrts), ls="", c="k", marker=2,   markersize=1.5, label=r"{\tt YRT}")
-	ax.plot(*zip(*ycns), ls="", c="k", marker="|", markersize=3, label=r"{\tt YCN}")
+	ax.plot(*zip(*vals), ls="", c="k", marker=".", markersize=1.5
+	, label=r"{\tt 0}")
+	ax.plot(*zip(*xlfs), ls="", c="r", marker=0,   markersize=1.5, alpha=0.75
+	, label=r"{\tt XLF}")
+	ax.plot(*zip(*xrts), ls="", c="r", marker=1,   markersize=1.5, alpha=0.75
+	, label=r"{\tt XRT}")
+	ax.plot(*zip(*xcns), ls="", c="r", marker="_", markersize=3,   alpha=0.75
+	, label=r"{\tt XCN}")
+	ax.plot(*zip(*ylfs), ls="", c="b", marker=3,   markersize=1.5, alpha=0.75
+	, label=r"{\tt YLF}")
+	ax.plot(*zip(*yrts), ls="", c="b", marker=2,   markersize=1.5, alpha=0.75
+	, label=r"{\tt YRT}")
+	ax.plot(*zip(*ycns), ls="", c="b", marker="|", markersize=3,   alpha=0.75
+	, label=r"{\tt YCN}")
 	
 	legend_conf = {
 		"bbox_to_anchor":(1,0,1,1),
