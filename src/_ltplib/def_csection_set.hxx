@@ -44,7 +44,7 @@ struct db_group_t {
 	u16            ch_index[2];
 	group_flags_t  flags;
 
-	db_group_t (csection_set_cfg *cfg, py::dict entry);
+	db_group_t (const csection_set_cfg *cfg, py::dict entry);
 };
 
 enum db_entry_flags : u8 {
@@ -97,12 +97,15 @@ struct csection_set_cfg {
 	
 	csection_set_cfg
 	(std::vector<py::dict>, f32, py::str, py::str, py::dict);
+	
 };
 
 void add_particle(csection_set_cfg *cfg, py::dict obj);
 void add_db_group(csection_set_cfg *cfg, py::dict obj);
 void add_db_entry(csection_set_cfg *cfg, py::dict obj, py::dict opts);
 u16  add_constant(csection_set_cfg *cfg, f32 arg);
+
+void update_cfg (csection_set_cfg *cfg, py::dict opts);
 
 /******************************************************************************/
 class csection_set_holder : public csection_set_t {

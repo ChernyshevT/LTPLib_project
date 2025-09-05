@@ -48,7 +48,7 @@ void add_particle(csection_set_cfg* cfg, py::dict entry) {
 };
 
 /******************************************************************************/
-db_group_t::db_group_t (csection_set_cfg* cfg, py::dict entry) {
+db_group_t::db_group_t (const csection_set_cfg* cfg, py::dict entry) {
 	
 	flags.reset();
 	
@@ -260,3 +260,180 @@ db_entry_t::db_entry_t
 	, flags.to_string('-','*')
 	);
 }
+
+inline f32 from_table(const f32 tab[], u16 size, f32 arg) {
+	arg = arg + 0.0625f;
+	i32 k; f32 m{2*frexpf(FLT_EPSILON+arg*arg, &k)};
+	
+	//fmt::print("{:e} -> {:08b} ({:>4d})\n", arg, (k+8>0)*0x1u | (k+8>=size)*0x2u, k+7);
+	
+	switch ((k+8>0)*0x1 | (k+8>=size)*0x2) {
+		case 0x0:
+			return 0.0f;
+		case 0x1:
+			return tab[k+7]*(2.0f-m) + tab[k+8]*(m-1.0f);
+		default:
+			return NAN;
+	}
+}
+
+struct table_t {
+	f32 *_table;
+	u16 _row_size;
+	u16 _n_rows;
+	u16 _n_entries;
+
+	inline
+	f32& enth (u16 j) const {
+		return *(_table + j);
+	}
+	inline
+	f32& rmax (u16 j) const {
+		return *(_table + j + _n_entries);
+	}
+	inline
+	f32* operator [] (u16 k) const {
+		return _table + _n_entries*2 + _row_size*k;
+	}
+	inline
+	f32  operator () (u16 j, f32 arg) const {
+		return from_table((*this)[j], _row_size, arg); 
+	}
+};
+
+/******************************************************************************/
+
+/* this function builds look-up table */
+void update_cfg (csection_set_cfg *cfg, py::dict opts) {
+	
+	//auto _debug = py::cast<bool>(opts.attr("get")("debug", false));
+	
+	
+	/* determine look-up table's size */
+	size_t n_rows{0}, n_entries{cfg->db_entries.size()};
+	py::print(cfg->consts);
+	py::print(cfg->pt_list);
+	py::print(cfg->bg_list);
+	fmt::print("GROUPS:\n");
+	for (auto& group : cfg->db_groups) {
+		fmt::print("\t{:<15} PT#[{:03d}] BG#[{:03d}] CH#[{:03d}, {:03d}] {}\n"
+		, group.descr, group.pt_index, group.bg_index
+		, group.ch_index[0], group.ch_index[1]
+		, group.flags.to_string('-','*')
+		);
+		for (u16 k{group.ch_index[0]}, n{group.ch_index[1]}; k<n; ++k) {
+			n_rows += 1 + cfg->db_entries[k].fns.contains("DCS");
+			py::print(cfg->db_entries[k]);
+		}
+	}
+	fmt::print("{} groups, {} entries, {} rows\n"
+	, cfg->db_groups.size()
+	, n_entries
+	, n_rows
+	);
+	
+	std::vector<f32> _table(n_entries*2 + n_rows*(cfg->tsize-1));
+	
+	table_t tab{_table.data(), u16(cfg->tsize-1), u16(n_rows), u16(n_entries)};
+	
+	/* build look-up table */
+	u16 j1 = cfg->db_entries.size();
+	
+	for (auto& group : cfg->db_groups) {
+		f64 r0, rmx{0.0f}, rsh{0.0f};
+		f32 s0, s1, xi, enel, enth, cfft;
+		for (u16 j{group.ch_index[0]}, n{group.ch_index[1]}; j<n; ++j) {
+			auto& entry{cfg->db_entries[j]};
+			
+			bool containsDCS{entry.fns.contains("DCS")};
+			
+			if (true) {
+				py::print(fmt::format("BUILDING LOOKUP-TABLE #{:03d} for \"{}, {}\""
+				, j, group.descr, entry.descr));
+				if (containsDCS) {
+					py::print(fmt::format("|{:>10}|{:>10}|{:>10}|{:>10}|{:>8}|"
+					, "energy", "c_rate", "σ", "σₘ", "DCS"));
+					py::print(54*"-"s);
+				} else {
+					py::print(fmt::format("|{:>10}|{:>10}|{:>10}|"
+					, "energy", "c_rate", "σ"));
+					py::print(34*"-"s);
+				}
+			}
+			
+			enth = entry.enth;
+			cfft = cfg->cffts[group.pt_index];
+			for (u8 k{0}; k<cfg->tsize-1; ++k) {
+				enel = cfg->points[k] + enth;
+				if (enel == 0) { /* fix infinity */
+					enel = 0.5f*cfg->points[1];
+				}
+				
+				/* write cross-section */
+				s0 = entry.fns.at("CS0")(enel);
+				if (isfinite(s0) and s0 > 0.0f) {
+					r0  = rsh + f64(s0 * sqrtf(enel/cfft));
+					rmx = std::max(rmx, r0);
+				} else {
+					r0 = rsh; // no-collision fallback
+				}
+				tab[j][k] = r0;
+				//~ _table[n_entries*2 + cfg->tsize*j + k] = r0;
+				
+				/* write DCS */
+				if (containsDCS) {
+					s1 = entry.fns.at("CS1")(enel);
+					xi = entry.fns.at("DCS")(enel);
+					if (fabsf(xi) <= 1.0) {
+						// ok;
+					} else if (r0 == rsh) {
+						xi = 0.0f; // no-collision fallback
+					} else {
+						throw std::logic_error \
+						(fmt::format("invalid DCS value ({}) at {} eV", xi, enel));
+					}
+					tab[j1][k] = xi;
+				}
+				
+				if (true) {
+					if (containsDCS) {
+						py::print(fmt::format("|{:>10.3e}|{:>10.3e}|{:>10.3e}|{:>10.3e}|{:>8.4f}|"
+						, enel, r0-rsh, s0, s1, xi));
+					} else {
+						py::print(fmt::format("|{:>10.3e}|{:>10.3e}|{:>10.3e}|"
+						, enel, r0-rsh, s0));
+					}
+				}
+			}
+			if (true) {
+				if (containsDCS) {
+					py::print(54*"-"s);
+				} else {
+					py::print(34*"-"s);
+				}
+			}
+			
+			
+			j1 += containsDCS;
+			/* final check */
+			if (rmx == rsh) {
+				throw bad_arg
+				("CHANNEL#{:03d}: collision with zero effect!", j);
+			} else {
+				rsh = rmx;
+				tab.enth(j) = -enth;
+				tab.rmax(j) = -rmx; 
+			}
+			/* update RATE function */
+			entry.fns["C_RATE"] = \
+			[tab=std::vector(tab[j], tab[j+1]), size=cfg->tsize-1, enth] (f32 arg) -> f32 {
+				return from_table(tab.data(), size, arg-enth);
+			};
+			entry.rmax = rmx;
+		}
+	}
+	
+	//~ for (auto& t : _table)
+		//~ py::print(t);
+		
+};

@@ -23,6 +23,16 @@ set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(fmt)
 
 ################################################################################
+# Download range-v3 from GitHub
+FetchContent_Declare(
+  range-v3
+  GIT_REPOSITORY https://github.com/ericniebler/range-v3.git
+  GIT_TAG        master
+  GIT_PROGRESS   TRUE
+)
+FetchContent_MakeAvailable(range-v3)
+
+################################################################################
 add_library(_ltplib SHARED 
 	_ltplib.cxx
 	grid_cfg.cxx
@@ -45,8 +55,8 @@ set_target_properties(_ltplib PROPERTIES LIBRARY_OUTPUT_NAME
 # Ensure _ltplib is compiled with Position Independent Code (PIC)
 set_target_properties(_ltplib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-# Link pybind11 and fmt directly
 target_link_libraries(_ltplib PRIVATE pybind11::module fmt::fmt-header-only)
+target_link_libraries(_ltplib PRIVATE range-v3)
 
 # Find OpenMP (this will automatically set up the correct compiler flags)
 find_package(OpenMP REQUIRED)

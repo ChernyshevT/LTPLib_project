@@ -61,26 +61,6 @@ std::map<std::string, group_flags_t> parse_bg_flags(py::handle str) {
 	return bg_flags;
 }
 
-
-void update_cfg (csection_set_cfg *cfg, py::dict opts) {
-	
-	//auto _debug = py::cast<bool>(opts.attr("get")("debug", false));
-	
-	if (true) {
-		py::print(cfg->consts);
-		py::print(cfg->pt_list);
-		py::print(cfg->bg_list);
-		fmt::print("GROUPS:\n");
-		for (const auto& group : cfg->db_groups) {
-			fmt::print("\t{:<15} PT#[{:03d}] BG#[{:03d}] CH#[{:03d}, {:03d}] {}\n"
-			, group.descr, group.pt_index, group.bg_index
-			, group.ch_index[0], group.ch_index[1]
-			, group.flags.to_string('-','*')
-			);
-		}
-	}
-};
-
 /******************************************************************************/
 csection_set_cfg::csection_set_cfg (
 	std::vector<py::dict> entries,
@@ -106,15 +86,15 @@ csection_set_cfg::csection_set_cfg (
 	}
 	
 	/****************************************************************************/
-	if (max_energy < 10.0f) {
-		throw bad_arg("invalid max_energy ({:e} < 10 eV)!", max_energy);
+	if (max_energy < 0.25f) {
+		throw bad_arg("invalid max_energy ({:e} < 0.25 eV)!", max_energy);
 	} else {
 		points.reserve(256);
 		f32 e0;
 		int k{0}; do {
 			e0 = ldexpf((k%2 ? 1.0f/sqrtf(2.0f) : 0.5f), k/2-3) - 0.0625f; k += 1;
 			points.push_back(e0);
-		} while (e0 <= max_energy);
+		} while (e0 <= max_energy*1.5);
 		tsize = k+1;
 	}
 	/****************************************************************************/
@@ -298,12 +278,6 @@ csection_set_cfg::csection_set_cfg (
 						flags.skip = true;
 						continue;
 					}
-					if (bg_flags.contains("*")) {
-						db_group.flags |= bg_flags["*"];
-					}
-					if (bg_flags.contains(db_group.bgkey)) {
-						db_group.flags |= bg_flags[db_group.bgkey];
-					}
 					
 					/* register background if it is newone */
 					if (db_group.bg_index == bg_list.size()) {
@@ -399,18 +373,18 @@ csection_set_cfg::csection_set_cfg (
 	ncsect = ptabs[0].size(); //r_base
 	nxtra  = DCS_NUM;
 	
-	u16 k{0};
-	for (auto &entry : db_entries) {
-		entry.rmax = tabs[k];
-		entry.fns["C_RATE"]  = [&, fn=csection_t(&tabs[ncsect + k*tsize])] (f32 enel) {
-			if (enel - fn.enth <= max_energy) {
-				return fn[enel];
-			} else {
-				return NAN;
-			}
-		};
-		++k;
-	}
+	//~ u16 k{0};
+	//~ for (auto &entry : db_entries) {
+		//~ entry.rmax = tabs[k];
+		//~ entry.fns["C_RATE"]  = [&, fn=csection_t(&tabs[ncsect + k*tsize])] (f32 enel) {
+			//~ if (enel - fn.enth <= max_energy) {
+				//~ return fn[enel];
+			//~ } else {
+				//~ return NAN;
+			//~ }
+		//~ };
+		//~ ++k;
+	//~ }
 
 	update_cfg(this, opts);
 }
