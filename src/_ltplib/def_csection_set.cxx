@@ -16,11 +16,10 @@ csection_set_holder:: csection_set_holder ( \
 std::vector<py::dict> _entries,
 f32                 _max_energy,
 py::str               _ptdescr,
-py::str               _bgdescr,
 py::kwargs            kws
 )
 : cfg{std::make_unique<csection_set_cfg>
-	(_entries, _max_energy, _ptdescr, _bgdescr, (py::dict)(kws))}
+	(_entries, _max_energy, _ptdescr, (py::dict)(kws))}
 {
 	m.data_holder
 		.req(&(this->progs), cfg->progs.size())
@@ -178,8 +177,8 @@ void def_csections(py::module &m) {
 	
 	/* start cross-section database class */ cs_cls
 	
-	.def(py::init<std::vector<py::dict>, f32, py::str, py::str, py::kwargs>
-	(), "cfg"_a, "max_energy"_a, "ptdescr"_a="e", "bgdescr"_a=""s
+	.def(py::init<std::vector<py::dict>, f32, py::str, py::kwargs>
+	(), "cfg"_a, "max_energy"_a, "ptdescr"_a="e"
 	, CSECTION_SET_CTOR)
 	
 	.def_readonly("max_energy", &csection_set_holder::max_energy,
@@ -196,7 +195,7 @@ void def_csections(py::module &m) {
 	, py::keep_alive<0, 1>())
 	
 	.def_property_readonly("bglist", [] (const csection_set_holder& self) {
-		return self.cfg->bginfo;
+		return self.cfg->bg_list;
 	}, "list of background components"
 	, py::keep_alive<0, 1>())
 

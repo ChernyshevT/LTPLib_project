@@ -261,12 +261,10 @@ db_entry_t::db_entry_t
 	);
 }
 
-inline f32 from_table(const f32 tab[], u16 size, f32 arg) {
+inline
+f32 from_table(const f32 tab[], u16 size, f32 arg) {
 	arg = arg + 0.0625f;
 	i32 k; f32 m{2*frexpf(FLT_EPSILON+arg*arg, &k)};
-	
-	//fmt::print("{:e} -> {:08b} ({:>4d})\n", arg, (k+8>0)*0x1u | (k+8>=size)*0x2u, k+7);
-	
 	switch ((k+8>0)*0x1 | (k+8>=size)*0x2) {
 		case 0x0:
 			return 0.0f;
@@ -279,35 +277,33 @@ inline f32 from_table(const f32 tab[], u16 size, f32 arg) {
 
 struct table_t {
 	f32 *_table;
-	u16 _row_size;
+	u16 _table_size;
 	u16 _n_rows;
 	u16 _n_entries;
 
 	inline
 	f32& enth (u16 j) const {
-		return *(_table + j);
+		return _table[j];
 	}
 	inline
 	f32& rmax (u16 j) const {
-		return *(_table + j + _n_entries);
+		return _table[_n_entries + j];
 	}
 	inline
 	f32* operator [] (u16 k) const {
-		return _table + _n_entries*2 + _row_size*k;
+		return _table + _n_entries*2 + _table_size*k;
 	}
 	inline
 	f32  operator () (u16 j, f32 arg) const {
-		return from_table((*this)[j], _row_size, arg); 
+		return from_table((*this)[j], _table_size, arg); 
 	}
 };
 
 /******************************************************************************/
 
 /* this function builds look-up table */
-void update_cfg (csection_set_cfg *cfg, py::dict opts) {
-	
-	//auto _debug = py::cast<bool>(opts.attr("get")("debug", false));
-	
+void build_table (csection_set_cfg *cfg, py::dict opts) {
+	bool _debug = py::cast<bool>(opts.attr("get")("debug", false));
 	
 	/* determine look-up table's size */
 	size_t n_rows{0}, n_entries{cfg->db_entries.size()};
@@ -334,11 +330,14 @@ void update_cfg (csection_set_cfg *cfg, py::dict opts) {
 	
 	std::vector<f32> _table(n_entries*2 + n_rows*(cfg->tsize-1));
 	
-	table_t tab{_table.data(), u16(cfg->tsize-1), u16(n_rows), u16(n_entries)};
+	table_t table{_table.data(), u16(cfg->tsize-1), u16(n_rows), u16(n_entries)};
 	
 	/* build look-up table */
 	u16 j1 = cfg->db_entries.size();
 	
+	if (_debug) {
+		py::print(fmt::format("LOOKUP-TABLE ROW SIZE = {}", cfg->tsize-1));
+	}
 	for (auto& group : cfg->db_groups) {
 		f64 r0, rmx{0.0f}, rsh{0.0f};
 		f32 s0, s1, xi, enel, enth, cfft;
@@ -347,18 +346,19 @@ void update_cfg (csection_set_cfg *cfg, py::dict opts) {
 			
 			bool containsDCS{entry.fns.contains("DCS")};
 			
-			if (true) {
-				py::print(fmt::format("BUILDING LOOKUP-TABLE #{:03d} for \"{}, {}\""
+			if (_debug) {
+				py::print(fmt::format("BUILDING LOOKUP-TABLE #{:03d} for \"{}, {}\":"
 				, j, group.descr, entry.descr));
-				if (containsDCS) {
-					py::print(fmt::format("|{:>10}|{:>10}|{:>10}|{:>10}|{:>8}|"
-					, "energy", "c_rate", "σ", "σₘ", "DCS"));
-					py::print(54*"-"s);
-				} else {
-					py::print(fmt::format("|{:>10}|{:>10}|{:>10}|"
-					, "energy", "c_rate", "σ"));
-					py::print(34*"-"s);
-				}
+			}
+			if (_debug and containsDCS) {
+				py::print(fmt::format("|{:>10}|{:>10}|{:>10}|{:>10}|{:>8}|"
+				, "energy", "c_rate", "σ", "σₘ", "DCS"));
+				py::print(54*"-"s);
+			}
+			if (_debug and not containsDCS) {
+				py::print(fmt::format("|{:>10}|{:>10}|{:>10}|"
+				, "energy", "c_rate", "σ"));
+				py::print(34*"-"s);
 			}
 			
 			enth = entry.enth;
@@ -377,8 +377,7 @@ void update_cfg (csection_set_cfg *cfg, py::dict opts) {
 				} else {
 					r0 = rsh; // no-collision fallback
 				}
-				tab[j][k] = r0;
-				//~ _table[n_entries*2 + cfg->tsize*j + k] = r0;
+				table[j][k] = r0;
 				
 				/* write DCS */
 				if (containsDCS) {
@@ -392,28 +391,21 @@ void update_cfg (csection_set_cfg *cfg, py::dict opts) {
 						throw std::logic_error \
 						(fmt::format("invalid DCS value ({}) at {} eV", xi, enel));
 					}
-					tab[j1][k] = xi;
+					table[j1][k] = xi;
 				}
 				
-				if (true) {
-					if (containsDCS) {
-						py::print(fmt::format("|{:>10.3e}|{:>10.3e}|{:>10.3e}|{:>10.3e}|{:>8.4f}|"
-						, enel, r0-rsh, s0, s1, xi));
-					} else {
-						py::print(fmt::format("|{:>10.3e}|{:>10.3e}|{:>10.3e}|"
-						, enel, r0-rsh, s0));
-					}
+				if (_debug and containsDCS) {
+					py::print(fmt::format("|{:>10.3e}|{:>10.3e}|{:>10.3e}|{:>10.3e}|{:>8.4f}|"
+					, enel, r0-rsh, s0, s1, xi));
+				}
+				if (_debug and not containsDCS) {
+					py::print(fmt::format("|{:>10.3e}|{:>10.3e}|{:>10.3e}|"
+					, enel, r0-rsh, s0));
 				}
 			}
-			if (true) {
-				if (containsDCS) {
-					py::print(54*"-"s);
-				} else {
-					py::print(34*"-"s);
-				}
+			if (_debug) {
+				py::print((containsDCS ? 54 : 34)*"-"s);
 			}
-			
-			
 			j1 += containsDCS;
 			/* final check */
 			if (rmx == rsh) {
@@ -421,15 +413,15 @@ void update_cfg (csection_set_cfg *cfg, py::dict opts) {
 				("CHANNEL#{:03d}: collision with zero effect!", j);
 			} else {
 				rsh = rmx;
-				tab.enth(j) = -enth;
-				tab.rmax(j) = -rmx; 
 			}
-			/* update RATE function */
-			entry.fns["C_RATE"] = \
-			[tab=std::vector(tab[j], tab[j+1]), size=cfg->tsize-1, enth] (f32 arg) -> f32 {
+			/* update entry.RATE \& other stuff */
+			entry.fns["C_RATE"] = [tab=std::vector(table[j], table[j+1])\
+			, size=cfg->tsize-1, enth] (f32 arg) -> f32 {
 				return from_table(tab.data(), size, arg-enth);
 			};
-			entry.rmax = rmx;
+			table.enth(j) = enth;
+			table.rmax(j) = rmx; 
+			entry.rmax    = rmx;
 		}
 	}
 	

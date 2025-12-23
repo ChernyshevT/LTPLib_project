@@ -71,12 +71,12 @@ std::tuple<ts...> parse_vals (const std::string& line) {
  ******************************************************************************/
 inline constexpr size_t _hash (const char *str, size_t n=0) {
 	// FNV-1a
-	size_t res{0xcbf29ce484222325}, prime{0x00000100000001b3};
-	for (size_t i{0}; i<n or (n==0 and str[i]!='\0'); ++i) {
-		res = res ^ str[i];
-		res = res * prime;
+	size_t hash{0xcbf29ce484222325}, prime{0x00000100000001b3};
+	for (size_t i{0}; (i < n) or (n == 0 and str[i]!='\0'); ++i) {
+		hash = hash ^ str[i];
+		hash = hash * prime;
 	}
-	return res;
+	return hash;
 }
 
 inline constexpr size_t operator ""_hash (const char *str, size_t n) {
@@ -88,7 +88,7 @@ inline constexpr size_t _hash (std::string_view strv) {
 }
 
 inline size_t _hash (py::handle str) {
-	return _hash (py::cast<std::string>(str).c_str()); 
+	return _hash (py::cast<std::string_view>(str)); 
 }
 
 /******************************************************************************/

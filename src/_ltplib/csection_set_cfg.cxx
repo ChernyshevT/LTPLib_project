@@ -30,8 +30,9 @@ std::map<std::string, group_flags_t> parse_bg_flags(py::handle str) {
 	              | split(' ')
 	              | filter(not_empty)
 	              | transform([] (auto&& entry) {
-	                return entry | split(':') | transform(to_string_view);
-	              })) {
+	                	return entry | split(':') | transform(to_string_view);
+	                })
+	) {
 	
 		auto key = std::string(row.front());
 		if (not key.empty()) {
@@ -66,11 +67,9 @@ csection_set_cfg::csection_set_cfg (
 	std::vector<py::dict> entries,
 	f32 max_energy_i,
 	py::str ptinfo_i,
-	py::str bginfo_i,
 	py::dict opts
 ) :
 	ptinfo(py::cast<decltype(ptinfo)>(ptinfo_i.attr("split")())),
-	bginfo(py::cast<decltype(ptinfo)>(bginfo_i.attr("split")())),
 	max_energy(max_energy_i)
 {
 	std::vector<f64> ptabs[3];
@@ -127,24 +126,10 @@ csection_set_cfg::csection_set_cfg (
 	} flags;
 	/****************************************************************************/
 	auto add_cs = [&, k=0] (u8 tag, bool is_first, db_entry_t &entry) mutable {
-		auto _debug = py::cast<bool>(opts.attr("get")("debug", false));
-
-		if (_debug) {
-			py::print(fmt::format("BUILDING LOOKUP-TABLE #{:03d} for {}"
-			, k, MPROG_DESCR[entry.opc]));
-			if (entry.fns.contains("DCS")) {
-				py::print(fmt::format("|{:>10}|{:>10}|{:>10}|{:>10}|{:>8}|"
-				, "energy", "c_rate", "σ", "σₘ", "DCS"));
-				py::print(54*"-"s);
-			} else {
-				py::print(fmt::format("|{:>10}|{:>10}|{:>10}|"
-				, "energy", "c_rate", "σ"));
-				py::print(34*"-"s);
-			}
-		}
 		
+
 		f64 r0, rmx{0.0}, rsh{is_first? ptabs[0].back() : 0.0};
-		f32 s0, s1, xi, enel, enth{entry.enth};
+		f32 s0, enel, enth{entry.enth};
 		
 		std::vector<f32> rvec(tsize);
 		for (size_t k{0}; k<tsize; ++k) {
@@ -162,8 +147,6 @@ csection_set_cfg::csection_set_cfg (
 			}
 			
 			s0 = entry.fns.at("CS0")(enel);
-			s1 = s0;
-			xi = 0;
 			if (s0 > 0.0f) {
 				r0  = rsh + f64(s0 * sqrtf(enel/cffts[tag]));
 				rmx = std::max(rmx, r0);
@@ -175,8 +158,8 @@ csection_set_cfg::csection_set_cfg (
 			ptabs[1].push_back(r0);
 			
 			if (entry.fns.contains("DCS")) {
-				s1 = entry.fns.at("CS1")(enel);
-				xi = entry.fns.at("DCS")(enel);
+				//f32 s1{entry.fns.at("CS1")(enel)};
+				f32 xi{entry.fns.at("DCS")(enel)};
 				if (fabsf(xi) <= 1.0) {
 					// ok;
 				} else if (r0 == rsh) {
@@ -187,22 +170,7 @@ csection_set_cfg::csection_set_cfg (
 				}
 				ptabs[2].push_back(xi);
 			}
-			if (_debug and  entry.fns.contains("DCS")) {
-				py::print(fmt::format("|{:>10.3e}|{:>10.3e}|{:>10.3e}|{:>10.3e}|{:>8.4f}|"
-				, enel, r0-rsh, s0, s1, xi));
-			}
-			if (_debug and !entry.fns.contains("DCS")) {
-				py::print(fmt::format("|{:>10.3e}|{:>10.3e}|{:>10.3e}|"
-				, enel, r0-rsh, s0));
-			}
 		}
-		if (_debug and  entry.fns.contains("DCS")) {
-			py::print(54*"-"s);
-		}
-		if (_debug and !entry.fns.contains("DCS")) {
-			py::print(34*"-"s);
-		}
-		
 		if (rmx == rsh) {
 			throw bad_arg("collision with zero effect!");
 		} else {
@@ -278,11 +246,17 @@ csection_set_cfg::csection_set_cfg (
 						flags.skip = true;
 						continue;
 					}
-					
-					/* register background if it is newone */
+					/* register the background if it is the new one */
 					if (db_group.bg_index == bg_list.size()) {
 						bg_list.push_back(db_group.bgkey);
 					}
+					if (bg_flags.contains(db_group.bgkey)) {
+						db_group.flags |= bg_flags.at(db_group.bgkey);
+					}
+					if (bg_flags.contains("*")) {
+						db_group.flags |= bg_flags.at("*");
+					}
+					
 					/* register m/M ratio const */ //TODO REMOVE
 					if (db_group.flags[MRATE_DEF]) {
 						flags.massrate_def = 1;
@@ -386,5 +360,5 @@ csection_set_cfg::csection_set_cfg (
 		//~ ++k;
 	//~ }
 
-	update_cfg(this, opts);
+	build_table(this, opts);
 }

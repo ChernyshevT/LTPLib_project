@@ -74,18 +74,14 @@ struct db_entry_t {
 struct csection_set_cfg {
 	typedef mprog_t::opc_t opcode;
 	
-	std::vector<std::string>      ptinfo, bginfo, chinfo;
-	f32                         max_energy;
+	std::vector<std::string>      ptinfo, chinfo;
+	f32                           max_energy;
 	std::vector<mprog_t>          progs;
 	std::vector<f32>            cffts, points, cstabs, rates, tabs;
-	std::map<u16, py::tuple> dset;
 	u8                       tsize,  ntype; 
 	u16                      ncsect, nxtra;
 	
-	//~ std::unordered_map<std::string>
 	std::vector<f32>              consts;
-	std::vector<f32>              _tabs;
-	std::vector<u16>              _index;
 	std::vector<db_group_t>       db_groups;
 	std::vector<db_entry_t>       db_entries;
 	
@@ -96,7 +92,7 @@ struct csection_set_cfg {
 		bg_flags;
 	
 	csection_set_cfg
-	(std::vector<py::dict>, f32, py::str, py::str, py::dict);
+	(std::vector<py::dict>, f32, py::str, py::dict);
 	
 };
 
@@ -105,7 +101,7 @@ void add_db_group(csection_set_cfg *cfg, py::dict obj);
 void add_db_entry(csection_set_cfg *cfg, py::dict obj, py::dict opts);
 u16  add_constant(csection_set_cfg *cfg, f32 arg);
 
-void update_cfg (csection_set_cfg *cfg, py::dict opts);
+void build_table (csection_set_cfg *cfg, py::dict opts);
 
 /******************************************************************************/
 class csection_set_holder : public csection_set_t {
@@ -121,7 +117,7 @@ public:
 	~csection_set_holder (void);
 	
 	 csection_set_holder
-	(std::vector<py::dict>, f32, py::str, py::str, py::kwargs);
+	(std::vector<py::dict>, f32, py::str, py::kwargs);
 };
 
 #endif
