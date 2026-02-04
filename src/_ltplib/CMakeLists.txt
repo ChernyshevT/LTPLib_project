@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 3.15)  # Ensure CMake is recent enough
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
+set(FETCHCONTENT_QUIET FALSE)
 
 ################################################################################
 # Download pybind11 from GitHub
 FetchContent_Declare(
 	pybind11
 	GIT_REPOSITORY https://github.com/pybind/pybind11.git
-	GIT_TAG        master
+	#GIT_TAG        master
+	GIT_TAG        v3.0
 	GIT_PROGRESS   TRUE
 )
 FetchContent_MakeAvailable(pybind11)

@@ -88,13 +88,14 @@ def main(args, logger):
 	# declare particle storage
 	nppin = np.prod(grid.units)*args.npunit
 	npmax = int(node_size*args.npunit*(1+args.extra))
+	nargs = 1+(grid.ndim+3)*(2 args.nrep>0 else 1) # more memory for impl. solver
 	
 	pstore = ltp.pstore(grid
 	, ptinfo = [
 	 {"KEY":"e", "CHARGE/MASS": -ECHARGE/ME},
 	]
 	, npmax = npmax
-	, nargs = 1 + (grid.ndim+3)*2) # extra memory for implicit solver
+	, nargs = nargs)
 
 	##############################################################################
 	# declare electric field vcache
@@ -532,7 +533,6 @@ if __name__ == '__main__':
 		
 		logger.info("run string: "+" ".join(sys.argv))
 		logger.info(f"args: {vars(args)}")
-		# ~ print()
 		# run program
 		sys.exit(main(args, logger))
 		

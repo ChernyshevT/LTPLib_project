@@ -32,4 +32,4 @@ install(TARGETS _ltplib _default
 	LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
 
-# cmake -S ./src -B ./build && cmake --build ./build --target install
+# cmake -S src -B build && cmake --build build --target install
