@@ -120,7 +120,7 @@ void def_ppost_funcs (py::module &m) {
 			("ptfluid.vsize={} < {}", ptfluid.vsize, vsize);
 
 			std::string backend = "default";
-			std::string fn_name = fmt::format("ppost{}_{}_fn",
+			std::string fn_name = std::format("ppost{}_{}_fn",
 				nd,
 				ptfluid.order == 1? "LINE" :
 				ptfluid.order == 2? "QUAD" :

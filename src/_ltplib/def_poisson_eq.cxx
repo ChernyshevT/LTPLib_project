@@ -137,7 +137,7 @@ struct poisson_eq_holder {
 		std::visit([&] <u8 nd> (poisson_eq_t<nd> &eq) -> iter_fn_t {
 			
 			auto backend = "default";
-			auto fn_name = fmt::format("SOR_iter{}_fn", nd);
+			auto fn_name = std::format("SOR_iter{}_fn", nd);
 			logger::debug ("bind {}->{}", backend, fn_name);
 			auto &&fn = libs[backend].get_function<SOR_iter_fn_t<nd>>(fn_name);
 			return [&, fn] (f32 w) -> f32 {

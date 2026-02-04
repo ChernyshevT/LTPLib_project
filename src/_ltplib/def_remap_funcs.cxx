@@ -46,18 +46,18 @@ tp* check_array_arg
 	}
 	if (nd+1 != u8(info.ndim)) {
 		throw py::buffer_error
-		(fmt::format("ndims aren't match: {} != {}",
+		(std::format("ndims aren't match: {} != {}",
 		nd+1, info.ndim));
 	}
 	for (size_t i{0}; i<nd+1; ++i) {
 		if (shape[i] != size_t(info.shape[i])) {
 			throw py::buffer_error
-			(fmt::format("shapes aren't match: {} != {}",
+			(std::format("shapes aren't match: {} != {}",
 			info.shape, std::vector(shape, shape+nd+1)));
 		}
 		if (info.strides[i] < 0 or info.strides[i] != ssize_t(offst[i+1]*sizeof(tp))) {
 			throw py::buffer_error
-			(fmt::format("array slices are not allowed: {} {}",
+			(std::format("array slices are not allowed: {} {}",
 			info.strides, std::vector(offst+1, offst+nd+2)));
 		}
 	}
@@ -100,14 +100,14 @@ void def_remap_funcs (py::module &m) {
 			tp* ptr = check_array_arg<nd, tp>(grid, iodata, vcache.order, vcache.vsize);
 			
 			std::string backend = "default";
-			std::string fn_name = fmt::format (
+			std::string fn_name = std::format (
 				"remap{}{}_{}_fn",
 				nd,
 				datatypecode<tp>(),
 				mode == '<' ? "NODES" :
 				mode == '>' ? "ARRAY" :
 				throw std::invalid_argument
-				(fmt::format("invalid mode (\"{}\")", mode))
+				(std::format("invalid mode (\"{}\")", mode))
 			);
 			logger::debug ("bind {}->{} &grid={}, &vcache={}, &vdata={}"
 				, backend

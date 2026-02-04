@@ -116,7 +116,7 @@ struct vcache_ctor {
 			);
 			
 			std::string backend = "default";
-			std::string fn_name = fmt::format("remap{}{}", nd, datatypecode<tp>());
+			std::string fn_name = std::format("remap{}{}", nd, datatypecode<tp>());
 
 			auto &&fn_in = libs[backend].get_function<remap_fn_t<nd,tp>>(fn_name+"_NODES_fn");
 			self.remap_fns[REMAP_MODE::NODES] = [&, ptr, fn = fn_in] () mutable {
@@ -139,7 +139,7 @@ vcache_holder:: vcache_holder
 		_dtype == "f32"? vcache_v{vcache_t<f32>{}} :
 		_dtype == "f64"? vcache_v{vcache_t<f64>{}} :
 		_dtype == "u32"? vcache_v{vcache_t<u32>{}} :
-		throw std::invalid_argument(fmt::format("dtype = \"{}\"", _dtype))
+		throw std::invalid_argument(std::format("dtype = \"{}\"", _dtype))
 	},
 	gridp{&grid}
 {

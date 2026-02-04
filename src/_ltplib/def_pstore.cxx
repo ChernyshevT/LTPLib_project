@@ -19,7 +19,7 @@ template<u8 nd> inject_fn_t construct_inject_fn
 	return [&] (u8 tag, const parts_input_t& input) -> size_t {
 		auto pts{input.unchecked<2>()};
 		if (pts.shape(1) != nd+3) {
-			throw std::invalid_argument(fmt::format("pts.shape[1] != {}+3", nd));
+			throw std::invalid_argument(std::format("pts.shape[1] != {}+3", nd));
 		}
 		
 		size_t n_overflow{0};
@@ -148,11 +148,11 @@ pstore_cfg::pstore_cfg
 	ntype = ptinfo.size();
 	
 	if (npmax >= NPPMAX_LIMIT) throw \
-	std::invalid_argument(fmt::format("npmax: {} >= {}", npmax, NPPMAX_LIMIT));
+	std::invalid_argument(std::format("npmax: {} >= {}", npmax, NPPMAX_LIMIT));
 	
 	
 	if (nargs <= nd+3) throw \
-	std::invalid_argument(fmt::format("nargs: {} <= {}", nargs, nd+3));
+	std::invalid_argument(std::format("nargs: {} <= {}", nargs, nd+3));
 	
 	idxsh  = 1+md;
 	npools = sz;
@@ -318,12 +318,12 @@ void def_pstores (py::module &m) {
 
 			auto pos{std::find(self.cfg->ptinfo.begin(), self.cfg->ptinfo.end(), key)};
 			if (pos == self.cfg->ptinfo.end()) {
-				throw std::invalid_argument(fmt::format("invalid key \"{}\"", key));
+				throw std::invalid_argument(std::format("invalid key \"{}\"", key));
 			}
 			
 			n_overflow += self.inject_fn(u8(pos-self.cfg->ptinfo.begin()), data);
 		} if (n_overflow) {
-			throw std::overflow_error(fmt::format(
+			throw std::overflow_error(std::format(
 			"pstore.inject: can not inject {} samples: overflow!", n_overflow));
 		}
 	}, "input"_a,

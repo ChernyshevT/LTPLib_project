@@ -62,7 +62,7 @@ db_group_t::db_group_t (const csection_set_cfg* cfg, py::dict entry) {
 		case "KEY"_hash:
 			flags.set(DESCR_DEF);
 			bgkey = py::cast<std::string>(entry["KEY"]);
-			descr = fmt::format("{} + {}", cfg->pt_list.back(), bgkey);
+			descr = std::format("{} + {}", cfg->pt_list.back(), bgkey);
 			continue;
 		case "MASSRATE"_hash:
 			flags.set(MRATE_DEF);
@@ -310,23 +310,23 @@ void build_table (csection_set_cfg *cfg, py::dict opts) {
 	py::print(cfg->consts);
 	py::print(cfg->pt_list);
 	py::print(cfg->bg_list);
-	fmt::print("GROUPS:\n");
+	py::print("GROUPS:\n");
 	for (auto& group : cfg->db_groups) {
-		fmt::print("\t{:<15} PT#[{:03d}] BG#[{:03d}] CH#[{:03d}, {:03d}] {}\n"
+		py::print(std::format("\t{:<15} PT#[{:03d}] BG#[{:03d}] CH#[{:03d}, {:03d}] {}\n"
 		, group.descr, group.pt_index, group.bg_index
 		, group.ch_index[0], group.ch_index[1]
 		, group.flags.to_string('-','*')
-		);
+		));
 		for (u16 k{group.ch_index[0]}, n{group.ch_index[1]}; k<n; ++k) {
 			n_rows += 1 + cfg->db_entries[k].fns.contains("DCS");
 			py::print(cfg->db_entries[k]);
 		}
 	}
-	fmt::print("{} groups, {} entries, {} rows\n"
+	py::print(std::format("{} groups, {} entries, {} rows\n"
 	, cfg->db_groups.size()
 	, n_entries
 	, n_rows
-	);
+	));
 	
 	std::vector<f32> _table(n_entries*2 + n_rows*(cfg->tsize-1));
 	
@@ -336,7 +336,7 @@ void build_table (csection_set_cfg *cfg, py::dict opts) {
 	u16 j1 = cfg->db_entries.size();
 	
 	if (_debug) {
-		py::print(fmt::format("LOOKUP-TABLE ROW SIZE = {}", cfg->tsize-1));
+		py::print(std::format("LOOKUP-TABLE ROW SIZE = {}", cfg->tsize-1));
 	}
 	for (auto& group : cfg->db_groups) {
 		f64 r0, rmx{0.0f}, rsh{0.0f};
@@ -347,16 +347,16 @@ void build_table (csection_set_cfg *cfg, py::dict opts) {
 			bool containsDCS{entry.fns.contains("DCS")};
 			
 			if (_debug) {
-				py::print(fmt::format("BUILDING LOOKUP-TABLE #{:03d} for \"{}, {}\":"
+				py::print(std::format("BUILDING LOOKUP-TABLE #{:03d} for \"{}, {}\":"
 				, j, group.descr, entry.descr));
 			}
 			if (_debug and containsDCS) {
-				py::print(fmt::format("|{:>10}|{:>10}|{:>10}|{:>10}|{:>8}|"
+				py::print(std::format("|{:>10}|{:>10}|{:>10}|{:>10}|{:>8}|"
 				, "energy", "c_rate", "σ", "σₘ", "DCS"));
 				py::print(54*"-"s);
 			}
 			if (_debug and not containsDCS) {
-				py::print(fmt::format("|{:>10}|{:>10}|{:>10}|"
+				py::print(std::format("|{:>10}|{:>10}|{:>10}|"
 				, "energy", "c_rate", "σ"));
 				py::print(34*"-"s);
 			}
@@ -389,17 +389,17 @@ void build_table (csection_set_cfg *cfg, py::dict opts) {
 						xi = 0.0f; // no-collision fallback
 					} else {
 						throw std::logic_error \
-						(fmt::format("invalid DCS value ({}) at {} eV", xi, enel));
+						(std::format("invalid DCS value ({}) at {} eV", xi, enel));
 					}
 					table[j1][k] = xi;
 				}
 				
 				if (_debug and containsDCS) {
-					py::print(fmt::format("|{:>10.3e}|{:>10.3e}|{:>10.3e}|{:>10.3e}|{:>8.4f}|"
+					py::print(std::format("|{:>10.3e}|{:>10.3e}|{:>10.3e}|{:>10.3e}|{:>8.4f}|"
 					, enel, r0-rsh, s0, s1, xi));
 				}
 				if (_debug and not containsDCS) {
-					py::print(fmt::format("|{:>10.3e}|{:>10.3e}|{:>10.3e}|"
+					py::print(std::format("|{:>10.3e}|{:>10.3e}|{:>10.3e}|"
 					, enel, r0-rsh, s0));
 				}
 			}

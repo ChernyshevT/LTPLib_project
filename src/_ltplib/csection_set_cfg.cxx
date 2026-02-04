@@ -56,7 +56,7 @@ std::map<std::string, group_flags_t> parse_bg_flags(py::handle str) {
 	}
 	
 	for (auto [k,v] : bg_flags) {
-		std::cout<<fmt::format("{:<10} {}\n", k, v.to_string());
+		std::cout<<std::format("{:<10} {}\n", k, v.to_string());
 	}
 
 	return bg_flags;
@@ -166,7 +166,7 @@ csection_set_cfg::csection_set_cfg (
 					xi = 0.0f; // no-collision fallback
 				} else {
 					throw std::logic_error \
-					(fmt::format("invalid DCS value ({}) at {} eV", xi, enel));
+					(std::format("invalid DCS value ({}) at {} eV", xi, enel));
 				}
 				ptabs[2].push_back(xi);
 			}

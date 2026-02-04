@@ -82,7 +82,7 @@ void def_mcsim_funcs (py::module &m) {
 			auto &bgrnd = std::get<vcache_t<f32>>(bgrnd_h);
 			
 			std::string backend = "default";
-			std::string fn_name = fmt::format("mcsim{}_fn", nd);
+			std::string fn_name = std::format("mcsim{}_fn", nd);
 			
 			logger::debug("bind {}->{} &grid={}, &pstore={}, &cfreq={}, &cset={}, &bgrnd={}",
 			backend, fn_name, (void*)(&grid), (void*)(&pstore), (void*)(&cfreq), (void*)(&cset), (void*)(&bgrnd) 

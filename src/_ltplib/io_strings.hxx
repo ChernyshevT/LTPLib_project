@@ -39,8 +39,9 @@ constexpr auto _type_name() noexcept {
 
 /**********************************************************************/
 // here was FMT_HEADER_ONLY...
-#include "fmt/format.h"
-#include "fmt/ranges.h"
+//#include "fmt/format.h"
+//#include "fmt/ranges.h"
+#include <format>
 
 /******************************************************************************/
 template<typename... ts>
@@ -52,7 +53,7 @@ std::tuple<ts...> parse_vals (std::istringstream& istr) {
 	}, vals);
 
 	if (not done) throw std::invalid_argument
-	(fmt::format("failed to parse \"{}\" -> {}", istr.str(), TYPE_STR(vals)));
+	(std::format("failed to parse \"{}\" -> {}", istr.str(), TYPE_STR(vals)));
 	
 	return vals;
 }
@@ -184,45 +185,45 @@ decltype(auto) inline replace
 namespace logger {
 	
 	template<typename... ts>
-	void debug (fmt::format_string<ts...> arg, ts&&... args) {
+	void debug (std::format_string<ts...> arg, ts&&... args) {
 		py::module::import("logging").attr("getLogger")("_ltplib").attr("debug")
-		(fmt::format(arg, std::forward<ts>(args)...).c_str());
+		(std::format(arg, std::forward<ts>(args)...).c_str());
 	}
 
 	template<typename... ts>
-	void info (fmt::format_string<ts...> arg, ts&&... args) {
+	void info (std::format_string<ts...> arg, ts&&... args) {
 		py::module::import("logging").attr("getLogger")("_ltplib").attr("info")
-		(fmt::format(arg, std::forward<ts>(args)...).c_str());
+		(std::format(arg, std::forward<ts>(args)...).c_str());
 	}
 	
 	template<typename... ts>
-	void warning (fmt::format_string<ts...> arg, ts&&... args) {
+	void warning (std::format_string<ts...> arg, ts&&... args) {
 		py::module::import("logging").attr("getLogger")("_ltplib").attr("warning")
-		(fmt::format(arg, std::forward<ts>(args)...).c_str());
+		(std::format(arg, std::forward<ts>(args)...).c_str());
 	}
 
 	template<typename... ts>
-	void error (fmt::format_string<ts...> arg, ts&&... args) {
+	void error (std::format_string<ts...> arg, ts&&... args) {
 		py::module::import("logging").attr("getLogger")("_ltplib").attr("error")
-		(fmt::format(arg, std::forward<ts>(args)...).c_str());
+		(std::format(arg, std::forward<ts>(args)...).c_str());
 	}
 
 	template<typename... ts>
-	void critical (fmt::format_string<ts...> arg, ts&&... args) {
+	void critical (std::format_string<ts...> arg, ts&&... args) {
 		py::module::import("logging").attr("getLogger")("_ltplib").attr("critical")
-		(fmt::format(arg, std::forward<ts>(args)...).c_str());
+		(std::format(arg, std::forward<ts>(args)...).c_str());
 	}
 
 }
 
 template <typename... ts>
-std::invalid_argument bad_arg (fmt::format_string<ts...> fmt_str, ts&&... args) {
-	return std::invalid_argument (fmt::format(fmt_str, std::forward<ts>(args)...));
+std::invalid_argument bad_arg (std::format_string<ts...> fmt_str, ts&&... args) {
+	return std::invalid_argument (std::format(fmt_str, std::forward<ts>(args)...));
 };
 
 template <typename... ts>
-py::import_error bad_import (fmt::format_string<ts...> fmt_str, ts&&... args) {
-	return py::import_error (fmt::format(fmt_str, std::forward<ts>(args)...));
+py::import_error bad_import (std::format_string<ts...> fmt_str, ts&&... args) {
+	return py::import_error (std::format(fmt_str, std::forward<ts>(args)...));
 };
 
 template<typename tp>
@@ -237,7 +238,7 @@ const char* datatypecode() {
 }
 
 //~ template <typename DTYPE>
-//~ DTYPE _pycast (py::handle obj, fmt::format_string<DTYPE> msg) {
+//~ DTYPE _pycast (py::handle obj, std::format_string<DTYPE> msg) {
 	//~ DTYPE retv = ;
 //~ } 
 

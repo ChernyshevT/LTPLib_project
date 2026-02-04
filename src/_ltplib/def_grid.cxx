@@ -64,7 +64,7 @@ grid_holder:: grid_holder
 		nd == 1? grid_v{grid_t<1>{}} :
 		nd == 2? grid_v{grid_t<2>{}} :
 		nd == 3? grid_v{grid_t<3>{}} :
-		throw std::invalid_argument(fmt::format("nd == {}", nd))
+		throw std::invalid_argument(std::format("nd == {}", nd))
 	}
 , cfg {std::make_unique<grid_cfg>
 	(nd, py::dict{"step"_a=_step, "axes"_a=_axes, "nodes"_a=_nodes, "mask"_a=_mask , **kwargs})}

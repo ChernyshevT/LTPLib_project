@@ -15,14 +15,14 @@ FetchContent_MakeAvailable(pybind11)
 
 ################################################################################
 # Download fmt from GitHub
-FetchContent_Declare(
-	fmt
-	GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-	GIT_TAG        master
-	GIT_PROGRESS   TRUE
-)
-set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(fmt)
+#~ FetchContent_Declare(
+	#~ fmt
+	#~ GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+	#~ GIT_TAG        master
+	#~ GIT_PROGRESS   TRUE
+#~ )
+#~ set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
+#~ FetchContent_MakeAvailable(fmt)
 
 ################################################################################
 add_library(_ltplib SHARED 
@@ -36,7 +36,7 @@ add_library(_ltplib SHARED
 	def_mcsim_funcs.cxx
 	def_ppost_funcs.cxx
 	def_ppush_funcs.cxx
-	def_remap_funcs.cxx
+	#def_remap_funcs.cxx
 	def_poisson_eq.cxx
 )
 
@@ -49,7 +49,7 @@ set_target_properties(_ltplib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 target_link_libraries(_ltplib PRIVATE
 	pybind11::module
-	fmt::fmt-header-only
+	#fmt::fmt-header-only
 )
 
 # Find OpenMP (this will automatically set up the correct compiler flags)

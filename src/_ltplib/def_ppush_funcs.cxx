@@ -125,14 +125,14 @@ void def_ppush_funcs (py::module &m) {
 			auto &emfield = std::get<vcache_t<f32>>(emfield_h);
 			
 			std::string backend = "default";
-			std::string fn_name = fmt::format("ppush{}{}_{}_{}_fn",
+			std::string fn_name = std::format("ppush{}{}_{}_{}_fn",
 				nd,
 				grid.flags & AXIS_FLAG::CYLINDER ? "CYLINDER" : "",
 				scheme,
 				emfield.order == 1? "LINE" :
 				emfield.order == 2? "QUAD" :
 				emfield.order == 3? "CUBE" :
-				throw std::invalid_argument(fmt::format("emfield.order={}", emfield.order))
+				throw std::invalid_argument(std::format("emfield.order={}", emfield.order))
 			);
 			// check argument
 			if (scheme != "LEAPF" and pstore.cfg->nargs< 1+(nd+3)*2) throw bad_arg(

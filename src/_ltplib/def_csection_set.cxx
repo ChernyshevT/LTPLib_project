@@ -240,10 +240,10 @@ void def_csections(py::module &m) {
 		for (const auto& cmd : self.cfg->progs) {
 			if (opcode::END == cmd.opc) {
 				progs_repr.push_back \
-				(fmt::format("{}", MPROG_DESCR[cmd.opc]));
+				(std::format("{}", MPROG_DESCR[cmd.opc]));
 			} else {
 				progs_repr.push_back \
-				(fmt::format("{}.{}", MPROG_DESCR[cmd.opc], cmd.arg));
+				(std::format("{}.{}", MPROG_DESCR[cmd.opc], cmd.arg));
 			}
 		}
 		return progs_repr;
@@ -263,7 +263,7 @@ void def_csections(py::module &m) {
 		if (k < self.cfg->db_entries.size()) {
 			return self.cfg->db_entries[k];
 		} else throw \
-		py::index_error(fmt::format("{} >= {}", k, self.cfg->db_entries.size()));
+		py::index_error(std::format("{} >= {}", k, self.cfg->db_entries.size()));
 	}, "channel_id"_a, "returns specific entry, same as db_entries[channel_id]"
 	, py::keep_alive<0, 1>())
 	
