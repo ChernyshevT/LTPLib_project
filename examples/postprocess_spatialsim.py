@@ -128,7 +128,7 @@ def main(args):
 	
 	if os.path.exists(fname:=f"{os.path.abspath(args.fdir)}.dset.zip"):
 		if input(f"\"{fname}\" already exists, delete [y|yes]? ") in ["y", "yes"]:
-			shutil.rmtree(fname)
+			os.remove(fname)
 		else:
 			exit(0)
 	
