@@ -192,23 +192,26 @@ def main(args):
 		
 		vmx = 0
 		
-		pdata, count = None, 0
+		count,vxs,vys,vzs = 0,None,None,None
 		for k in range(k_avg, n+1):
 			if os.path.exists(fname:=f"{args.fdir}/pdata{k:06d}.zip"):
 				pdata  = load_frame(fname)
 				vxs,vys,vzs = pdata.data.T[2:]
-				vmx = max(vmx, np.max(np.abs(vxs)), np.max(np.abs(vxs)))
-				print(f"v_max = {vmx:e}")
+				
+				vmx = np.max(np.sqrt(vxs*vxs + vys*vys))
+				print(f"add \"{fname}\": v_max = {vmx:e}")
 				
 				dist.add(vxs, vys)
 				count += 1
 		
-		if pdata is None:
+		if count < 1:
 			raise RuntimeError("no pdata-files were found!")
 		else:
+			dset["cfg"]["vmax"] = vmax
+			dset["vxs"] = vxs
+			dset["vys"] = vys
+			dset["vzs"] = vzs
 			dset["eVDFxy"] = dist.hist/count
-			dset["vmax"]   = vmax
-			dset["parts"]  = pdata.data.T[2:]
 	
 	############################################################
 	print(dset.keys())
