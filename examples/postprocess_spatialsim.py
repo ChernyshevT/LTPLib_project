@@ -128,12 +128,12 @@ def main(args):
 	
 	if os.path.exists(fname:=f"{os.path.abspath(args.fdir)}.dset.zip"):
 		if input(f"\"{fname}\" already exists, delete [y|yes]? ") in ["y", "yes"]:
-				shutil.rmtree(args.save)
+			shutil.rmtree(fname)
 		else:
 			exit(0)
 	
-	stats = []
-	n = 0
+	##############################################################################
+	stats, n = [], 0
 	while os.path.exists(fname:=f"{args.fdir}/frame{n+1:06d}.zip"):
 		print(f"\rread \"{fname}\"", end="")
 		frame = load_frame(fname).add_funcs(**funcs)
@@ -156,7 +156,7 @@ def main(args):
 			a, b = j-args.window+1, j+1
 			for field in fields:
 				err = np.std(stats[field][a:b])/np.mean(stats[field][a:b])
-				if errmx:
+				if errmx is not None:
 					errmx = max(abs(err), errmx)
 				else:
 					errmx = abs(err)
