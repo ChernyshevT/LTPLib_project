@@ -190,11 +190,16 @@ def main(args):
 		xbins,ybins = [np.linspace(-vmax, +vmax, npts) for _ in range(2)]
 		dist = distro_h(xbins, ybins)
 		
+		vmx = 0
+		
 		pdata, count = None, 0
 		for k in range(k_avg, n+1):
 			if os.path.exists(fname:=f"{args.fdir}/pdata{k:06d}.zip"):
 				pdata  = load_frame(fname)
 				vxs,vys,vzs = pdata.data.T[2:]
+				vmx = max(vmx, np.max(np.abs(vxs)), np.max(np.abs(vxs)))
+				print(vmx)
+				
 				dist.add(vxs, vys)
 				count += 1
 		
