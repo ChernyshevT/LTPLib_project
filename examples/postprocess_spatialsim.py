@@ -198,7 +198,7 @@ def main(args):
 				pdata  = load_frame(fname)
 				vxs,vys,vzs = pdata.data.T[2:]
 				vmx = max(vmx, np.max(np.abs(vxs)), np.max(np.abs(vxs)))
-				print(vmx)
+				print(f"v_max = {vmx:e}")
 				
 				dist.add(vxs, vys)
 				count += 1
