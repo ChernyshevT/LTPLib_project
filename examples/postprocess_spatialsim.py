@@ -125,6 +125,12 @@ keys = ["ENe","UDRIFTe","UXe","UYe","CFREQ"]
 
 def main(args):
 	
+	if os.path.exists(fname:=f"{os.path.abspath(args.fdir)}.dset.zip"):
+		if input(f"\"{fname}\" already exists, delete [y|yes]? ") in ["y", "yes"]:
+				shutil.rmtree(args.save)
+		else:
+			exit(0)
+	
 	stats = []
 	n = 0
 	while os.path.exists(fname:=f"{args.fdir}/frame{n+1:06d}.zip"):
@@ -183,7 +189,7 @@ def main(args):
 		xbins,ybins = [np.linspace(-vmax, +vmax, npts) for _ in range(2)]
 		dist = distro_h(xbins, ybins)
 		
-		count = 0
+		pdata, count = None, 0
 		for k in range(k_avg, n+1):
 			if os.path.exists(fname:=f"{args.fdir}/pdata{k:06d}.zip"):
 				pdata  = load_frame(fname)
@@ -191,13 +197,15 @@ def main(args):
 				dist.add(vxs, vys)
 				count += 1
 		
-		if count < 1:
+		if pdata is None:
 			raise RuntimeError("no pdata-files were found!")
-		
-		dset["eVDFxy"] = dist.hist/count
-		dset["vmax"] = vmax
+		else:
+			dset["eVDFxy"] = dist.hist/count
+			dset["vmax"]   = vmax
+			dset["parts"]  = pdata.data.T[2:]
 	
 	############################################################
+	print(dset.keys())
 	save_frame(f"{os.path.abspath(args.fdir)}.dset.zip", **dset)
 	
 ################################################################################
