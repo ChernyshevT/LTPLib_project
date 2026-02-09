@@ -26,7 +26,7 @@ struct db_group_t;
 struct db_entry_t;
 struct csection_set_cfg;
 
-	enum db_group_flags : u8 {
+enum db_group_flags : u8 {
 	DESCR_DEF = 0,
 	MRATE_DEF,
 	VTERM_DEF,

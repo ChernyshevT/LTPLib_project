@@ -164,7 +164,7 @@ def main(args):
 			print('-'*len(line))
 		
 		if k_avg is not None and errmx is not None and errmx >= args.precision:
-			raise RuntimeError(f"errmx = {errmx:e} >= {precision:e}!")
+			raise RuntimeError(f"errmx = {errmx:e} >= {args.precision:e}!")
 	
 	# endline ##########
 	print('-'*len(line))

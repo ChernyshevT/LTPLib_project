@@ -59,15 +59,15 @@ struct grid_ctor {
 
 //~ grid_holder:: grid_holder (u8 nd, py::dict arg, py::kwargs kwargs)
 grid_holder:: grid_holder
-(u8 nd, step_a _step, axes_a _axes, nodes_a _nodes, mask_a _mask, py::kwargs kwargs)
+(step_a _step, axes_a _axes, nodes_a _nodes, mask_a _mask, py::kwargs kwargs)
 : grid_v {
-		nd == 1? grid_v{grid_t<1>{}} :
-		nd == 2? grid_v{grid_t<2>{}} :
-		nd == 3? grid_v{grid_t<3>{}} :
-		throw std::invalid_argument(std::format("nd == {}", nd))
+		_step.size() == 1u ? grid_v{grid_t<1>{}} :
+		_step.size() == 2u ? grid_v{grid_t<2>{}} :
+		_step.size() == 3u ? grid_v{grid_t<3>{}} :
+		throw std::invalid_argument(std::format("nd == {}", _step.size()))
 	}
 , cfg {std::make_unique<grid_cfg>
-	(nd, py::dict{"step"_a=_step, "axes"_a=_axes, "nodes"_a=_nodes, "mask"_a=_mask , **kwargs})}
+	(_step.size(), py::dict{"step"_a=_step, "axes"_a=_axes, "nodes"_a=_nodes, "mask"_a=_mask , **kwargs})}
 {
 	//~ cfg = std::make_unique<grid_cfg> 
 	
@@ -138,8 +138,8 @@ void def_grids (py::module &m) {
 	It describes problem's geometry, and nodes for parallel computation.
 	)pbdoc"); cls
 	
-	.def(py::init<u8, step_a, axes_a, nodes_a, mask_a, py::kwargs>()
-	, "nd"_a, "step"_a, "axes"_a, "nodes"_a=std::nullopt, "mask"_a=std::nullopt
+	.def(py::init<step_a, axes_a, nodes_a, mask_a, py::kwargs>()
+	, "step"_a, "axes"_a, "nodes"_a=std::nullopt, "mask"_a=std::nullopt
 	, GRID_INIT_DOC)
 
 	.def_property_readonly("ndim", [] (const grid_holder& self) {

@@ -61,7 +61,6 @@ def main(args, logger):
 			nx, mx, dx = 192, 16, 0.00625
 			ny, my, dy = 192, 16, 0.00625
 			grid_conf = {
-			 "nd"     : 2,
 			 "step"   : [dx,dy],
 			 "axes"   : [
 			  [*range(0,nx+1,mx)],
@@ -71,7 +70,7 @@ def main(args, logger):
 			  for x in range(nx//mx)\
 			  for y in range(ny//my)\
 			 ],
-			 flags = "LOOPX|LOOPY",
+			 "flags" : "LOOPX|LOOPY",
 			}
 			node_size = mx*my
 			logger.info(f"use default2d preset: {nx}x{ny}")
@@ -81,7 +80,6 @@ def main(args, logger):
 			ny, my, dy = 48, 6, 0.025
 			nz, mz, dz = 48, 6, 0.025
 			grid_conf = {
-			 "nd"     : 3,
 			 "step"   : [dx,dy,dz],
 			 "axes"   : [
 			  [*range(0, nx+1, mx)],
@@ -93,7 +91,7 @@ def main(args, logger):
 			  for y in range(ny//my)\
 			  for z in range(nz//mz)\
 			 ],
-			 flags = "LOOPX|LOOPY|LOOPZ",
+			 "flags" : "LOOPX|LOOPY|LOOPZ",
 			}
 			node_size = mx*my*mz
 			logger.info(f"use lowres3d preset: {nx}x{ny}x{nz}")

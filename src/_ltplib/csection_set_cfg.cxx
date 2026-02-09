@@ -67,6 +67,7 @@ csection_set_cfg::csection_set_cfg (
 	std::vector<py::dict> entries,
 	f32 max_energy_i,
 	py::str ptinfo_i,
+	py::str bginfo_i,
 	py::dict opts
 ) :
 	ptinfo(py::cast<decltype(ptinfo)>(ptinfo_i.attr("split")())),

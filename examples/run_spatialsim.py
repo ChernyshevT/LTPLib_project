@@ -69,6 +69,8 @@ def main(args, logger):
 	cset = ltp.csection_set(cs_cfg
 	, max_energy = args.max_energy
 	, ptdescr = "e"
+	, bgdescr = "*"
+	, debug   = True
 	, rescale = 1e4 #CGS (m² -> cm²)
 	)
 
@@ -78,24 +80,23 @@ def main(args, logger):
 	ny, my, dy = 384, 32, 1/1024
 	node_size = mx*my
 	# declare grid
-	grid = ltp.grid(2
-	, step = [dx,dy]
+	grid = ltp.grid([dx, dy]
 	, axes = [[*range(0,nx+1,mx)], [*range(0,ny+1,my)]]
-	, nodes = [(x,y) for x in range(nx//mx) for y in range(ny//my)]
-	, flags = "LOOPX|LOOPY")
+	, flags = "LOOPX|LOOPY"
+	)
 	
 	##############################################################################
 	# declare particle storage
 	nppin = np.prod(grid.units)*args.npunit
 	npmax = int(node_size*args.npunit*(1+args.extra))
-	nargs = 1+(grid.ndim+3)*(2 args.nrep>0 else 1) # more memory for impl. solver
 	
 	pstore = ltp.pstore(grid
 	, ptinfo = [
 	 {"KEY":"e", "CHARGE/MASS": -ECHARGE/ME},
-	]
+	 ]
 	, npmax = npmax
-	, nargs = nargs)
+	, nargs = 1 + 2*(grid.ndim + 3) # more memory for semi-implicit solver
+	)
 
 	##############################################################################
 	# declare electric field vcache
@@ -115,6 +116,8 @@ def main(args, logger):
 	# declare vcaches for event-counter and background concentration
 	events = ltp.vcache(grid, dtype="u32", vsize=len(cset))
 	bgrnd  = ltp.vcache(grid, dtype="f32", vsize=len(cset.bglist))
+	
+	print(bgrnd.shape,cset.bglist)
 	
 	##############################################################################
 	# set-up background

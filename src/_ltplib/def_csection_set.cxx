@@ -177,8 +177,8 @@ void def_csections(py::module &m) {
 	
 	/* start cross-section database class */ cs_cls
 	
-	.def(py::init<std::vector<py::dict>, f32, py::str, py::kwargs>
-	(), "cfg"_a, "max_energy"_a, "ptdescr"_a="e"
+	.def(py::init<std::vector<py::dict>, f32, py::str, py::str, py::kwargs>
+	(), "cfg"_a, "max_energy"_a, "ptdescr"_a="e", "bgdescr"_a="*"
 	, CSECTION_SET_CTOR)
 	
 	.def_readonly("max_energy", &csection_set_holder::max_energy,

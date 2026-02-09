@@ -80,8 +80,7 @@ struct grid_holder : grid_v {
 		mem_holder base_h;
 	} m;
 
-	 //~ grid_holder (u8, py::dict, py::kwargs);
-	 grid_holder (u8, step_a, axes_a, nodes_a, mask_a, py::kwargs);
+	 grid_holder (step_a, axes_a, nodes_a, mask_a, py::kwargs);
 	~grid_holder (void);
 };
 
