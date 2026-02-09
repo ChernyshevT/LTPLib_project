@@ -28,6 +28,9 @@ class distro_h:
 	
 	def add (m, xs, ys):
 		hist,*_ = np.histogram2d(xs, ys, [m.xbins, m.ybins], density=True)
+		#print(hist[50,50])
+		#print(m.xbins)
+		#print(m.ybins)
 		if m.hist is not None:
 			m.hist += hist
 		else:
@@ -177,41 +180,36 @@ def main(args):
 	print('-'*len(line))
 	
 	###################################
-	dset = {"cfg": frame.cfg, "avg":{}}
+	dset = {"cfg": vars(frame.cfg), "avg":{}}
 	for key in keys:
 		entry = np.stack(stats[k_avg:][key])
 		dset["avg"][key] = entry.mean(axis=0), entry.std(axis=0)
 	
 	#############
-	if args.eVDF:
-		vmax = float(args.eVDF[0])
-		npts = int(args.eVDF[1])
+	if args.eVDFxy:
 		
-		xbins,ybins = [np.linspace(-vmax, +vmax, npts) for _ in range(2)]
-		dist = distro_h(xbins, ybins)
-		
-		vmx = 0
-		
-		count,vxs,vys,vzs = 0,None,None,None
+		count,dist,pdata = 0, None, None
 		for k in range(k_avg, n+1):
 			if os.path.exists(fname:=f"{args.fdir}/pdata{k:06d}.zip"):
-				pdata  = load_frame(fname)
-				vxs,vys,vzs = pdata.data.T[2:]
+				pdata = load_frame(fname).data
+				vxs,vys,*_ = pdata.T[2:]
 				
-				vmx = np.max(np.sqrt(vxs*vxs + vys*vys))
-				print(f"add \"{fname}\": v_max = {vmx:e}")
+				vmax = np.max(np.sqrt(vxs*vxs + vys*vys))
+				if dist is None:
+					xbins, ybins = [np.linspace(-vmax, +vmax, 256) for _ in range(2)]
+					dist = distro_h(xbins, ybins)
 				
+				print(f"add \"{fname}\": vmax = {vmax:e}")
 				dist.add(vxs, vys)
 				count += 1
 		
 		if count < 1:
 			raise RuntimeError("no pdata-files were found!")
 		else:
-			dset["cfg"]["vmax"] = vmax
-			dset["vxs"] = vxs
-			dset["vys"] = vys
-			dset["vzs"] = vzs
-			dset["eVDFxy"] = dist.hist/count
+			np.random.shuffle(pdata)
+			dset["vbins"] = np.asarray([dist.xbins, dist.ybins])
+			dset["vpart"] = pdata[:,2:]
+			dset["VDFxy"] = dist.hist/count
 	
 	############################################################
 	print(dset.keys())
@@ -234,9 +232,8 @@ args = {
   "default": 0.01,
   "required": False,
  },
- "--eVDF" : {
-  "nargs": 2,
-  "required": False,
+ "--eVDFxy" : {
+  "action"   : argparse.BooleanOptionalAction,
  },
 }
 
