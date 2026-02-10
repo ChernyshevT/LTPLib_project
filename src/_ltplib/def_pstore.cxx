@@ -148,11 +148,11 @@ pstore_cfg::pstore_cfg
 	ntype = ptinfo.size();
 	
 	if (npmax >= NPPMAX_LIMIT) throw \
-	std::invalid_argument(std::format("npmax: {} >= {}", npmax, NPPMAX_LIMIT));
+	std::invalid_argument(std::format("capacity: {} >= {}", npmax, NPPMAX_LIMIT));
 	
 	
 	if (nargs <= nd+3) throw \
-	std::invalid_argument(std::format("nargs: {} <= {}", nargs, nd+3));
+	std::invalid_argument(std::format("vsize: {} <= {}", nargs, nd+3));
 	
 	idxsh  = 1+md;
 	npools = sz;
@@ -251,21 +251,17 @@ R"pbdoc(Creates particles storage.
 
 Parameters
 ----------
-
-cfg : storage configuration, see an examle:
-	{
-	 # maximum number of samples per node 
-	 "npmax" : 100000,
-	 # (optional) vector size per sample:
-	 # [*] 1+nd+3 for explicit integrator,
-	 # [*] 1+2*(nd+3) for implicit integrator
-	 "nargs" : 6,
-	 # components' info
-	 "ptinfo": [
-	 {"KEY":"e", "CHARGE/MASS":-5.333333e+17},
-	 {"KEY":"i", "CHARGE/MASS":+2.201710e+12},
+grid : existing grid,
+cfg : list containing components' description, i.e.:
+	[
+	 {"KEY":"e", "CHARGE/MASS": -5.333333e+17},
+	 {"KEY":"i", "CHARGE/MASS": +2.201710e+12},
 	],
-	}
+capacity -- maximum number of samples per node 
+vsize -- (optional) sample vector size:
+	1+nd+3 (by default)
+	or
+	1+(nd+3)*2 in case of semi-implicit mover
 )pbdoc"
 };
 
@@ -281,12 +277,12 @@ input : dictionary with particles to inject
 };
 
 const char *EXTRACT_FN {
-R"pbdoc(Saves particles into externl array.
+R"pbdoc(Saves particles into external array.
 
 Returns
 -------
 pair (output, index):
-  output: numpy.ndarray[numpy.f3232]
+  output: numpy.ndarray[numpy.f32]
     pVDF samples, shape == [:, nd+3]
   index: List[int]]
     range where specific component is located,
@@ -299,11 +295,11 @@ pair (output, index):
 void def_pstores (py::module &m) {
 
 	py::class_<pstore_holder> cls (m, "pstore",
-	"class to store particles"); cls
+	"Particle storage"); cls
 	
-	.def(py::init<const grid_holder&, std::vector<py::dict>, u32, u8
-	, py::kwargs> ()
-	, "grid"_a, "ptinfo"_a, "npmax"_a, "nargs"_a=0, PSTORE_INIT
+	.def(py::init\
+	<const grid_holder&, std::vector<py::dict>, u32, u8, py::kwargs> ()
+	, "grid"_a, "cfg"_a, "capacity"_a, "vsize"_a=0, PSTORE_INIT
 	, py::keep_alive<0, 1>() /* keep grid */
 	)
 

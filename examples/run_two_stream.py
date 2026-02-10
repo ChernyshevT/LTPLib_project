@@ -3,9 +3,10 @@
 import sys, os, timeit, shutil, logging, signal
 import numpy   as np
 
+from functools    import reduce
 from datetime     import datetime
 from time         import time
-from importlib    import import_module
+#from importlib    import import_module
 from itertools    import repeat, count
 from util.frames  import *
 from util.loggers import *
@@ -42,87 +43,81 @@ class poisson_eq_sp():
 ################################################################################
 def main(args, logger):
 
-	ME, MP   = 9.109383e-28, 1.6605402e-24 # gram
+	ME, AEM  = 9.109383e-28, 1.660539e-24 # gram
 	ECHARGE  = 4.803204e-10 # statC
 	M_4PI_E  = 6.035884e-09
 	##############################################################################
 	# problem's presets:
 	E0       = args.stream_en  # eV
 	T0       = 0.25 # eV
+	MLIGHT = ME
+	MHEAVY = 4.002602*AEM
+	V0  = np.sqrt(E0 * ECHARGE/150./MLIGHT)
+	VE  = np.sqrt(T0 * ECHARGE/150./MLIGHT)
+	VI  = np.sqrt(T0 * ECHARGE/150./MHEAVY)
+	WPE = np.sqrt(M_4PI_E*args.n_plasma * ECHARGE/MLIGHT)
 	
-	V0  = np.sqrt(E0 * ECHARGE/150./ME)
-	VE  = np.sqrt(T0 * ECHARGE/150./ME)
-	VI  = np.sqrt(T0 * ECHARGE/150./MP)
-	WPE = np.sqrt(M_4PI_E*args.n_plasma * ECHARGE/ME)
+	##############################################################################
 
 	# the problem's base geometry:
-	match args.preset:
-		case "default2d":
-			nx, mx, dx = 192, 16, 0.00625
-			ny, my, dy = 192, 16, 0.00625
-			grid_conf = {
-			 "step"   : [dx,dy],
-			 "axes"   : [
-			  [*range(0,nx+1,mx)],
-			  [*range(0,ny+1,my)],
-			 ],
-			 "flags" : "LOOPX|LOOPY",
-			}
-			node_size = mx*my
-			logger.info(f"use default2d preset: {nx}x{ny}")
+	# ~ match args.preset:
+		# ~ case "default2d":
+			# ~ nx, mx, dx = 192, 16, 0.00625
+			# ~ ny, my, dy = 192, 16, 0.00625
+			# ~ grid_conf = {
+			 # ~ "step"   : [dx,dy],
+			 # ~ "axes"   : [
+			  # ~ [*range(0,nx+1,mx)],
+			  # ~ [*range(0,ny+1,my)],
+			 # ~ ],
+			 # ~ "flags" : "LOOPX|LOOPY",
+			# ~ }
+			# ~ node_size = mx*my
+			# ~ logger.info(f"use default2d preset: {nx}x{ny}")
 			
-		case "lowres3d":
-			nx, mx, dx = 48, 8, 0.025
-			ny, my, dy = 48, 6, 0.025
-			nz, mz, dz = 48, 6, 0.025
-			grid_conf = {
-			 "step"   : [dx,dy,dz],
-			 "axes"   : [
-			  [*range(0, nx+1, mx)],
-			  [*range(0, ny+1, my)],
-			  [*range(0, nz+1, mz)],
-			 ],
-			 "flags" : "LOOPX|LOOPY|LOOPZ",
-			}
-			node_size = mx*my*mz
-			logger.info(f"use lowres3d preset: {nx}x{ny}x{nz}")
-		case _:
-			raise ValueError(f"invalid preset \"{args.preset}\"")
+		# ~ case "lowres3d":
+			# ~ nx, mx, dx = 48, 8, 0.025
+			# ~ ny, my, dy = 48, 6, 0.025
+			# ~ nz, mz, dz = 48, 6, 0.025
+			# ~ grid_conf = {
+			 # ~ "step"   : [dx,dy,dz],
+			 # ~ "axes"   : [
+			  # ~ [*range(0, nx+1, mx)],
+			  # ~ [*range(0, ny+1, my)],
+			  # ~ [*range(0, nz+1, mz)],
+			 # ~ ],
+			 # ~ "flags" : "LOOPX|LOOPY|LOOPZ",
+			# ~ }
+			# ~ node_size = mx*my*mz
+			# ~ logger.info(f"use lowres3d preset: {nx}x{ny}x{nz}")
+		# ~ case _:
+			# ~ raise ValueError(f"invalid preset \"{args.preset}\"")
 		
-	logger.info(f"using \"{args.preset}\" preset")
+	# ~ logger.info(f"using \"{args.preset}\" preset")
 	
-	stats = {
-		"v_max*dt/dx": max(V0, VE)*args.dt/dx,
-		"dt*wce": args.dt * WPE,
-		"dx/rde": dx*WPE/max(V0, VE),
-		"vte/v0" : VE/V0,
-	}
-	for k,v in stats.items():
-		msg = f"{k} = {v:06.3f}"
-		if v<0.5:
-			logger.info(msg)
-		else:
-			logger.warning(msg)
-	tframe = args.dt*args.nsub*1e9
-	logger.info(f"tframe = {tframe:07.3f} ns")
-	logger.info(f"order  = {args.order}")
-	logger.info(f"npunit = {args.npunit}")
+
 	
 	##############################################################################
 	ltp.load_backend("default");
 	##############################################################################
 	# declare grid
-	grid = ltp.grid(**grid_conf)
-	
+	with open("presets/two_stream_grids.py") as f:
+		grid_cfg = eval(f.read())[args.preset]
+	grid = ltp.grid(**grid_cfg)
+
 	##############################################################################
 	# declare particle storage
+	node_size = reduce(lambda k,ax: k*(ax[1]-ax[0]), grid.axes, 1)
+	
 	pstore = ltp.pstore(grid
-	, ptinfo = [
-	 {"KEY":"e-", "CHARGE/MASS": -ECHARGE/ME},
-	 {"KEY":"H+", "CHARGE/MASS": +ECHARGE/MP},
+	, cfg = [
+	 {"KEY":"e-",   "CHARGE/MASS": -ECHARGE/MLIGHT},
+	 {"KEY":"He4+", "CHARGE/MASS": +ECHARGE/MHEAVY},
 	]
-	, npmax = int(node_size*args.npunit*(2+args.extra))
-	, nargs = 1 + (grid.ndim+3)*2) # extra memory for implicit solver
+	, capacity = int(node_size * args.npunit*(int(args.ions)+args.extra))
+	, vsize = 1 + (grid.ndim+3)*2 # extra memory for implicit solver
+	)
+	
 	# weight coefficient
 	wcfft = args.n_plasma/args.npunit
 	
@@ -131,48 +126,42 @@ def main(args, logger):
 	emfield = ltp.vcache (grid
 	, dtype = "f32"
 	, order = args.order
-	, vsize = len(grid.step)) # Ex Ey (Ez)
-	#g_emfield = np.zeros (**emfield.cfg)
+	, vsize = grid.ndim # Ex Ey (Ez)
+	)
 	
 	##############################################################################
 	# declare fluid moments vcache & gobal array
 	ptfluid = ltp.vcache (grid
 	, dtype = "f32"
 	, order = args.order
-	, vsize = len(pstore.ptlist)*4) # C Pxx Pyy Pzz
-	#g_ptfluid = np.zeros (**ptfluid.cfg)
+	, vsize = (1+grid.ndim)*len(pstore.ptlist) # C Pxx Pyy (Pzz) for each sort
+	)
 
 	##############################################################################
 	# declare function bindings:
-	emf_descr = "ExEyEz"[:grid.ndim*2]
-	ppush_fns = [ltp.bind_ppush_fn (pstore, f"{emf_descr}:{mover}", emfield) \
+	_descr = "".join(["Ex","Ey","Ez"][:grid.ndim])
+	ppush_fns = [ltp.bind_ppush_fn (pstore, f"{_descr}:{mover}", emfield) \
 	 for mover in ["LEAPF", "IMPL0","IMPLR"]
 	]
-	ppost_fn = ltp.bind_ppost_fn (pstore, "C Pxx Pyy Pzz", ptfluid)
+	
+	_descr = "".join(["C","Pxx","Pyy","Pzz"][:1+grid.ndim])
+	ppost_fn = ltp.bind_ppost_fn (pstore, _descr, ptfluid)
 	
 	##############################################################################
 	# declare poisson_eq
 	eq = poisson_eq_sp(grid.units, grid.step)
-	
-	##############################################################################
-	# main steps:
-	def run_ppush_step(dt, mode):
-		ppush_fns[mode](args.dt)
-	
-	def run_ppost_step():
-		ppost_fn()
-		ptfluid.remap("out")[...] *= wcfft
-	
-	def run_field_step():
+
+	def recalc_field():
 		slicer1 = [slice(args.order, None, None)  for _ in eq.vmap.shape]
 		slicer2 = [slice(1,          -1,   None)  for _ in eq.vmap.shape]
 		padding = [(args.order+1, 1)  for _ in eq.vmap.shape]
 		
 		# collect charge density
-		eq.cmap[...] = 0
-		eq.cmap[...] += ptfluid[*slicer1, 0]*M_4PI_E
-		eq.cmap[...] -= ptfluid[*slicer1, 4]*M_4PI_E \
-		                if args.ions else args.n_plasma*M_4PI_E
+		eq.cmap[...] = ptfluid[*slicer1, 0]*M_4PI_E
+		if args.ions:
+			eq.cmap[...] -= ptfluid[*slicer1, 1+grid.ndim]*M_4PI_E
+		else:
+			eq.cmap[...] -= args.n_plasma*M_4PI_E
 		
 		# solve
 		verr = eq.solve()
@@ -186,6 +175,36 @@ def main(args, logger):
 		emfield.remap("in")
 		
 		return verr
+
+	##############################################################################
+	
+	# ~ stats = {
+		# ~ "v_max*dt/dx": max(V0, VE)*args.dt/dx,
+		# ~ "dt*wce": args.dt * WPE,
+		# ~ "dx/rde": dx*WPE/max(V0, VE),
+		# ~ "vte/v0" : VE/V0,
+	# ~ }
+	# ~ for k,v in stats.items():
+		# ~ msg = f"{k} = {v:06.3f}"
+		# ~ if v<0.5:
+			# ~ logger.info(msg)
+		# ~ else:
+			# ~ logger.warning(msg)
+	# ~ tframe = args.dt*args.nsub*1e9
+	# ~ logger.info(f"tframe = {tframe:07.3f} ns")
+	# ~ logger.info(f"order  = {args.order}")
+	# ~ logger.info(f"npunit = {args.npunit}")
+	
+	##############################################################################
+	# main steps:
+	def run_ppush_step(dt, mode):
+		ppush_fns[mode](args.dt)
+	
+	def run_ppost_step():
+		ppost_fn()
+		ptfluid.remap("out")[...] *= wcfft
+	
+
 	
 		
 	##############################################################################
@@ -231,7 +250,7 @@ def main(args, logger):
 	##############################################################################
 	# run initial step
 	run_ppost_step()
-	run_field_step()
+	recalc_field()
 	
 	##############################################################################
 	# define arrays to collect data for each frame-data
@@ -417,8 +436,8 @@ args = {
 	},
 	"--preset"  : {
 		"type"    : str,
-		"default" : "default2d",
-		"help"    : "select preset: \"default2d\" or \"lowres3d\""
+		"default" : "hires2d",
+		"help"    : "select preset: \"hires2d\" or \"lowres3d\""
 	},
 	"--no-mean"    : {
 		"dest"    : "mean",

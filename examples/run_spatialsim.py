@@ -91,11 +91,11 @@ def main(args, logger):
 	npmax = int(node_size*args.npunit*(1+args.extra))
 	
 	pstore = ltp.pstore(grid
-	, ptinfo = [
+	, cfg = [
 	 {"KEY":"e", "CHARGE/MASS": -ECHARGE/ME},
 	 ]
-	, npmax = npmax
-	, nargs = 1 + 2*(grid.ndim + 3) # more memory for semi-implicit solver
+	, capacity = npmax
+	, vsize = 1 + 2*(grid.ndim + 3) # more memory for semi-implicit solver
 	)
 
 	##############################################################################

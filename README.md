@@ -115,18 +115,18 @@ This class is used to store pVDF samples (macro-particles).
 The class constructor accepts the following arguments:
 1. *grid* — existing grid;
 1. *ptinfo* — description of active components to store;
-1. *npmax* — the capacity (maximum number of samples per node);
-1. *nargs* (optional) — number of components, `1+grid.nd+3` by default.
+1. *capacity* — the maximum number of samples per node;
+1. *vsize* (optional) — the number of components to store, `1+grid.nd+3` by default.
 
 See the example:
 ```python
 pstore = ltp.pstore(grid, # existing grid
- ptinfo = [
+ cfg = [
   {"KEY":"e",   "CHARGE/MASS": -5.272810e+17}, # electron
   {"KEY":"Ar+", "CHARGE/MASS": +7.240801e+12}, # argon ion
  ],
- npmax = 100000, # the limit is 16777216 samples per node
- nargs = 1+2*(grid.nd+3), # in case of using with implicit mover
+ capaticy = 100000, # the limit is 16777216 samples per node
+ vsize    = 1+2*(grid.nd+3), # in case of using with semi-implicit mover
 )
 ```
 
