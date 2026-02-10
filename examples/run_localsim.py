@@ -46,8 +46,8 @@ def main(args):
 	bginfo = [(lambda x: (x[0], float(x[1])))(x.split(":")) for x in args.bginfo]
 	keys, fracs = zip(*bginfo); fracs = np.array(fracs)/sum(fracs)
 	cs_cfg = [
-	{ "TYPE":"PARTICLE", "KEY":"e"
-	, "ENCFFT": 2.842815e-16}, #CGS (cm/s)² -> eV
+	 {"TYPE":"PARTICLE", "KEY":"e", "ENCFFT": 2.842815e-16, #CGS (cm/s)² -> eV
+	 },
 	]
 	cs_kws = {
 	 "max_energy" : args.max_energy,
@@ -93,8 +93,7 @@ def main(args):
 	
 	#####################
 	# create fake 1d grid
-	grid = ltp.grid(1 
-	, step=[1]
+	grid = ltp.grid(step=[1]
 	, axes=[[*range(args.nodes+1)]]
 	, nodes=[[i] for i in range(args.nodes)]
 	, flags="LOOPX")

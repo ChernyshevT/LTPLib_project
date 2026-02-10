@@ -77,9 +77,9 @@ struct csection_set_cfg {
 	std::vector<std::string>      ptinfo, chinfo;
 	f32                           max_energy;
 	std::vector<mprog_t>          progs;
-	std::vector<f32>            cffts, points, cstabs, rates, tabs;
-	u8                       tsize,  ntype; 
-	u16                      ncsect, nxtra;
+	std::vector<f32>              cffts, points, cstabs, rates, tabs;
+	u8                            tsize,  ntype; 
+	u16                           ncsect, nxtra;
 	
 	std::vector<f32>              consts;
 	std::vector<db_group_t>       db_groups;
@@ -92,7 +92,7 @@ struct csection_set_cfg {
 		bg_flags;
 	
 	csection_set_cfg
-	(std::vector<py::dict>, f32, py::str, py::dict);
+	(std::vector<py::dict>, f32, py::str, py::str, py::dict);
 	
 };
 
@@ -117,7 +117,7 @@ public:
 	~csection_set_holder (void);
 	
 	 csection_set_holder
-	(std::vector<py::dict>, f32, py::str, py::kwargs);
+	(std::vector<py::dict>, f32, py::str, py::str, py::kwargs);
 };
 
 #endif

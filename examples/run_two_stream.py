@@ -66,10 +66,6 @@ def main(args, logger):
 			  [*range(0,nx+1,mx)],
 			  [*range(0,ny+1,my)],
 			 ],
-			 "nodes"  : [(x, y)\
-			  for x in range(nx//mx)\
-			  for y in range(ny//my)\
-			 ],
 			 "flags" : "LOOPX|LOOPY",
 			}
 			node_size = mx*my
@@ -86,11 +82,6 @@ def main(args, logger):
 			  [*range(0, ny+1, my)],
 			  [*range(0, nz+1, mz)],
 			 ],
-			 "nodes"  : [(x, y, z)\
-			  for x in range(nx//mx)\
-			  for y in range(ny//my)\
-			  for z in range(nz//mz)\
-			 ],
 			 "flags" : "LOOPX|LOOPY|LOOPZ",
 			}
 			node_size = mx*my*mz
@@ -98,7 +89,7 @@ def main(args, logger):
 		case _:
 			raise ValueError(f"invalid preset \"{args.preset}\"")
 		
-	logger.info(f"using \"{args.preset}\" preset, {len(grid_conf['nodes'])} nodes")
+	logger.info(f"using \"{args.preset}\" preset")
 	
 	stats = {
 		"v_max*dt/dx": max(V0, VE)*args.dt/dx,

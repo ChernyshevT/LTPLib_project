@@ -81,9 +81,7 @@ csection_set_cfg::csection_set_cfg (
 	this->db_groups.reserve(entries.size());
 	this->db_entries.reserve(entries.size());
 	
-	if (opts.contains("bginfo")) {
-		this->bg_flags = parse_bg_flags(opts["bginfo"]);
-	}
+	this->bg_flags = parse_bg_flags(bginfo_i);
 	
 	/****************************************************************************/
 	if (max_energy < 0.25f) {

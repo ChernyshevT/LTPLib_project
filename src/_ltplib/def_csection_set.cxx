@@ -15,11 +15,12 @@ csection_set_holder::~csection_set_holder (void) {
 csection_set_holder:: csection_set_holder ( \
 std::vector<py::dict> _entries,
 f32                 _max_energy,
-py::str               _ptdescr,
-py::kwargs            kws
+py::str             _ptdescr,
+py::str             _bgdescr,
+py::kwargs           kws
 )
 : cfg{std::make_unique<csection_set_cfg>
-	(_entries, _max_energy, _ptdescr, (py::dict)(kws))}
+	(_entries, _max_energy, _ptdescr, _bgdescr, (py::dict)(kws))}
 {
 	m.data_holder
 		.req(&(this->progs), cfg->progs.size())

@@ -6,7 +6,6 @@ import os
 import shutil
 
 from util.frames import *
-from util.plots  import *
 from util.args  import *
 
 import scipy.interpolate as intrp
@@ -51,54 +50,7 @@ class distro_h:
 		return np.asarray\
 		([m.func(pt) for pt in zip(xs, ys)], dtype=np.float32)
 
-def draw_eVDF(fname, ax, **kwargs):
-	
-	vmx = kwargs.get("vmx", 1e9)
-	
-	xs,ys = np.linspace(-vmx, +vmx, 101), np.linspace(-vmx, +vmx, 101)
-	dist = distro_h(xs, ys)
-	
-	pdata = load_frame(fname)
-	parts = pdata.data[pdata.index[0]: pdata.index[1]]
-	np.random.shuffle(parts)
-	
-	vxs,vys,vzs = parts.T[-3:]
-	dist.add(vxs, vys).normalize()
-	n = min(kwargs.get("n", pdata.index[1]), pdata.index[1])
-	
-	cols = dist.get(vxs[:n], vys[:n])
-	
-	ux,uy = np.mean(vxs), np.mean(vys)
-
-	ptcfg = {
-	 "cmap"       : "jet",
-	 "rasterized" : 1,
-	 "marker"     : "s",
-	 "s"          : kwargs.get("msize", 16)*(72./ax.figure.dpi)**2,
-	 "lw"         : 0,
-	 **(dict(norm=kwargs.get("norm")) if "norm" in kwargs else {})
-	}
-	
-	cm = kwargs.get("cmap", "jet")
-	
-	ax.imshow(dist.hist.T*1e3, extent=(-vmx, +vmx, -vmx, +vmx), cmap=cm, origin="lower")
-	# ~ im = ax.scatter(vxs[:n], vys[:n], c="k", **ptcfg)
-	# ~ ax.plot(vxs[:n], vys[:n],",k")
-	# ~ return im
-
-	ax.axhline(0, ls="--", c="w")
-	ax.axvline(0, ls="--", c="w")
-
-	ax.plot(ux, uy, "xw")
-	if u0 := kwargs.get("u0"):
-		ax.axhline(u0, ls="--", c="w")
-		alpha = np.linspace(0,2*np.pi,361)
-		xx,yy = u0*np.sin(alpha), u0+u0*np.cos(alpha)
-		ax.plot(xx,yy,"--w",lw=1)
-	
-
 ################################################################################
-
 funcs = {
 "TIME": lambda f:\
  0.5*np.sum(f.cfg.tindex)*f.cfg.dt * 1e9,
@@ -127,6 +79,7 @@ funcs = {
 
 keys = ["ENe","UDRIFTe","UXe","UYe","CFREQ"]
 
+################################################################################
 def main(args):
 	
 	if os.path.exists(fname:=f"{os.path.abspath(args.fdir)}.dset.zip"):

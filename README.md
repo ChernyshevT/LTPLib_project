@@ -71,17 +71,15 @@ The following sections provide a brief overview of **\_ltplib** components.
 The grid is a primary class for every simulation.
 It describes the geometry of the problem, boundary conditions, and spatial decomposition for parallel computation.
 The code uses a slightly modified approach of tile decomposition described in the papers [^decyk2014][^decyk2015]. The class constructor accepts the following arguments:
-1. *nd* — number of spatial dimensions;
-1. *step* — list containing spatial steps along each axis;
-1. *axes* — list describing spatial decomposition along each axis;
+1. *step* — list containing spatial steps along the each axis;
+1. *axes* — list describing spatial decomposition along the each axis;
 1. *nodes* (optional) — list containing tuples to map computing nodes (will be created automatically if not given);
 1. *mask* (optional) — mask to mark adsorbing regions; 
 1. *flags* (optional) — flags to mark periodic boundaries (`"LOOPX|LOOPY|LOOPZ"`) and/or $x$-axis for axial-symmetric geometry (`"CYLINDER"`).
 
 The next example shows how `_ltplib.grid` can be constructed:
 ```python
-grid = ltp.grid(nd = 2,
-
+grid = ltp.grid(
  # First, let's define the spatial step for each dimension:
  step = [0.25, 0.25], # dx, dy
 
@@ -179,7 +177,7 @@ Constructor parameters for the class are:
 1. *cfg* — configuration sequence (see below);
 1. *max_energy* — energy limit defining lookup-table's size;
 1. *ptdescr* — string containing keys for active components, separated by spaces.
-This argument **must** exactly match the components from `pstore`.
+This argument **must** exactly match the components from `_ltplib.pstore`.
 1. *bgdescr* (optional) — string containing keys for background components, separated by spaces.
 If given, the class will ignore all other backgrounds from the configuration sequence.
 
@@ -630,6 +628,8 @@ The saved data can be accessed with dot-operator: `frame.data`.
 In the case of absence of the data `None` will be returned.
 
 ## [`examples/run_localsim.py`](./examples/run_localsim.py) <a name="run_localsim"></a>
+(**OUTDATED, UPDATE IS REQUIRED**)
+
 This problem shows an example of so-called spatial-local approximation.
 This approximation assumes that there are no spatial-gradients, thus spatial coordinate can be ignored
 and eVDF (<ins>e</ins>lectron <ins>V</ins>elocity <ins>D</ins>istribution <ins>F</ins>unction) is global.
