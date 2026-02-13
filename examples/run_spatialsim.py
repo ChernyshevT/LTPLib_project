@@ -70,7 +70,7 @@ def main(args, logger):
 	, max_energy = args.max_energy
 	, ptdescr = "e"
 	, bgdescr = "*"
-	, debug   = True
+	, debug   = False
 	, rescale = 1e4 #CGS (m² -> cm²)
 	)
 
@@ -257,7 +257,9 @@ def main(args, logger):
 	
 	##############################################################################
 	# now, run the main cycle
-	ts = np.empty([3], dtype=np.float64)
+	dtimes = np.empty([3], dtype=np.float64)
+	dcalls = np.empty([3], dtype=np.uint64)
+	dnames = ["mcsim", "ppush", "ppost"]
 	for irun in range(args.nstart, args.nrun+1):
 		# start new frame [t --> t + args.dt*args.nsub] & clear data
 		t0, t1 = (irun-1)*args.nsub*args.dt, irun*args.nsub*args.dt
@@ -275,13 +277,20 @@ def main(args, logger):
 		
 		#################
 		# run frame-cycle
+		dtimes[...], dcalls[...] = 0, 0
 		for isub in range(1, args.nsub+1):
 
 			#####################
 			# run collision-phase
 			seed = np.random.randint(0xFFFFFFFF, dtype=np.uint32)
+			
+			t0 = time()
 			mcsim_fn(args.dt, seed)
-			npp = len(pstore); np_counter += npp
+			npp = len(pstore)
+			dtimes[0] += time()-t0
+			dcalls[0] += npp 
+			
+			np_counter += npp
 			# [!] we need this hack because electrons spawn without paired ions
 			ptfluid.remap("out")[...] *= args.n_plasma/args.npunit*nppin/npp
 			recalc_field()
@@ -290,14 +299,23 @@ def main(args, logger):
 			#####################################################
 			# run streaming-phase (sub-cycle for implicit solver)
 			for irep in range(0, args.nrep+1):
-				# push particles
 				mode = (args.nrep>0)+(irep>0)
+				# push particles
+				t0 = time()
 				ppush_fns[mode](args.dt)
 				npp = len(pstore)
+				dtimes[1] += time()-t0
+				dcalls[1] += npp
+				
 				# obtain density & flows & kinetic energy
+				t0 = time()
 				ppost_fn()
+				dtimes[2] += time()-t0
+				dcalls[2] += npp
+				
 				ptfluid.remap("out")[...] *= args.n_plasma/args.npunit*nppin/npp
 				# recalculate field
+				t_field = time()
 				verr = recalc_field()
 				emfield.remap("in")
 				
@@ -312,10 +330,13 @@ def main(args, logger):
 			_ptfluid[isub, ...] = ptfluid[...]
 			_vplasma[isub, ...] = eq.vmap[...]
 			_emenrgy[isub, ...] = np.sum(emfield[..., 1:]**2, axis=2)/8/np.pi
+			
 
 		############################################################################
 		# end frame cycle
 		logger.info(f"end frame ({len(pstore):} samples)")
+		for name, dtpp in zip(dnames, dtimes/dcalls*1e9):
+			logger.info(f"{name}: {dtpp:06.3f} ns/part")
 		
 		# acquire frame-avgeraged values
 		_evtfreq[...] = events.remap("out")[...].astype(np.float32)\

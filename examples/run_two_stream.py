@@ -265,6 +265,7 @@ def main(args, logger):
 				t1 = time()
 				run_ppost_step()
 				# recalculate field
+				t2 = time()
 				verr = run_field_step()
 				_errv[isub-1, irep] = verr
 				t2 = time()
