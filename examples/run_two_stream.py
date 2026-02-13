@@ -46,59 +46,22 @@ def main(args, logger):
 	ME, AEM  = 9.109383e-28, 1.660539e-24 # gram
 	ECHARGE  = 4.803204e-10 # statC
 	M_4PI_E  = 6.035884e-09
+	CLIGHT   = 2.99792458e+10 # cm/s
+	
 	##############################################################################
 	# problem's presets:
-	E0       = args.stream_en  # eV
-	T0       = 0.25 # eV
-	MLIGHT = ME
-	MHEAVY = 4.002602*AEM
-	V0  = np.sqrt(E0 * ECHARGE/150./MLIGHT)
-	VE  = np.sqrt(T0 * ECHARGE/150./MLIGHT)
-	VI  = np.sqrt(T0 * ECHARGE/150./MHEAVY)
+	E0     = args.stream_en  # eV
+	T0     = 0.25 # eV
+	MLIGHT = ME   # gram
+	MHEAVY = 4.002602*AEM # gram
+	VE0 = np.sqrt(E0 * ECHARGE/150./MLIGHT)
+	VTE = np.sqrt(T0 * ECHARGE/150./MLIGHT)
+	VEI = np.sqrt(T0 * ECHARGE/150./MHEAVY)
 	WPE = np.sqrt(M_4PI_E*args.n_plasma * ECHARGE/MLIGHT)
 	
 	##############################################################################
-
-	# the problem's base geometry:
-	# ~ match args.preset:
-		# ~ case "default2d":
-			# ~ nx, mx, dx = 192, 16, 0.00625
-			# ~ ny, my, dy = 192, 16, 0.00625
-			# ~ grid_conf = {
-			 # ~ "step"   : [dx,dy],
-			 # ~ "axes"   : [
-			  # ~ [*range(0,nx+1,mx)],
-			  # ~ [*range(0,ny+1,my)],
-			 # ~ ],
-			 # ~ "flags" : "LOOPX|LOOPY",
-			# ~ }
-			# ~ node_size = mx*my
-			# ~ logger.info(f"use default2d preset: {nx}x{ny}")
-			
-		# ~ case "lowres3d":
-			# ~ nx, mx, dx = 48, 8, 0.025
-			# ~ ny, my, dy = 48, 6, 0.025
-			# ~ nz, mz, dz = 48, 6, 0.025
-			# ~ grid_conf = {
-			 # ~ "step"   : [dx,dy,dz],
-			 # ~ "axes"   : [
-			  # ~ [*range(0, nx+1, mx)],
-			  # ~ [*range(0, ny+1, my)],
-			  # ~ [*range(0, nz+1, mz)],
-			 # ~ ],
-			 # ~ "flags" : "LOOPX|LOOPY|LOOPZ",
-			# ~ }
-			# ~ node_size = mx*my*mz
-			# ~ logger.info(f"use lowres3d preset: {nx}x{ny}x{nz}")
-		# ~ case _:
-			# ~ raise ValueError(f"invalid preset \"{args.preset}\"")
-		
-	# ~ logger.info(f"using \"{args.preset}\" preset")
-	
-
-	
-	##############################################################################
 	ltp.load_backend("default");
+	
 	##############################################################################
 	# declare grid
 	with open("presets/two_stream_grids.py") as f:
@@ -107,12 +70,12 @@ def main(args, logger):
 
 	##############################################################################
 	# declare particle storage
-	node_size = reduce(lambda k,ax: k*(ax[1]-ax[0]), grid.axes, 1)
+	node_size = reduce(lambda k, ax: k*(ax[1]-ax[0]), grid.axes, 1)
 	
 	pstore = ltp.pstore(grid
 	, cfg = [
-	 {"KEY":"e-",   "CHARGE/MASS": -ECHARGE/MLIGHT},
-	 {"KEY":"He4+", "CHARGE/MASS": +ECHARGE/MHEAVY},
+	 {"KEY":"e-",  "CHARGE/MASS": -ECHARGE/MLIGHT},
+	 {"KEY":"He+", "CHARGE/MASS": +ECHARGE/MHEAVY},
 	]
 	, capacity = int(node_size * args.npunit*(int(args.ions)+args.extra))
 	, vsize = 1 + (grid.ndim+3)*2 # extra memory for implicit solver
@@ -195,14 +158,16 @@ def main(args, logger):
 	# ~ logger.info(f"order  = {args.order}")
 	# ~ logger.info(f"npunit = {args.npunit}")
 	
+	exit()
+	
 	##############################################################################
 	# main steps:
-	def run_ppush_step(dt, mode):
-		ppush_fns[mode](args.dt)
+	# ~ def run_ppush_step(dt, mode):
+		# ~ ppush_fns[mode](args.dt)
 	
-	def run_ppost_step():
-		ppost_fn()
-		ptfluid.remap("out")[...] *= wcfft
+	# ~ def run_ppost_step():
+		# ~ ppost_fn()
+		# ~ ptfluid.remap("out")[...] *= wcfft
 	
 
 	
@@ -228,7 +193,7 @@ def main(args, logger):
 			# generate ion velocities
 			pdata[:, grid.ndim:] = np.random.normal(0, VI, size=[nppin,3])
 			# inject ions
-			pstore.inject({"H+": pdata})
+			pstore.inject({"He+": pdata})
 		
 		logger.info(f"{len(pstore)} samples created")
 		
@@ -248,20 +213,33 @@ def main(args, logger):
 		logger.info(f"loaded \"{fpath}\" ({len(pstore)} samples injected)")
 
 	##############################################################################
-	# run initial step
-	run_ppost_step()
-	recalc_field()
-	
-	##############################################################################
-	# define arrays to collect data for each frame-data
+	# arrays to collect data for the each frame
 	_ptfluid = np.zeros([args.nsub+1, *ptfluid.shape], dtype=np.float32)
 	_vplasma = np.zeros([args.nsub+1, *eq.vmap.shape], dtype=np.float32)
-	_errv    = np.zeros([args.nsub, args.nrep+1],      dtype=np.float32)
+	_emenrgy = np.zeros([args.nsub+1, *eq.vmap.shape], dtype=np.float32)
+	_errv    = np.zeros([args.nsub, args.nrep+1], dtype=np.float32)
+
+	cfg = {**vars(args),
+	 "step"     : grid.step,
+	 "units"    : grid.units,
+	 "nppin"    : nppin,
+	 "E0"       : E0,
+	 "B0"       : B0,
+	 "chinfo"   : chinfo,
+	 "flinfo"   : ["C","KEn", "Fx","Fy"],
+	}
 	
 	if args.run == False or not (args.run or input(f"run? [y] ") == "y"):
 		exit(0)
-	else:
-		logger.info("start calculation")
+	
+	##############################################################################
+	# run initial step
+	logger.info("start calculation")
+	ppost_fn()
+	ptfluid.remap("out")[...] *= args.n_plasma/args.npunit
+	recalc_field()
+	emfield.remap("in")
+	
 	# now, run main cycle
 	ts = np.empty([3], dtype=np.float64)
 	for irun in range(args.nstart, args.nrun+1):
@@ -272,6 +250,7 @@ def main(args, logger):
 		# refresh arrays to save
 		_ptfluid[0, ...] = ptfluid[...]
 		_vplasma[0, ...] = eq.vmap[...]
+		_emenrgy[0, ...] = np.sum(emfield[..., 1:]**2, axis=2)/8/np.pi
 		_errv[...] = np.nan
 		
 		# run frame-cycle

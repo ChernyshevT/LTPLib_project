@@ -42,10 +42,10 @@ class poisson_eq_sp():
 ################################################################################
 def main(args, logger):
 
-	ME, MP   = 9.109383e-28, 1.6605402e-24 # gram
+	ME       = 9.109383e-28 # gram
 	ECHARGE  = 4.803204e-10 # statC
 	M_4PI_E  = 6.035884e-09
-	CLIGHT   = 2.99792458e+10
+	CLIGHT   = 2.99792458e+10 # cm/s
 
 	##############################################################################
 	ltp.load_backend("default")
@@ -53,12 +53,12 @@ def main(args, logger):
 	##############################################################################
 	# load gas presets
 	bginfo = [(lambda x: (x[0], float(x[1])))(x.split(":")) for x in args.bginfo]
-	keys, fracs = zip(*bginfo)
+	bgkeys, bgfracs = zip(*bginfo)
 	cs_cfg = [
 	 {"TYPE":"PARTICLE", "KEY":"e",
 	  "ENCFFT": 2.842815e-16}, #CGS (cm/s)² -> eV
 	]
-	for key in keys:
+	for key in bgkeys:
 		fname = f"csections_db/{key}.py"
 		lvars = {"fpath": os.path.dirname(fname), **vars(import_module("math"))}
 		with open(fname, "r") as f:
@@ -106,14 +106,14 @@ def main(args, logger):
 	, vsize = 1+len(grid.step)) # Bz Ex Ey (Ez)
 
 	##############################################################################
-	# declare fluid moments vcache
+	# declare vcache for fluid moments 
 	ptfluid = ltp.vcache (grid
 	, dtype = "f32"
 	, order = args.order
 	, vsize = len(pstore.ptlist)*4) # C Fx Fy KEn
 
 	##############################################################################
-	# declare vcaches for event-counter and background concentration
+	# declare vcaches for event-counter and background concentrations
 	events = ltp.vcache(grid, dtype="u32", vsize=len(cset))
 	bgrnd  = ltp.vcache(grid, dtype="f32", vsize=len(cset.bglist))
 	
@@ -121,8 +121,7 @@ def main(args, logger):
 	
 	##############################################################################
 	# set-up background
-	#xs, ys = np.mgrid[0:nx, 0:ny]
-	for j, frac in enumerate(fracs):
+	for j, frac in enumerate(bgfracs):
 		#bgrnd[..., j] = args.n_bgrnd*frac*(np.sin(xs*2*np.pi/nx)*np.sin(ys*2*np.pi/ny))**2
 		bgrnd[..., j] = args.n_bgrnd*frac
 	bgrnd.remap("in")
@@ -247,6 +246,7 @@ def main(args, logger):
 	##############################################################################
 	if args.run == False or not (args.run or input(f"run? [y] ") == "y"):
 		exit(0)
+	
 	##############################################################################
 	# run initial step
 	logger.info("start calculation")
