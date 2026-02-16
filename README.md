@@ -93,7 +93,7 @@ grid = ltp.grid(2 # Two-dimensional problem
   [0, 4, 8, 12, 16], 
  ]
  # The position of each node is described relative to the "axes":
- nodes = [
+ , nodes = [
   (0, 0),
   (0, 1),
   (0, 2),
