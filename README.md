@@ -87,9 +87,9 @@ grid = ltp.grid(2 # Two-dimensional problem
  # The next two sections describe domain decomposition.
  # Here, the numbers in between define the edges of sub-domains:
  , axes = [
-  # x-axis, 2 slices
+  # x-axis, 4 slices
   [0, 6, 12, 18, 24],
-  # y-axis, 3 slices
+  # y-axis, 4 slices
   [0, 4, 8, 12, 16], 
  ]
  # The position of each node is described relative to the "axes":
