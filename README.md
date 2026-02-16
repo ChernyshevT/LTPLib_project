@@ -88,28 +88,32 @@ grid = ltp.grid(2 # Two-dimensional problem
  # Here, the numbers in between define the edges of sub-domains:
  , axes = [
   # x-axis, 2 slices
-  [0, 16, 32],
+  [0, 6, 12, 18, 24],
   # y-axis, 3 slices
-  [0, 20, 40, 60], 
+  [0, 4, 8, 12, 16], 
  ]
- # Now the position of each sub-domain is described relative to the "axes":
+ # The position of each node is described relative to the "axes":
  nodes = [
   (0, 0),
   (0, 1),
   (0, 2),
   ...
  ],
- # Links between the nodes will be built automatically.
+ # Or skip it and nodes will be created automatically.
  
  # It is possible to mark some points as particle absorbers
  # using the optional "mask" parameter:
- , mask = [...] # numpy.uint8-array, with the same shape as the grid axes.
+ , mask = [...] # numpy.uint8 array, with the same shape as the grid axes.
  # Any value != 0 will be considered as an adsorbing cell.
  
  # Axes can be marked with flags:
  , flags = "LOOPX|LOOPY"
 )
 ```
+The following figure shows the grid described before:
+<br>
+<img src="./docs/imgs/grid_example.png" alt="An example for grid-configuration" width="812"/>
+<br>
 
 ### [`_ltplib.pstore`](./src/_ltplib/def_pstore.cxx) (particle storage) <a name="pstore"></a>
 This class is used to store pVDF samples (macro-particles).
