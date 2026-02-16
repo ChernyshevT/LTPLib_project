@@ -80,7 +80,8 @@ def main(args, logger):
 	ny, my, dy = 384, 32, 1/1024
 	node_size = mx*my
 	# declare grid
-	grid = ltp.grid([dx, dy]
+	grid = ltp.grid(2
+	, [dx, dy]
 	, axes = [[*range(0,nx+1,mx)], [*range(0,ny+1,my)]]
 	, flags = "LOOPX|LOOPY"
 	)
@@ -95,7 +96,7 @@ def main(args, logger):
 	 {"KEY":"e", "CHARGE/MASS": -ECHARGE/ME},
 	 ]
 	, capacity = npmax
-	, vsize = 1 + 2*(grid.ndim + 3) # more memory for semi-implicit solver
+	, vsize = 1 + 2*(grid.nd + 3) # more memory for semi-implicit solver
 	)
 
 	##############################################################################
@@ -132,7 +133,7 @@ def main(args, logger):
 	
 	ppost_fn = ltp.bind_ppost_fn(pstore, "C KEn Fx Fy", ptfluid)
 	
-	emf_descr = "BzExEyEz"[:(1+grid.ndim)*2]
+	emf_descr = "BzExEyEz"[:(1+grid.nd)*2]
 	ppush_fns = [ltp.bind_ppush_fn(pstore, f"{emf_descr}:{scheme}", emfield) \
 	 for scheme in ["LEAPF", "IMPL0","IMPLR"]
 	]
@@ -171,7 +172,7 @@ def main(args, logger):
 	##############################################################################
 	# now, let's generate samples to inject
 	if not (fpath := args.load):
-		pdata = np.zeros([nppin, grid.ndim+3], dtype=np.float32)
+		pdata = np.zeros([nppin, grid.nd+3], dtype=np.float32)
 		
 		# generate electrons' positions
 		for ax, (ds, ns) in enumerate(zip(grid.step, grid.units)):
@@ -257,9 +258,9 @@ def main(args, logger):
 	
 	##############################################################################
 	# now, run the main cycle
-	dtimes = np.empty([3], dtype=np.float64)
-	dcalls = np.empty([3], dtype=np.uint64)
 	dnames = ["mcsim", "ppush", "ppost"]
+	dtimes = np.empty([len(dnames)], dtype=np.float64)
+	dcalls = np.empty([len(dnames)], dtype=np.uint64)
 	for irun in range(args.nstart, args.nrun+1):
 		# start new frame [t --> t + args.dt*args.nsub] & clear data
 		t0, t1 = (irun-1)*args.nsub*args.dt, irun*args.nsub*args.dt
@@ -307,7 +308,7 @@ def main(args, logger):
 				dtimes[1] += time()-t0
 				dcalls[1] += npp
 				
-				# obtain density & flows & kinetic energy
+				# obtain density, kinetic energy, and flows
 				t0 = time()
 				ppost_fn()
 				dtimes[2] += time()-t0
@@ -315,7 +316,6 @@ def main(args, logger):
 				
 				ptfluid.remap("out")[...] *= args.n_plasma/args.npunit*nppin/npp
 				# recalculate field
-				t_field = time()
 				verr = recalc_field()
 				emfield.remap("in")
 				
@@ -365,7 +365,7 @@ def main(args, logger):
 		logger.info(f"ke    = {ke:e} eV")
 		logger.info(f"ux    = {vx:e} cm/s")
 		logger.info(f"uy    = {vy:e} cm/s")
-		logger.info(f"cferq = {np.mean(np.sum(_evtfreq, axis=-1)):e} 1/s")
+		logger.info(f"cfreq = {np.mean(np.sum(_evtfreq, axis=-1)):e} 1/s")
 		
 		for j, entry in enumerate(chinfo):
 			freq = np.mean(_evtfreq[..., j])/args.n_bgrnd
@@ -389,8 +389,7 @@ def main(args, logger):
 			 "bgrnd" : bgrnd[...],
 			 # error-vector
 			 **({"errv": _errv} if args.nrep else {}),
-			 },
-			)
+			})
 		
 		# save samples' dump
 		if (fpath := args.save) and irun in args.dump:
@@ -406,7 +405,7 @@ args = {
 	"--loglevel" : {
 		"type"     : str,
 		"required" : False,
-		"default"  : "DEBUG",
+		"default"  : "INFO",
 		"help"     : "DEBUG/INFO/WARNING/ERROR",
 	},
 	"--run"      : {

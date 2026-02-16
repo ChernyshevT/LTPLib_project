@@ -71,6 +71,7 @@ The following sections provide a brief overview of **\_ltplib** components.
 The grid is a primary class for every simulation.
 It describes the geometry of the problem, boundary conditions, and spatial decomposition for parallel computation.
 The code uses a slightly modified approach of tile decomposition described in the papers [^decyk2014][^decyk2015]. The class constructor accepts the following arguments:
+1. *nd* -- number of spatial dimensions;
 1. *step* — list containing spatial steps along the each axis;
 1. *axes* — list describing spatial decomposition along the each axis;
 1. *nodes* (optional) — list containing tuples to map computing nodes (will be created automatically if not given);
@@ -79,18 +80,18 @@ The code uses a slightly modified approach of tile decomposition described in th
 
 The next example shows how `_ltplib.grid` can be constructed:
 ```python
-grid = ltp.grid(
+grid = ltp.grid(2 # Two-dimensional problem
  # First, let's define the spatial step for each dimension:
- step = [0.25, 0.25], # dx, dy
+ , step = [0.25, 0.25] # dx, dy
 
  # The next two sections describe domain decomposition.
  # Here, the numbers in between define the edges of sub-domains:
- axes = [
+ , axes = [
   # x-axis, 2 slices
   [0, 16, 32],
   # y-axis, 3 slices
   [0, 20, 40, 60], 
- ],
+ ]
  # Now the position of each sub-domain is described relative to the "axes":
  nodes = [
   (0, 0),
@@ -102,11 +103,11 @@ grid = ltp.grid(
  
  # It is possible to mark some points as particle absorbers
  # using the optional "mask" parameter:
- mask = [...], # numpy.uint8-array, with the same shape as the grid axes.
+ , mask = [...] # numpy.uint8-array, with the same shape as the grid axes.
  # Any value != 0 will be considered as an adsorbing cell.
  
  # Axes can be marked with flags:
- flags = "LOOPX|LOOPY",
+ , flags = "LOOPX|LOOPY"
 )
 ```
 
@@ -690,7 +691,7 @@ The syntax as follows `--bginfo KEY1:FRACTION1 KEY2:FRACTION2`.
 ## [`examples/run_two_stream.py`](./examples/run_two_stream.py) <a name="run_two_stream"></a>
 <!--[Two-stream instability](https://www.particleincell.com/2015/two-stream-instability/)--->
 <!--[see](https://www.particleincell.com/2018/intro-to-vlasov-solvers/)--->
-(To be done...)
+(**WIP, UPDATE IS REQUIRED**)
 
 <br>
 <img src="./docs/imgs/two-stream.gif" alt="Two-Stream-Instability" width="768"/>

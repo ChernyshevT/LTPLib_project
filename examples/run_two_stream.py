@@ -56,7 +56,7 @@ def main(args, logger):
 	MHEAVY = 4.002602*AEM # gram
 	VE0 = np.sqrt(E0 * ECHARGE/150./MLIGHT)
 	VTE = np.sqrt(T0 * ECHARGE/150./MLIGHT)
-	VEI = np.sqrt(T0 * ECHARGE/150./MHEAVY)
+	VTI = np.sqrt(T0 * ECHARGE/150./MHEAVY)
 	WPE = np.sqrt(M_4PI_E*args.n_plasma * ECHARGE/MLIGHT)
 	
 	##############################################################################
@@ -70,15 +70,21 @@ def main(args, logger):
 
 	##############################################################################
 	# declare particle storage
-	node_size = reduce(lambda k, ax: k*(ax[1]-ax[0]), grid.axes, 1)
+	_nsamples = args.npunit*reduce(lambda k, ax: k*(ax[1]-ax[0]), grid.axes, 1)
+	_capacity = int(_nsamples*((2 if args.ions else 1) + args.extra))
+	
+	print(f"{args.extra=}")
+	print(f"{_nsamples=} {_capacity=}")
+	
+	print(grid.units)
 	
 	pstore = ltp.pstore(grid
 	, cfg = [
 	 {"KEY":"e-",  "CHARGE/MASS": -ECHARGE/MLIGHT},
 	 {"KEY":"He+", "CHARGE/MASS": +ECHARGE/MHEAVY},
 	]
-	, capacity = int(node_size * args.npunit*(int(args.ions)+args.extra))
-	, vsize = 1 + (grid.ndim+3)*2 # extra memory for implicit solver
+	, capacity = _capacity
+	, vsize = 1 + (grid.nd+3)*2 # extra memory for implicit solver
 	)
 	
 	# weight coefficient
@@ -89,7 +95,7 @@ def main(args, logger):
 	emfield = ltp.vcache (grid
 	, dtype = "f32"
 	, order = args.order
-	, vsize = grid.ndim # Ex Ey (Ez)
+	, vsize = grid.nd # Ex Ey (Ez)
 	)
 	
 	##############################################################################
@@ -97,17 +103,17 @@ def main(args, logger):
 	ptfluid = ltp.vcache (grid
 	, dtype = "f32"
 	, order = args.order
-	, vsize = (1+grid.ndim)*len(pstore.ptlist) # C Pxx Pyy (Pzz) for each sort
+	, vsize = (1+grid.nd)*len(pstore.ptlist) # C Pxx Pyy (Pzz) for each sort
 	)
 
 	##############################################################################
 	# declare function bindings:
-	_descr = "".join(["Ex","Ey","Ez"][:grid.ndim])
+	_descr = "".join(["Ex","Ey","Ez"][:grid.nd])
 	ppush_fns = [ltp.bind_ppush_fn (pstore, f"{_descr}:{mover}", emfield) \
 	 for mover in ["LEAPF", "IMPL0","IMPLR"]
 	]
 	
-	_descr = "".join(["C","Pxx","Pyy","Pzz"][:1+grid.ndim])
+	_descr = "".join(["C","Pxx","Pyy","Pzz"][:1+grid.nd])
 	ppost_fn = ltp.bind_ppost_fn (pstore, _descr, ptfluid)
 	
 	##############################################################################
@@ -122,7 +128,7 @@ def main(args, logger):
 		# collect charge density
 		eq.cmap[...] = ptfluid[*slicer1, 0]*M_4PI_E
 		if args.ions:
-			eq.cmap[...] -= ptfluid[*slicer1, 1+grid.ndim]*M_4PI_E
+			eq.cmap[...] -= ptfluid[*slicer1, 1+grid.nd]*M_4PI_E
 		else:
 			eq.cmap[...] -= args.n_plasma*M_4PI_E
 		
@@ -133,9 +139,6 @@ def main(args, logger):
 		_vmap = np.pad(eq.vmap, padding, mode="wrap")
 		for i, grad in enumerate(np.gradient(_vmap, *grid.step)):
 			emfield[..., i] = -grad[*slicer2]
-		
-		# put electric field into value cache
-		emfield.remap("in")
 		
 		return verr
 
@@ -158,7 +161,7 @@ def main(args, logger):
 	# ~ logger.info(f"order  = {args.order}")
 	# ~ logger.info(f"npunit = {args.npunit}")
 	
-	exit()
+	# ~ exit()
 	
 	##############################################################################
 	# main steps:
@@ -175,23 +178,25 @@ def main(args, logger):
 	##############################################################################
 	# now, let's generate samples to inject
 	if not (fpath := args.load):
-		nppin = np.prod(grid.units)*args.npunit 
-		pdata = np.empty([nppin, grid.ndim+3], dtype=np.float32)
+		nppin = np.prod(grid.units)*args.npunit
+		pdata = np.empty([nppin, grid.nd+3], dtype=np.float32)
+		
+		print(f"{nppin=}")
 		
 		# generate positions
 		for ax, (ds, ns) in enumerate(zip(grid.step, grid.units)):
 			pdata[:, ax] = np.random.uniform(0, ds*ns, size=nppin)
 		
-		# generate electron velocities
-		pdata[:, grid.ndim:] = np.random.normal(0, VE, size=[nppin,3])
-		pdata[:nppin//2, grid.ndim] += V0
-		pdata[nppin//2:, grid.ndim] -= V0
+		# generate wto groups of electrons
+		pdata[:, grid.nd:] = np.random.normal(0, VTE, size=[nppin, 3])
+		pdata[:nppin//2, grid.nd] += VE0
+		pdata[nppin//2:, grid.nd] -= VE0
 		# inject electrons
 		pstore.inject({"e-": pdata})
 		
-		if args.ions: # cold ion background
-			# generate ion velocities
-			pdata[:, grid.ndim:] = np.random.normal(0, VI, size=[nppin,3])
+		if args.ions:
+			# generate cold ion background
+			pdata[:, grid.nd:] = np.random.normal(0, VTI, size=[nppin, 3])
 			# inject ions
 			pstore.inject({"He+": pdata})
 		
@@ -216,17 +221,14 @@ def main(args, logger):
 	# arrays to collect data for the each frame
 	_ptfluid = np.zeros([args.nsub+1, *ptfluid.shape], dtype=np.float32)
 	_vplasma = np.zeros([args.nsub+1, *eq.vmap.shape], dtype=np.float32)
-	_emenrgy = np.zeros([args.nsub+1, *eq.vmap.shape], dtype=np.float32)
+	_emenrgy = np.zeros([args.nsub+1, *emfield.shape[:grid.nd]], dtype=np.float32)
 	_errv    = np.zeros([args.nsub, args.nrep+1], dtype=np.float32)
 
 	cfg = {**vars(args),
 	 "step"     : grid.step,
 	 "units"    : grid.units,
-	 "nppin"    : nppin,
-	 "E0"       : E0,
-	 "B0"       : B0,
-	 "chinfo"   : chinfo,
-	 "flinfo"   : ["C","KEn", "Fx","Fy"],
+	 "nppin"    : np.prod(grid.units)*args.npunit,
+	 "flinfo"   : ["C","Pxx", "Pyy","Pzz"][:1+grid.nd],
 	}
 	
 	if args.run == False or not (args.run or input(f"run? [y] ") == "y"):
@@ -236,12 +238,15 @@ def main(args, logger):
 	# run initial step
 	logger.info("start calculation")
 	ppost_fn()
-	ptfluid.remap("out")[...] *= args.n_plasma/args.npunit
+	ptfluid.remap("out")[...] *= wcfft
 	recalc_field()
 	emfield.remap("in")
+	npp = len(pstore)
 	
 	# now, run main cycle
-	ts = np.empty([3], dtype=np.float64)
+	dnames = ["ppush", "ppost"]
+	dtimes = np.empty([len(dnames)], dtype=np.float64)
+	dcalls = np.empty([len(dnames)], dtype=np.uint64)
 	for irun in range(args.nstart, args.nrun+1):
 		# start new frame [t --> t + args.dt*args.nsub] & clear data
 		t0, t1 = (irun-1)*args.nsub*args.dt, irun*args.nsub*args.dt
@@ -253,68 +258,64 @@ def main(args, logger):
 		_emenrgy[0, ...] = np.sum(emfield[..., 1:]**2, axis=2)/8/np.pi
 		_errv[...] = np.nan
 		
+		#################
 		# run frame-cycle
+		dtimes[...], dcalls[...] = 0, 0
 		for isub in range(1, args.nsub+1):
-			# run sub-cycle for implicit solver
+			#####################################################
+			# run streaming-phase (sub-cycle for implicit solver)
 			for irep in range(0, args.nrep+1):
+				mode = (args.nrep>0)+(irep>0)
 				# push parts
 				t0 = time()
-				mode = (args.nrep>0)+(irep>0)
-				run_ppush_step(args.dt, mode)
-				# obtain density & flows
-				t1 = time()
-				run_ppost_step()
+				ppush_fns[mode](args.dt)
+				dtimes[0] += time()-t0
+				dcalls[0] += npp
+				
+				# obtain density and pressures
+				t0 = time()
+				ppost_fn()
+				dtimes[1] += time()-t0
+				dcalls[1] += npp
+				
+				ptfluid.remap("out")[...] *= wcfft
 				# recalculate field
-				t2 = time()
-				verr = run_field_step()
-				_errv[isub-1, irep] = verr
-				t2 = time()
+				verr = recalc_field()
+				emfield.remap("in")
 				
 				logger.debug\
 				(f"{' 'if irep else '*'}{irun:06d}/{isub:04d}/{irep:02d}({'E0R'[mode]}) verr={verr:6.3e}")
 				
+				_errv[isub-1, irep] = verr
 				if irep and verr < args.epsilon:
 					break
 			
-			#end implicit run, collect avg. data
+			# end sub-cycle, collect data to average
 			_ptfluid[isub, ...] = ptfluid[...]
 			_vplasma[isub, ...] = eq.vmap[...]
+			_emenrgy[0, ...] = np.sum(emfield[..., 1:]**2, axis=2)/8/np.pi
 		
 		# end frame cycle
 		logger.info(f"end frame ({len(pstore):} samples)")
+		for name, dtpp in zip(dnames, dtimes/dcalls*1e9):
+			logger.info(f"{name}: {dtpp:06.3f} ns/part")
 		
 		# save frame
 		if (fpath := args.save):
-			save_frame(f"{fpath}/frame{irun:06d}.zip", "w",
-			 cfg = dict(**vars(args),
-			       step   = grid.step,
-			       units  = grid.units,
-			       tindex = [(irun - 1) * args.nsub, irun * args.nsub],
-			 ),
-			 # plasma potential:
-			 vplasma = np.mean(_vplasma, axis=0)
-			           if args.mean else _vplasma
-			 ,
-			 # electron concentration & pressure:
-			 ne = np.mean(_ptfluid[..., 0], axis=0)
-			      if args.mean else _ptfluid[..., 0]
-			 ,
-			 pe = np.mean(_ptfluid[...,  1:4], axis=0)
-			      if args.mean else _ptfluid[..., 1:4]
-			 ,
-			 # ion concentration:
-			 **(dict(
-			    ni = np.mean(_ptfluid[..., 4], axis=0)
-			    if args.mean else _ptfluid[..., 4]
-			    ,
-			    pi = np.mean(_ptfluid[..., 5:8], axis=0)
-			    if args.mean else _ptfluid[..., 5:8]
-			 ) if args.ions else {}),
+			save_frame(f"{fpath}/frame{irun:06d}.zip", "w", **{
+			 "cfg" : {**cfg,
+			  "tindex": [(irun - 1) * args.nsub, irun * args.nsub],
+			 },
+			 # plasma potential
+			 "vplasma": np.mean(_vplasma, axis=0),
+			 # field-energy
+			 "emenrgy": np.mean(_emenrgy, axis=0),
+			 # concentration, pressures
+			 "ptfluid": np.mean(_ptfluid, axis=0),
 			 # error-vector
-			 **(dict(errv = _errv) if args.nrep else {}),
-			)
+			 **({"errv": _errv} if args.nrep else {}),
+			})
 
-		
 		# save samples' dump
 		if (fpath := args.save) and irun in args.dump:
 			data, index, = pstore.extract()
@@ -380,7 +381,7 @@ args = {
 	},
 	"--extra": {
 		"type"     : float,
-		"default"  : 2.5,
+		"default"  : 0.25,
 		"action"   : check_arg(lambda x: x>0, "{} <= 0"),
 		"help"     : "extra storage capacity", 
 	},

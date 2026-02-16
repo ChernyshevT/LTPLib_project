@@ -93,20 +93,20 @@ def main(args):
 	
 	#####################
 	# create fake 1d grid
-	grid = ltp.grid(step=[1]
+	grid = ltp.grid(1
+	, step=[1]
 	, axes=[[*range(args.nodes+1)]]
 	, nodes=[[i] for i in range(args.nodes)]
 	, flags="LOOPX")
 
 	#######################
 	# init particle storage
-	pstore_cfg = {
-		"npmax" : int(args.npp*(1.0 + args.extra)/args.nodes),
-		"ptinfo": [
-			{"KEY":"e", "CHARGE/MASS": -5.272810e+17}, #CGS
-		],
-	}
-	pstore = ltp.pstore(grid, **pstore_cfg)
+	pstore = ltp.pstore(grid
+	, cfg = [
+	 {"KEY":"e", "CHARGE/MASS": -5.272810e+17}, #CGS
+	]
+	, capacity = int(args.npp*(1.0 + args.extra)/args.nodes)
+	)
 	
 	######################################################
 	# declare value caches and corresponding numpy-arrays
