@@ -112,7 +112,7 @@ grid = ltp.grid(2 # Two-dimensional problem
 ```
 The following figure shows the grid described before:
 <br>
-<img src="./docs/imgs/grid_example.png" alt="An example for grid-configuration" width="812"/>
+<img src="./docs/imgs/grid_example.png" alt="An example for grid-configuration" width="406"/>
 <br>
 
 ### [`_ltplib.pstore`](./src/_ltplib/def_pstore.cxx) (particle storage) <a name="pstore"></a>
