@@ -155,21 +155,7 @@ def main(args, logger):
 	# ~ logger.info(f"tframe = {tframe:07.3f} ns")
 	# ~ logger.info(f"order  = {args.order}")
 	# ~ logger.info(f"npunit = {args.npunit}")
-	
-	# ~ exit()
-	
-	##############################################################################
-	# main steps:
-	# ~ def run_ppush_step(dt, mode):
-		# ~ ppush_fns[mode](args.dt)
-	
-	# ~ def run_ppost_step():
-		# ~ ppost_fn()
-		# ~ ptfluid.remap("out")[...] *= wcfft
-	
 
-	
-		
 	##############################################################################
 	# now, let's generate samples to inject
 	if not (fpath := args.load):
@@ -220,7 +206,7 @@ def main(args, logger):
 	_errv    = np.zeros([args.nsub, args.nrep+1], dtype=np.float32)
 
 	_cfg = {**vars(args)
-	, "grid"   : {"nd": grid.nd,"step": grid.step,"units": grid.units}
+	, "grid"   : {"nd": grid.nd, "step": grid.step, "units": grid.units}
 	, "nppin"  : np.prod(grid.units)*args.npunit
 	, "flinfo" : ["C","Pxx", "Pyy","Pzz"][:1+grid.nd]
 	}
@@ -297,7 +283,7 @@ def main(args, logger):
 		# save frame
 		if (fpath := args.save):
 			save_frame(f"{fpath}/frame{irun:06d}.zip", "w", **{
-			 "cfg" : {**cfg,
+			 "cfg" : {**_cfg,
 			  "tindex": [(irun - 1) * args.nsub, irun * args.nsub],
 			 },
 			 # plasma potential
@@ -318,8 +304,6 @@ def main(args, logger):
 			 "index" : index,
 			 "descr" : pstore.ptlist,
 			})
-			
-			
 
 ################################################################################
 args = {
@@ -375,7 +359,7 @@ args = {
 	},
 	"--extra": {
 		"type"     : float,
-		"default"  : 0.5,
+		"default"  : 0.75,
 		"action"   : check_arg(lambda x: x>0, "{} <= 0"),
 		"help"     : "extra storage capacity", 
 	},

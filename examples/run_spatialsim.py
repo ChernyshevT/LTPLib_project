@@ -208,14 +208,13 @@ def main(args, logger):
 			descr += f" ({entry.enth:.2e} eV)"
 		chinfo.append(descr)
 	
-	cfg = {**vars(args),
-	 "step"     : grid.step,
-	 "units"    : grid.units,
-	 "nppin"    : nppin,
-	 "E0"       : E0,
-	 "B0"       : B0,
-	 "chinfo"   : chinfo,
-	 "flinfo"   : ["C","KEn", "Fx","Fy"],
+	_cfg = {**vars(args),
+	, "grid"   : {"nd": grid.nd, "step": grid.step, "units": grid.units}
+	, "nppin"    : nppin,
+	, "E0"       : E0,
+	, "B0"       : B0,
+	, "chinfo"   : chinfo,
+	, "flinfo"   : ["C","KEn", "Fx","Fy"],
 	}
 	
 	WCE = ECHARGE*B0/ME/CLIGHT
@@ -374,7 +373,7 @@ def main(args, logger):
 		# save frame
 		if (fpath := args.save):
 			save_frame(f"{fpath}/frame{irun:06d}.zip", "w", **{
-			 "cfg" : {**cfg,
+			 "cfg" : {**_cfg,
 			  "tindex": [(irun - 1) * args.nsub, irun * args.nsub],
 			 },
 			 # plasma potential:
