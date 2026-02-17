@@ -43,10 +43,12 @@ class poisson_eq_sp():
 ################################################################################
 def main(args, logger):
 
-	ME, AEM  = 9.109383e-28, 1.660539e-24 # gram
-	ECHARGE  = 4.803204e-10 # statC
-	M_4PI_E  = 6.035884e-09
-	CLIGHT   = 2.99792458e+10 # cm/s
+
+	STATC_V = 2.99792458e2
+	ME, AEM = 9.109383e-28, 1.660539e-24 # gram
+	ECHARGE = 4.803204e-10 # statC
+	M_4PI_E = 6.035884e-09
+	CLIGHT  = 2.99792458e+10 # cm/s
 	
 	##############################################################################
 	# problem's presets:
@@ -54,9 +56,9 @@ def main(args, logger):
 	T0     = 0.25 # eV
 	MLIGHT = ME   # gram
 	MHEAVY = 4.002602*AEM # gram
-	VE0 = np.sqrt(E0 * ECHARGE/150./MLIGHT)
-	VTE = np.sqrt(T0 * ECHARGE/150./MLIGHT)
-	VTI = np.sqrt(T0 * ECHARGE/150./MHEAVY)
+	VE0 = np.sqrt(E0 * 2*ECHARGE/STATC_V/MLIGHT)
+	VTE = np.sqrt(T0 * 2*ECHARGE/STATC_V/MLIGHT)
+	VTI = np.sqrt(T0 * 2*ECHARGE/STATC_V/MHEAVY)
 	WPE = np.sqrt(M_4PI_E*args.n_plasma * ECHARGE/MLIGHT)
 	
 	##############################################################################
@@ -75,8 +77,8 @@ def main(args, logger):
 	
 	pstore = ltp.pstore(grid
 	, cfg = [
-	 {"KEY":"e-",  "CHARGE/MASS": -ECHARGE/MLIGHT},
-	 {"KEY":"He+", "CHARGE/MASS": +ECHARGE/MHEAVY},
+	 {"KEY":"e", "CHARGE/MASS": -ECHARGE/MLIGHT},
+	 {"KEY":"i", "CHARGE/MASS": +ECHARGE/MHEAVY},
 	]
 	, capacity = _capacity
 	, vsize = 1 + (grid.nd+3)*2 # extra memory for implicit solver
@@ -171,13 +173,13 @@ def main(args, logger):
 		pdata[:nppin//2, grid.nd] += VE0
 		pdata[nppin//2:, grid.nd] -= VE0
 		# inject electrons
-		pstore.inject("e-", pdata)
+		pstore.inject("e", pdata)
 		
 		if args.ions:
 			# generate cold ion background
 			pdata[:, grid.nd:] = np.random.normal(0, VTI, size=[nppin, 3])
 			# inject ions
-			pstore.inject("He+", pdata)
+			pstore.inject("i", pdata)
 		
 		logger.info(f"{len(pstore)} samples created")
 		
@@ -203,11 +205,16 @@ def main(args, logger):
 	_vplasma = np.zeros([args.nsub+1, *eq.vmap.shape], dtype=np.float32)
 	_emenrgy = np.zeros([args.nsub+1, *emfield.shape[:grid.nd]], dtype=np.float32)
 	_errv    = np.zeros([args.nsub, args.nrep+1], dtype=np.float32)
+	
+	
+	_flinfo = []
+	for key in pstore.ptlist:
+		_flinfo += [f"C{key}",f"PXX{key}", f"PYY{key}",f"P{key}zz"][:1+grid.nd]
 
 	_cfg = {**vars(args)
 	, "grid"   : {"nd": grid.nd, "step": grid.step, "units": grid.units}
 	, "nppin"  : np.prod(grid.units)*args.npunit
-	, "flinfo" : ["C","Pxx", "Pyy","Pzz"][:1+grid.nd]
+	, "flinfo" : _flinfo
 	}
 	
 	##############################################################################
