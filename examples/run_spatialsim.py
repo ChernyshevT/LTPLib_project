@@ -118,8 +118,6 @@ def main(args, logger):
 	events = ltp.vcache(grid, dtype="u32", vsize=len(cset))
 	bgrnd  = ltp.vcache(grid, dtype="f32", vsize=len(cset.bglist))
 	
-	print(bgrnd.shape,cset.bglist)
-	
 	##############################################################################
 	# set-up background
 	for j, frac in enumerate(bgfracs):
@@ -208,13 +206,13 @@ def main(args, logger):
 			descr += f" ({entry.enth:.2e} eV)"
 		chinfo.append(descr)
 	
-	_cfg = {**vars(args),
+	_cfg = {**vars(args)
 	, "grid"   : {"nd": grid.nd, "step": grid.step, "units": grid.units}
-	, "nppin"    : nppin,
-	, "E0"       : E0,
-	, "B0"       : B0,
-	, "chinfo"   : chinfo,
-	, "flinfo"   : ["C","KEn", "Fx","Fy"],
+	, "nppin"    : nppin
+	, "E0"       : E0
+	, "B0"       : B0
+	, "chinfo"   : chinfo
+	, "flinfo"   : ["C","KEn", "Fx","Fy"]
 	}
 	
 	WCE = ECHARGE*B0/ME/CLIGHT

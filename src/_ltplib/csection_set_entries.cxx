@@ -307,26 +307,35 @@ void build_table (csection_set_cfg *cfg, py::dict opts) {
 	
 	/* determine look-up table's size */
 	size_t n_rows{0}, n_entries{cfg->db_entries.size()};
-	py::print(cfg->consts);
-	py::print(cfg->pt_list);
-	py::print(cfg->bg_list);
-	py::print("GROUPS:\n");
+	if (_debug) {
+		py::print(cfg->consts);
+		py::print(cfg->pt_list);
+		py::print(cfg->bg_list);
+		py::print("GROUPS:\n");
+	}
 	for (auto& group : cfg->db_groups) {
-		py::print(std::format("\t{:<15} PT#[{:03d}] BG#[{:03d}] CH#[{:03d}, {:03d}] {}\n"
-		, group.descr, group.pt_index, group.bg_index
-		, group.ch_index[0], group.ch_index[1]
-		, group.flags.to_string('-','*')
-		));
+		if (_debug) {
+			py::print(std::format
+			("\t{:<15} PT#[{:03d}] BG#[{:03d}] CH#[{:03d}, {:03d}] {}\n"
+			, group.descr, group.pt_index, group.bg_index
+			, group.ch_index[0], group.ch_index[1]
+			, group.flags.to_string('-','*')
+			));
+		}
 		for (u16 k{group.ch_index[0]}, n{group.ch_index[1]}; k<n; ++k) {
 			n_rows += 1 + cfg->db_entries[k].fns.contains("DCS");
-			py::print(cfg->db_entries[k]);
+			if (_debug) {
+				py::print(cfg->db_entries[k]);
+			}
 		}
 	}
-	py::print(std::format("{} groups, {} entries, {} rows\n"
-	, cfg->db_groups.size()
-	, n_entries
-	, n_rows
-	));
+	if (_debug) {
+		py::print(std::format("{} groups, {} entries, {} rows\n"
+		, cfg->db_groups.size()
+		, n_entries
+		, n_rows
+		));
+	}
 	
 	std::vector<f32> _table(n_entries*2 + n_rows*(cfg->tsize-1));
 	
