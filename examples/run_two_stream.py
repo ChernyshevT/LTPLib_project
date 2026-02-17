@@ -162,8 +162,6 @@ def main(args, logger):
 		nppin = np.prod(grid.units)*args.npunit
 		pdata = np.empty([nppin, grid.nd+3], dtype=np.float32)
 		
-		print(f"{nppin=}")
-		
 		# generate positions
 		for ax, (ds, ns) in enumerate(zip(grid.step, grid.units)):
 			pdata[:, ax] = np.random.uniform(0, ds*ns, size=nppin)
@@ -196,6 +194,7 @@ def main(args, logger):
 		pdata = load_frame(fpath)
 		for key,a,b in zip(pdata.descr, pdata.index, pdata.index[1:]):
 			pstore.inject(key, pdata.data[a:b])
+		nppin = len(pstore)
 		logger.info(f"loaded \"{fpath}\" ({len(pstore)} samples injected)")
 
 	##############################################################################
@@ -211,6 +210,27 @@ def main(args, logger):
 	, "flinfo" : ["C","Pxx", "Pyy","Pzz"][:1+grid.nd]
 	}
 	
+	##############################################################################
+	WPE = np.sqrt(M_4PI_E * args.n_plasma * ECHARGE/ME)
+	tframe = args.dt*args.nsub*1e9
+	
+	_units = "x".join(map(str, grid.units))
+	_gsize = "x".join([f'{a*b:.3f}' for a,b in zip(grid.step, grid.units)])
+	
+	logger.info(f"grid     = {_units}: {_gsize} cm")
+	logger.info(f"order    = {args.order}")
+	logger.info(f"npunit   = {args.npunit}")
+	logger.info(f"nppin    = {nppin}")
+	logger.info(f"n_plasma = {args.n_plasma:e} cm^-3")
+	logger.info(f"tframe   = {tframe:07.3f} ns")
+	logger.info(f"1/δt     = {1/args.dt:e} 1/s")
+	# ~ logger.info(f"ωpe      = {WPE:e} 1/s")
+	logger.info(f"δt ωpe   = {args.dt*WPE:f}")
+	logger.info(f"ve δt/δh = {VE0*args.dt/np.min(grid.shape):f}")
+	logger.info(f"VE0      = {VE0:e} cm/s")
+	logger.info(f"RDE     ~= {VE0/WPE:f} cm")
+	
+	##############################################################################
 	if args.run == False or not (args.run or input(f"run? [y] ") == "y"):
 		exit(0)
 	
