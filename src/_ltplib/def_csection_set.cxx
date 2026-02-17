@@ -187,18 +187,15 @@ void def_csections(py::module &m) {
 	
 	.def_property_readonly("chinfo", [] (const csection_set_holder& self) {
 		return self.cfg->chinfo;
-	}, "reaction channels' description"
-	, py::keep_alive<0, 1>())
+	}, "reaction channels' description")
 	
 	.def_property_readonly("ptlist", [] (const csection_set_holder& self) {
 		return self.cfg->ptinfo;
-	}, "list of active components"
-	, py::keep_alive<0, 1>())
+	}, "list of active components")
 	
 	.def_property_readonly("bglist", [] (const csection_set_holder& self) {
 		return self.cfg->bg_list;
-	}, "list of background components"
-	, py::keep_alive<0, 1>())
+	}, "list of background components")
 
 	.def_property_readonly("points", [] (const csection_set_holder& self) {
 		return py::array_t<f32> (py::memoryview::from_buffer (
@@ -207,8 +204,7 @@ void def_csections(py::module &m) {
 			/* strides  */ {sizeof(f32)},
 			/* readonly */ true
 		));
-	}, "energy-grid used in the lookup-table"
-	, py::keep_alive<0, 1>())
+	}, "energy-grid used in the lookup-table")
 	
 	.def_property_readonly("cffts", [] (const csection_set_holder& self) {
 		return py::array_t<f32> (py::memoryview::from_buffer (
@@ -217,8 +213,7 @@ void def_csections(py::module &m) {
 			/* strides  */ {sizeof(f32)},
 			/* readonly */ true
 		));
-	}, "internal cache for various coefficients being used"
-	, py::keep_alive<0, 1>())
+	}, "internal cache for various coefficients being used")
 
 	.def_property_readonly("tabs", [] (const csection_set_holder& self) {
 		std::vector<py::ssize_t> shape(2), strides(2);
@@ -233,8 +228,7 @@ void def_csections(py::module &m) {
 			/* strides  */ std::move(strides),
 			/* readonly */ true
 		));
-	}, "internal cache for the lookup-table"
-	, py::keep_alive<0, 1>())
+	}, "internal cache for the lookup-table")
 	
 	.def_property_readonly("progs", [] (const csection_set_holder& self) {
 		std::vector<std::string> progs_repr;
@@ -248,8 +242,7 @@ void def_csections(py::module &m) {
 			}
 		}
 		return progs_repr;
-	}, "configuration sequence"
-	, py::keep_alive<0, 1>())
+	}, "configuration sequence")
 	
 	.def("__len__", [] (const csection_set_holder& self) {
 		return self.cfg->ncsect;
@@ -257,8 +250,7 @@ void def_csections(py::module &m) {
 
 	.def_property_readonly("db_entries", [] (const csection_set_holder& self) {
 		return self.cfg->db_entries;
-	}, "database entries for diagnostic/visualization"
-	, py::keep_alive<0, 1>())
+	}, "database entries for diagnostic/visualization")
 	
 	.def("__getitem__", [] (const csection_set_holder& self, u16 k) {
 		if (k < self.cfg->db_entries.size()) {
@@ -320,14 +312,12 @@ void def_csections(py::module &m) {
 	.def_property_readonly("rate_fn"
 	, [] (const db_entry_t& self) -> csfunc_t {
 		return self.fns.at("C_RATE");
-	}, "function for energy-depended cumulative rate"
-	, py::keep_alive<0, 1>())
+	}, "function for energy-depended cumulative rate")
 	
 	.def_property_readonly("csec_fn"
 	, [] (const db_entry_t& self) -> csfunc_t {
 		return self.fns.at("CS0");
-	}, "function for cross-section"
-	, py::keep_alive<0, 1>())
+	}, "function for cross-section")
 	
 	.def_property_readonly("mtcs_fn"
 	, [] (const db_entry_t& self) -> std::optional<csfunc_t> {
@@ -336,8 +326,7 @@ void def_csections(py::module &m) {
 		} else {
 			return std::nullopt;
 		}
-	}, "function for momentum-transfer cross-section (or None)"
-	, py::keep_alive<0, 1>())
+	}, "function for momentum-transfer cross-section (or None)")
 	
 	.def ("__getattr__"
 	, [] (const db_entry_t& self, py::str key) -> std::optional<py::object> {

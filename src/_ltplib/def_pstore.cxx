@@ -308,22 +308,22 @@ void def_pstores (py::module &m) {
 	}, "returns list of components")
 	
 	.def("inject", [] (pstore_holder &self
-	, const std::unordered_map<std::string, parts_input_t> &input) {
+	, const std::string& key,  const parts_input_t& data) {
+	//~ , const std::unordered_map<std::string, parts_input_t> &input) {
 		size_t n_overflow{0};
-		for (const auto& [key, data] : input) {
+		//~ for (const auto& [key, data] : input) {
 
-			auto pos{std::find(self.cfg->ptinfo.begin(), self.cfg->ptinfo.end(), key)};
-			if (pos == self.cfg->ptinfo.end()) {
-				throw std::invalid_argument(std::format("invalid key \"{}\"", key));
-			}
+		auto pos{std::find(self.cfg->ptinfo.begin(), self.cfg->ptinfo.end(), key)};
+		if (pos == self.cfg->ptinfo.end()) {
+			throw std::invalid_argument(std::format("invalid key \"{}\"", key));
+		}
 			
-			n_overflow += self.inject_fn(u8(pos-self.cfg->ptinfo.begin()), data);
-		} if (n_overflow) {
+		n_overflow = self.inject_fn(u8(pos-self.cfg->ptinfo.begin()), data);
+		if (n_overflow) {
 			throw std::overflow_error(std::format(
 			"pstore.inject: can not inject {} samples: overflow!", n_overflow));
 		}
-	}, "input"_a,
-	INJECT_FN)
+	}, "key"_a, "input"_a, INJECT_FN)
 	
 	.def("extract", [] (const pstore_holder &self) {
 		return self.extract_fn();
