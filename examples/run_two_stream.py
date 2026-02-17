@@ -73,11 +73,6 @@ def main(args, logger):
 	_nsamples = args.npunit*reduce(lambda k, ax: k*(ax[1]-ax[0]), grid.axes, 1)
 	_capacity = int(_nsamples*((2 if args.ions else 1) + args.extra))
 	
-	print(f"{args.extra=}")
-	print(f"{_nsamples=} {_capacity=}")
-	
-	print(grid.units)
-	
 	pstore = ltp.pstore(grid
 	, cfg = [
 	 {"KEY":"e-",  "CHARGE/MASS": -ECHARGE/MLIGHT},
@@ -192,13 +187,13 @@ def main(args, logger):
 		pdata[:nppin//2, grid.nd] += VE0
 		pdata[nppin//2:, grid.nd] -= VE0
 		# inject electrons
-		pstore.inject({"e-": pdata})
+		pstore.inject("e-", pdata)
 		
 		if args.ions:
 			# generate cold ion background
 			pdata[:, grid.nd:] = np.random.normal(0, VTI, size=[nppin, 3])
 			# inject ions
-			pstore.inject({"He+": pdata})
+			pstore.inject("He+", pdata)
 		
 		logger.info(f"{len(pstore)} samples created")
 		
@@ -214,7 +209,7 @@ def main(args, logger):
 	else: # inject existing distro
 		pdata = load_frame(fpath)
 		for key,a,b in zip(pdata.descr, pdata.index, pdata.index[1:]):
-			pstore.inject({key: pdata.data[a:b]})
+			pstore.inject(key, pdata.data[a:b])
 		logger.info(f"loaded \"{fpath}\" ({len(pstore)} samples injected)")
 
 	##############################################################################
@@ -224,11 +219,10 @@ def main(args, logger):
 	_emenrgy = np.zeros([args.nsub+1, *emfield.shape[:grid.nd]], dtype=np.float32)
 	_errv    = np.zeros([args.nsub, args.nrep+1], dtype=np.float32)
 
-	cfg = {**vars(args),
-	 "step"     : grid.step,
-	 "units"    : grid.units,
-	 "nppin"    : np.prod(grid.units)*args.npunit,
-	 "flinfo"   : ["C","Pxx", "Pyy","Pzz"][:1+grid.nd],
+	_cfg = {**vars(args)
+	, "grid"   : {"nd": grid.nd,"step": grid.step,"units": grid.units}
+	, "nppin"  : np.prod(grid.units)*args.npunit
+	, "flinfo" : ["C","Pxx", "Pyy","Pzz"][:1+grid.nd]
 	}
 	
 	if args.run == False or not (args.run or input(f"run? [y] ") == "y"):
@@ -255,7 +249,7 @@ def main(args, logger):
 		# refresh arrays to save
 		_ptfluid[0, ...] = ptfluid[...]
 		_vplasma[0, ...] = eq.vmap[...]
-		_emenrgy[0, ...] = np.sum(emfield[..., 1:]**2, axis=2)/8/np.pi
+		_emenrgy[0, ...] = np.sum(emfield[...]**2, axis=grid.nd)/8/np.pi
 		_errv[...] = np.nan
 		
 		#################
@@ -293,7 +287,7 @@ def main(args, logger):
 			# end sub-cycle, collect data to average
 			_ptfluid[isub, ...] = ptfluid[...]
 			_vplasma[isub, ...] = eq.vmap[...]
-			_emenrgy[0, ...] = np.sum(emfield[..., 1:]**2, axis=2)/8/np.pi
+			_emenrgy[isub, ...] = np.sum(emfield[...]**2, axis=grid.nd)/8/np.pi
 		
 		# end frame cycle
 		logger.info(f"end frame ({len(pstore):} samples)")
@@ -376,12 +370,12 @@ args = {
 	},
 	"--stream_en"  : {
 		"type"     : float,
-		"default"  : 250,
+		"default"  : 1000,
 		"help"     : "initial kinetic energy",
 	},
 	"--extra": {
 		"type"     : float,
-		"default"  : 0.25,
+		"default"  : 0.5,
 		"action"   : check_arg(lambda x: x>0, "{} <= 0"),
 		"help"     : "extra storage capacity", 
 	},
@@ -420,10 +414,6 @@ args = {
 		"default" : "hires2d",
 		"help"    : "select preset: \"hires2d\" or \"lowres3d\""
 	},
-	"--no-mean"    : {
-		"dest"    : "mean",
-		"action"  : "store_false",
-	}
 }
 ################################################################################
 def handle_sigterm(n, frame):

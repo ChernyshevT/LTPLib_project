@@ -179,14 +179,14 @@ def main(args, logger):
 			pdata[:, ax] = np.random.uniform(0, ds*ns, size=nppin)
 		
 		# inject electrons
-		pstore.inject({"e": pdata})
+		pstore.inject("e", pdata)
 		logger.info(f"{len(pstore)} samples created")
 		
 
 	else: # inject existing distro
 		pdata = load_frame(fpath)
 		for key,a,b in zip(pdata.descr, pdata.index, pdata.index[1:]):
-			pstore.inject({key: pdata.data[a:b]})
+			pstore.inject(key, pdata.data[a:b])
 		logger.info(f"loaded \"{fpath}\" ({len(pstore)} samples injected)")
 
 	##############################################################################
@@ -269,7 +269,7 @@ def main(args, logger):
 		# refresh arrays to save
 		_ptfluid[0, ...] = ptfluid[...]
 		_vplasma[0, ...] = eq.vmap[...]
-		_emenrgy[0, ...] = np.sum(emfield[..., 1:]**2, axis=2)/8/np.pi
+		_emenrgy[0, ...] = np.sum(emfield[..., 1:]**2, axis=grid.nd)/8/np.pi
 		_errv[...] = np.nan
 		
 		# reset collision counter
@@ -293,9 +293,12 @@ def main(args, logger):
 			
 			np_counter += npp
 			# [!] we need this hack because electrons spawn without paired ions
-			ptfluid.remap("out")[...] *= args.n_plasma/args.npunit*nppin/npp
-			recalc_field()
-			emfield.remap("in")
+			if npp != nppin:
+				ppost_fn()
+				ptfluid.remap("out")[...] *= args.n_plasma/args.npunit*nppin/npp
+				# recalc field to preserve integrity
+				recalc_field()
+				emfield.remap("in")
 
 			#####################################################
 			# run streaming-phase (sub-cycle for implicit solver)
@@ -329,7 +332,7 @@ def main(args, logger):
 			# end sub-cycle, collect data to average
 			_ptfluid[isub, ...] = ptfluid[...]
 			_vplasma[isub, ...] = eq.vmap[...]
-			_emenrgy[isub, ...] = np.sum(emfield[..., 1:]**2, axis=2)/8/np.pi
+			_emenrgy[isub, ...] = np.sum(emfield[..., 1:]**2, axis=grid.nd)/8/np.pi
 			
 
 		############################################################################
@@ -347,13 +350,10 @@ def main(args, logger):
 			data, _ = pstore.extract()
 			np.random.shuffle(data)
 			pstore.reset()
-			pstore.inject({"e": data[:min(npp, nppin)]})
+			pstore.inject("e", data[:min(npp, nppin)])
 			if nppin > npp:
-				pstore.inject({"e": data[:nppin-npp]})
+				pstore.inject("e", data[:nppin-npp])
 			logger.info(f"resample {npp} -> {nppin}")
-			# recalc field to preserve integrity
-			ppost_fn()
-			ptfluid.remap("out")[...] *= args.n_plasma/len(pstore)
 		
 		############################################################################
 		ne = np.nanmean(_ptfluid[..., 0])

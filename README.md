@@ -80,26 +80,26 @@ The code uses a slightly modified approach of tile decomposition described in th
 
 The next example shows how `_ltplib.grid` can be constructed:
 ```python
-grid = ltp.grid(2 # Two-dimensional problem
+grid = ltp.grid(nd = 2 # Two-dimensional problem
  # First, let's define the spatial step for each dimension:
  , step = [0.25, 0.25] # dx, dy
 
  # The next two sections describe domain decomposition.
  # Here, the numbers in between define the edges of sub-domains:
  , axes = [
-  # x-axis, 4 slices
+  # x-axis:
   [0, 6, 12, 18, 24],
-  # y-axis, 4 slices
+  # y-axis:
   [0, 4, 8, 12, 16], 
  ]
- # The position of each node is described relative to the "axes":
+ # The position of each node can be described relative to the "axes":
  , nodes = [
   (0, 0),
   (0, 1),
   (0, 2),
   ...
  ],
- # Or skip it and nodes will be created automatically.
+ # Or can be skipped (nodes will be generated automatically).
  
  # It is possible to mark some points as particle absorbers
  # using the optional "mask" parameter:
@@ -119,37 +119,41 @@ The following figure shows the grid described before:
 This class is used to store pVDF samples (macro-particles).
 The class constructor accepts the following arguments:
 1. *grid* — existing grid;
-1. *ptinfo* — description of active components to store;
+1. *cfg* — description of active components to store;
 1. *capacity* — the maximum number of samples per node;
 1. *vsize* (optional) — the number of components to store, `1+grid.nd+3` by default.
 
 See the example:
 ```python
-pstore = ltp.pstore(grid, # existing grid
- cfg = [
+pstore = ltp.pstore(grid # existing grid
+ , cfg = [
   {"KEY":"e",   "CHARGE/MASS": -5.272810e+17}, # electron
   {"KEY":"Ar+", "CHARGE/MASS": +7.240801e+12}, # argon ion
- ],
- capaticy = 100000, # the limit is 16777216 samples per node
- vsize    = 1+2*(grid.nd+3), # in case of using with semi-implicit mover
+ ]
+ , capaticy = 100000 # the limit is 16777216 samples per node
+ , vsize    = 1+2*(grid.nd+3) # in case of using with semi-implicit mover
 )
 ```
+Property `pstore.ptlist` returns the list of component keys.
 
 #### Methods
-To **inject** samples into the class `pstore.inject({...})` method should be called.
-Method accepts a dictionary, where keys correspond to component keys from `"ptinfo"`,
-and values are numpy arrays to load.
+To **inject** samples into the storage, `pstore.inject(key, data)` method should be called.
+Method accepts:
+1. *key* -- string corresponding to component key from `"ptinfo"`.
+2. *data* -- `numpy.ndarray` containing input samples.
 The shape of the input array should match `[npp, grid.nd+3]`, where `npp` is the number of samples to add.
 The components of sample's vector are $\{x\,\dots\,v_x\,v_y\,v_z\}$.
 
 To **extract** the samples, `pstore.extract()` should be used.
 Method accepts no arguments and returns the pair:
-1. numpy-arrays containing all the samples,
+1. `numpy.ndarray` containing all the samples,
 1. list of indices defining the sample range for each component
-(the components' order is the same as in ptinfo).
+(the components' order is the same as in `pstore.ptlist`).
 
 To **reset** (clean) the storage, use `pstore.reset()`.
 Also, calling `len(pstore)` will return the total number of samples.
+
+
 
 ### [`_ltplib.vcache`](./src/_ltplib/def_vcache.cxx) (value cache) <a name="vcache"></a>
 This class is used as a universal node-local cache for grid-based values. For example, it can be used to store electromagnetic fields, pVDF moments, background densities, and collision frequencies.
