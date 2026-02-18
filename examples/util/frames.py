@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-import os, io, json, zipfile, json, mmap, struct
+import os, io, json, zipfile, json
 import numpy as np
-import types
-from .loggers import *
 
+from types import SimpleNamespace as namespace
 from enum import Enum
+
+from .loggers import *
 
 class ENTRYT(Enum):
 	CACHE = 5,
@@ -12,8 +13,6 @@ class ENTRYT(Enum):
 	JSON  = 3,
 	NUMPY = 2,
 	TEXT  = 1,
-
-namespace = types.SimpleNamespace
 
 ################################################################################
 def to_namspace(obj):
@@ -48,58 +47,60 @@ class npEncoder(json.JSONEncoder):
 logger = get_logger()
 
 class frame_cls:
-	__slots__ = ("_zipf", "_list", "_funcs", "_cache", "files")
+	__slots__ = ("__zipf", "__list", "__funcs", "__cache")
 
 	def __init__(self, fname: str, **kwargs):
-		self._zipf  = zipfile.ZipFile(fname, "r")
-		self._list  = [os.path.splitext(f)[0] for f in self._zipf.namelist()]
-		self._funcs = {}
-		self._cache = {}
-		self.files = self._zipf.namelist()
+		self.__zipf  = zipfile.ZipFile(fname, "r")
+		self.__list  = [os.path.splitext(f)[0] for f in self.__zipf.namelist()]
+		self.__funcs = {}
+		self.__cache = {}
 		logger.debug(f"open {fname}")
 	
 	def add_funcs (self, **kwargs):
-		for key, func in kwargs.items():
-			self._funcs[key] = func
-			#self._cache[key] = func(self)
+		self.__funcs.update({**kwargs})
 		return self
 	
 	def __dir__(self):
-		return [*self._list, *self._cache]
+		return [*self.__list, *self.__funcs]
 
 	def __getitem__(self, key: str):
 		match (self.__contains__(key)):
 			
 			case ENTRYT.CACHE:
 				pass
+			
 			case ENTRYT.FUNC:
-				self._cache[key] = self._funcs[key](self)
+				self.__cache[key] = self.__funcs[key](self)
+			
 			case ENTRYT.JSON:
-				self._cache[key] = to_namspace(json.loads\
-				(io.BytesIO(self._zipf.read(f"{key}.json")).read().decode("utf-8")))
+				self.__cache[key] = to_namspace(json.loads \
+				(io.BytesIO(self.__zipf.read(f"{key}.json")).read().decode("utf-8")))
+			
 			case ENTRYT.NUMPY:
-				self._cache[key] = np.load\
-				(io.BytesIO(self._zipf.read(f"{key}.npy")))
+				self.__cache[key] = np.load \
+				(io.BytesIO(self.__zipf.read(f"{key}.npy")))
+			
 			case ENTRYT.TEXT:
-				self._cache[key] = self._zipf.read(f"{key}.txt").decode("utf-8")
+				self.__cache[key] = self.__zipf.read(f"{key}.txt").decode("utf-8")
+			
 			case _:
 				return None
 		
-		return self._cache[key]
+		return self.__cache[key]
 
 	def __getattr__(self, key: str):
 		return self[key]
 
 	def __contains__(self, key: str):
-		if key in self._cache:
+		if key in self.__cache:
 			return ENTRYT.CACHE
-		if key in self._funcs:
+		if key in self.__funcs:
 			return ENTRYT.FUNC
-		if f"{key}.json" in self.files:
+		if f"{key}.json" in self.__zipf.namelist():
 			return ENTRYT.JSON
-		if f"{key}.npy"  in self.files:
+		if f"{key}.npy"  in self.__zipf.namelist():
 			return ENTRYT.NUMPY
-		if f"{key}.txt"  in self.files:
+		if f"{key}.txt"  in self.__zipf.namelist():
 			return ENTRYT.TEXT
 		return False
 
@@ -110,7 +111,7 @@ def load_frame(fname: str) -> frame_cls:
 
 def save_frame(fname: str, mode: str = "w", **kwargs):
 	fname = os.path.abspath(os.path.expanduser(fname))
-	msg   = f"save \"{fname}\".."
+	msg   = f"saving \"{fname}\".."
 	try:
 		
 		if mode != "w" and mode != "a":
@@ -136,12 +137,13 @@ def save_frame(fname: str, mode: str = "w", **kwargs):
 			for k,arg in kwargs.items():
 				save_entry(k, arg)
 			nsize = sum([zinfo.file_size for zinfo in zipf.filelist])
-			
+			#
 			szstr = " KMGT"
 			while nsize > 512:
-				nsize /= 1024; szstr = szstr[1:]
-				
+				nsize = nsize/1024;
+				szstr = szstr[1:]
 			logger.info(f"{msg} ok ({nsize:.2f}{szstr[0]}B)")
+	
 	except Exception as e:
 		logger.error(f"{msg} fail: \"{e}\"")
 		raise e

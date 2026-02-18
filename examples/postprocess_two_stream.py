@@ -51,24 +51,24 @@ class distro_h:
 		([m.func(pt) for pt in zip(xs, ys)], dtype=np.float32)
 
 ################################################################################
-funcs = {
-  "TIME":  lambda f:0.5*np.sum(f.cfg.tindex)*f.cfg.dt
-, "EMFEN": lambda f: \
-   f.emenrgy*2.99792458e2/8/np.pi
-, "Ce":    lambda f: \
-   f.ptfluid[..., f.cfg.flinfo.index("Ce")]
-, "KXXENe":  lambda f: f.ptfluid[..., f.cfg.flinfo.index("PXXe")]/f.Ce*2.842815e-16
-, "KYYENe":  lambda f: f.ptfluid[..., f.cfg.flinfo.index("PYYe")]/f.Ce*2.842815e-16
-, "KZZENe":  lambda f: f.ptfluid[..., f.cfg.flinfo.index("PZZe")]/f.Ce*2.842815e-16
-, "Ci":    lambda f: f.ptfluid[..., f.cfg.flinfo.index("Ci")]
-, "KXXENi":  lambda f: f.ptfluid[..., f.cfg.flinfo.index("PXXi")]/f.Ci
-, "KYYENi":  lambda f: f.ptfluid[..., f.cfg.flinfo.index("PYYi")]/f.Ci
-, "KZZENi":  lambda f: f.ptfluid[..., f.cfg.flinfo.index("PZZi")]/f.Ci
+def get_cmp(frame, key: str):
+	return frame.ptfluid[..., frame.cfg.flinfo.index(key)]
 
-, "SCHARGE": lambda f: (f.Ci if f.cfg.ions else f.cfg.n_plasma) - f.Ce 
+funcs = {
+  "TIME":   lambda f: 0.5*np.sum(f.cfg.tindex)*f.cfg.dt
+, "EMFEN":  lambda f: f.emenrgy*2.99792458e2/8/np.pi
+, "C_e":    lambda f: get_cmp(f, "C_e")
+, "ENxx_e": lambda f: get_cmp(f, "Pxx_e")/f.C_e*2.842815e-16
+, "ENyy_e": lambda f: get_cmp(f, "Pyy_e")/f.C_e*2.842815e-16
+, "ENzz_e": lambda f: get_cmp(f, "Pzz_e")/f.C_e*2.842815e-16
+, "C_i":    lambda f: get_cmp(f, "C_i")
+, "ENxx_i": lambda f: get_cmp(f, "Pxx_i")/f.C_i
+, "ENyy_i": lambda f: get_cmp(f, "Pyy_i")/f.C_i
+, "ENzz_i": lambda f: get_cmp(f, "Pzz_i")/f.C_i
+, "CHARGE": lambda f: ((f.C_i if f.cfg.ions else 1) - f.C_e)/f.cfg.n_plasma
 }
 
-keys = ["TIME", "EMFEN", "KXXENe", "KYYENe"]
+keys = ["TIME", "EMFEN", "ENxx_e", "ENyy_e"]
 
 ################################################################################
 def main(args):
@@ -92,78 +92,6 @@ def main(args):
 	dset = {key: stats[key].to_numpy() for key in keys} | {"cfg" : cfg}
 	print(dset.keys())
 	save_frame(f"{os.path.abspath(args.fdir)}.dset.zip", **dset)
-	
-	# ~ fields = ["ENe", "UDRIFTe", "EVENTS/PT"]
-	# ~ print(dset.keys())
-	# ~ save_frame(f"{os.path.abspath(args.fdir)}.dset.zip", **dset)
-
-	# ~ line = f"| #FRAME| ERRMAX|"\
-	     # ~ + "|".join([f"{key:>10}" for key in fields]) + "|"
-	# ~ print(f"{line}\n{'-'*len(line)}")
-	
-	# ~ k_avg = None
-	# ~ for j, row in stats.iterrows():
-		
-		# ~ errmx = None
-		# ~ if j >= args.window:
-			# ~ a, b = j-args.window+1, j+1
-			# ~ for field in fields:
-				# ~ err = np.std(stats[field][a:b])/np.mean(stats[field][a:b])
-				# ~ if errmx is not None:
-					# ~ errmx = max(abs(err), errmx)
-				# ~ else:
-					# ~ errmx = abs(err)
-
-		# ~ line = f"| {j+1:>6d}"\
-		     # ~ + (f"| {errmx*1e2:>5.2f}%|" if errmx else "| ----- |")\
-		     # ~ +  "|".join([f"{row[key]:>10.3e}" for key in fields]) + "|"
-		# ~ print(f"{line}")
-
-		# ~ if k_avg is None and errmx is not None and errmx < args.precision:
-			# ~ k_avg = j
-			# ~ print('-'*len(line))
-		
-		# ~ if k_avg is not None and errmx is not None and errmx >= args.precision:
-			# ~ raise RuntimeError(f"errmx = {errmx:e} >= {args.precision:e}!")
-	
-	# ~ # endline ##########
-	# ~ print('-'*len(line))
-	
-	# ~ ###################################
-	# ~ dset = {"cfg": vars(frame.cfg), "avg":{}}
-	# ~ for key in keys:
-		# ~ entry = np.stack(stats[k_avg:][key])
-		# ~ dset["avg"][key] = entry.mean(axis=0), entry.std(axis=0)
-	
-	# ~ #############
-	# ~ if args.eVDFxy:
-		
-		# ~ count,dist,pdata = 0, None, None
-		# ~ for k in range(k_avg, n+1):
-			# ~ if os.path.exists(fname:=f"{args.fdir}/pdata{k:06d}.zip"):
-				# ~ pdata = load_frame(fname).data
-				# ~ vxs,vys,*_ = pdata.T[2:]
-				
-				# ~ vmax = np.max(np.sqrt(vxs*vxs + vys*vys))
-				# ~ if dist is None:
-					# ~ xbins, ybins = [np.linspace(-vmax, +vmax, 256) for _ in range(2)]
-					# ~ dist = distro_h(xbins, ybins)
-				
-				# ~ print(f"add \"{fname}\": vmax = {vmax:e}")
-				# ~ dist.add(vxs, vys)
-				# ~ count += 1
-		
-		# ~ if count < 1:
-			# ~ raise RuntimeError("no pdata-files were found!")
-		# ~ else:
-			# ~ np.random.shuffle(pdata)
-			# ~ dset["vbins"] = np.asarray([dist.xbins, dist.ybins])
-			# ~ dset["vpart"] = pdata[:,2:]
-			# ~ dset["VDFxy"] = dist.hist/count
-	
-	# ~ ############################################################
-	# ~ print(dset.keys())
-	# ~ save_frame(f"{os.path.abspath(args.fdir)}.dset.zip", **dset)
 	
 ################################################################################
 

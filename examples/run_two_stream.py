@@ -118,9 +118,9 @@ def main(args, logger):
 	eq = poisson_eq_sp(grid.units, grid.step)
 
 	def recalc_field():
-		slicer1 = [slice(args.order, None, None)  for _ in eq.vmap.shape]
-		slicer2 = [slice(1,          -1,   None)  for _ in eq.vmap.shape]
-		padding = [(args.order+1, 1)  for _ in eq.vmap.shape]
+		slicer1 = [slice(args.order, None, None)]*grid.nd
+		slicer2 = [slice(1,          -1,   None)]*grid.nd
+		padding = [(args.order+1, 1)]*grid.nd
 		
 		# collect charge density
 		eq.cmap[...] = ptfluid[*slicer1, 0]*M_4PI_E
@@ -209,7 +209,7 @@ def main(args, logger):
 	
 	_flinfo = []
 	for key in pstore.ptlist:
-		_flinfo += [f"C{key}",f"PXX{key}", f"PYY{key}",f"P{key}zz"][:1+grid.nd]
+		_flinfo += [f"C_{key}",f"Pxx_{key}", f"Pyy_{key}", f"Pzz_{key}"][:1+grid.nd]
 
 	_cfg = {**vars(args)
 	, "grid"   : {"nd": grid.nd, "step": grid.step, "units": grid.units}
