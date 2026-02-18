@@ -71,6 +71,9 @@ class frame_cls:
 			
 			case ENTRYT.FUNC:
 				self.__cache[key] = self.__funcs[key](self)
+				if self.__cache[key] is None:
+					del self.__cache[key]
+					del self.__funcs[key]
 			
 			case ENTRYT.JSON:
 				self.__cache[key] = to_namspace(json.loads \

@@ -55,7 +55,7 @@ def main(args, logger):
 	E0     = args.stream_en  # eV
 	T0     = 0.25 # eV
 	MLIGHT = ME   # gram
-	MHEAVY = 4.002602*AEM # gram
+	MHEAVY = 1.00784*AEM # gram
 	VE0 = np.sqrt(E0 * 2*ECHARGE/STATC_V/MLIGHT)
 	VTE = np.sqrt(T0 * 2*ECHARGE/STATC_V/MLIGHT)
 	VTI = np.sqrt(T0 * 2*ECHARGE/STATC_V/MHEAVY)
@@ -235,7 +235,7 @@ def main(args, logger):
 	logger.info(f"δt ωpe   = {args.dt*WPE:f}")
 	logger.info(f"ve δt/δh = {VE0*args.dt/np.min(grid.shape):f}")
 	logger.info(f"VE0      = {VE0:e} cm/s")
-	logger.info(f"RDE     ~= {VE0/WPE:f} cm")
+	logger.info(f"RDE/δh   = {VE0/WPE/min(*grid.step):f}")
 	
 	##############################################################################
 	if args.run == False or not (args.run or input(f"run? [y] ") == "y"):
