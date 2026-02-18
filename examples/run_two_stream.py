@@ -53,9 +53,10 @@ def main(args, logger):
 	##############################################################################
 	# problem's presets:
 	E0     = args.stream_en  # eV
-	T0     = 0.25 # eV
-	MLIGHT = ME   # gram
-	MHEAVY = 1.00784*AEM # gram
+	T0     = 0.25            # eV
+	MLIGHT = ME              # gram
+	MHEAVY = 1.00784*AEM     # gram
+	
 	VE0 = np.sqrt(E0 * 2*ECHARGE/STATC_V/MLIGHT)
 	VTE = np.sqrt(T0 * 2*ECHARGE/STATC_V/MLIGHT)
 	VTI = np.sqrt(T0 * 2*ECHARGE/STATC_V/MHEAVY)
