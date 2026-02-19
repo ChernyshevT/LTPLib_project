@@ -269,7 +269,7 @@ def main(args, logger):
 		
 		#################
 		# run frame-cycle
-		dtimes[...], dcalls[...] = 0, 0
+		dtimes[...], dcalls[...], _tstart = 0, 0, time()
 		for isub in range(1, args.nsub+1):
 			#####################################################
 			# run streaming-phase (sub-cycle for implicit solver)
@@ -305,7 +305,7 @@ def main(args, logger):
 			_emenrgy[isub, ...] = np.sum(emfield[...]**2, axis=grid.nd)/8/np.pi
 		
 		# end frame cycle
-		logger.info(f"end frame ({len(pstore):} samples)")
+		logger.info(f"end frame, {time()-_tstart:f}s ({len(pstore):} samples)")
 		for name, dtpp in zip(dnames, dtimes/dcalls*1e9):
 			logger.info(f"{name}: {dtpp:06.3f} ns/part")
 		
