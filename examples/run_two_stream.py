@@ -231,6 +231,7 @@ def main(args, logger):
 	logger.info(f"nppin    = {nppin}")
 	logger.info(f"n_plasma = {args.n_plasma:e} cm^-3")
 	logger.info(f"tframe   = {tframe:07.3f} ns")
+	logger.info(f"tfull    = {args.nrun*tframe:07.3f} ns")
 	logger.info(f"1/δt     = {1/args.dt:e} 1/s")
 	# ~ logger.info(f"ωpe      = {WPE:e} 1/s")
 	logger.info(f"δt ωpe   = {args.dt*WPE:f}")
