@@ -13,7 +13,8 @@ def show_umap(umap):
 	
 	ax.set_xlim(-0.5, umap.shape[0]-0.5)
 	ax.set_ylim(-0.5, umap.shape[1]-0.5)
-	ax.axis("off"),
+	ax.axis("off")
+	ax.set_aspect("equal")
 	
 	xlfs, xrts, xcns, ylfs, yrts, ycns, vals = [],[],[],[],[],[],[]
 	for x in range(umap.shape[0]):

@@ -55,17 +55,23 @@ def get_cmp(frame, key: str):
 	return frame.ptfluid[..., frame.cfg.flinfo.index(key)]
 
 funcs = {
-  "TIME":   lambda f: 0.5*np.sum(f.cfg.tindex)*f.cfg.dt
-, "EMFEN":  lambda f: f.emenrgy*2.99792458e2/8/np.pi
+  "TIME":  lambda f: 0.5*np.sum(f.cfg.tindex)*f.cfg.dt
+, "EMFEN": lambda f: f.emenrgy*2.99792458e2/8/np.pi
+
 , "C_e":    lambda f: get_cmp(f, "C_e")
 , "ENxx_e": lambda f: get_cmp(f, "Pxx_e")/f.C_e * 2.842815e-16 # e^-
 , "ENyy_e": lambda f: get_cmp(f, "Pyy_e")/f.C_e * 2.842815e-16
 , "ENzz_e": lambda f: get_cmp(f, "Pzz_e")/f.C_e * 2.842815e-16
+
 , "C_i":    lambda f: get_cmp(f, "C_i")
 , "ENxx_i": lambda f: get_cmp(f, "Pxx_i")/f.C_i * 5.222763e-13 # H^+
 , "ENyy_i": lambda f: get_cmp(f, "Pyy_i")/f.C_i * 5.222763e-13
 , "ENzz_i": lambda f: get_cmp(f, "Pzz_i")/f.C_i * 5.222763e-13
-, "CHARGE": lambda f: ((f.C_i if f.cfg.ions else 1) - f.C_e)/f.cfg.n_plasma
+
+, "CHARGE":  lambda f: ((f.C_i if f.cfg.ions else 1) - f.C_e)/f.cfg.n_plasma
+, "VPLASMA": lambda f: np.pad(f.vplasma \
+                     , [(f.cfg.order, 0)]*f.cfg.grid.nd , mode="wrap") \
+                     * 2.99792458e2
 }
 
 keys = ["TIME", "EMFEN", "ENxx_e", "ENyy_e", "ENzz_e", "ENxx_i", "ENyy_i", "ENzz_i"]
