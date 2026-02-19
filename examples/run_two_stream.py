@@ -225,6 +225,9 @@ def main(args, logger):
 	_units = "x".join(map(str, grid.units))
 	_gsize = "x".join([f'{a*b:.3f}' for a,b in zip(grid.step, grid.units)])
 	
+	if args.dump:
+		logger.info(args.dump)
+	
 	logger.info(f"grid     = {_units}: {_gsize} cm")
 	logger.info(f"order    = {args.order}")
 	logger.info(f"npunit   = {args.npunit}")
