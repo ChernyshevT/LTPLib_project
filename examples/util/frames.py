@@ -13,6 +13,7 @@ class ENTRYT(Enum):
 	JSON  = 3,
 	NUMPY = 2,
 	TEXT  = 1,
+	NONE  = 0,
 
 ################################################################################
 def to_namspace(obj):
@@ -49,12 +50,12 @@ logger = get_logger()
 class frame_cls:
 	__slots__ = ("__zipf", "__list", "__funcs", "__cache")
 
-	def __init__(self, fname: str, **kwargs):
+	def __init__(self, fname: str):
 		self.__zipf  = zipfile.ZipFile(fname, "r")
 		self.__list  = [os.path.splitext(f)[0] for f in self.__zipf.namelist()]
 		self.__funcs = {}
 		self.__cache = {}
-		logger.debug(f"open {fname}")
+		logger.debug(f"open \"{fname}\"")
 	
 	def add_funcs (self, **kwargs):
 		self.__funcs.update({**kwargs})
@@ -63,7 +64,7 @@ class frame_cls:
 	def __dir__(self):
 		return [*self.__list, *self.__funcs]
 
-	def __getitem__(self, key: str):
+	def __getitem__(self, key: str) -> object:
 		match (self.__contains__(key)):
 			
 			case ENTRYT.CACHE:
@@ -91,21 +92,30 @@ class frame_cls:
 		
 		return self.__cache[key]
 
-	def __getattr__(self, key: str):
+	def __getattr__(self, key: str) -> object:
 		return self[key]
 
-	def __contains__(self, key: str):
+	def __contains__(self, key: str) -> ENTRYT:
 		if key in self.__cache:
 			return ENTRYT.CACHE
+		
 		if key in self.__funcs:
 			return ENTRYT.FUNC
+		
 		if f"{key}.json" in self.__zipf.namelist():
 			return ENTRYT.JSON
+		
 		if f"{key}.npy"  in self.__zipf.namelist():
 			return ENTRYT.NUMPY
+		
 		if f"{key}.txt"  in self.__zipf.namelist():
 			return ENTRYT.TEXT
-		return False
+		
+		return ENTRYT.NONE
+		
+	@property
+	def files(self):
+		return self.__zipf.namelist()
 
 def load_frame(fname: str) -> frame_cls:
 	return frame_cls(fname)
@@ -114,7 +124,7 @@ def load_frame(fname: str) -> frame_cls:
 
 def save_frame(fname: str, mode: str = "w", **kwargs):
 	fname = os.path.abspath(os.path.expanduser(fname))
-	msg   = f"saving \"{fname}\".."
+	msg   = f"saving ({mode}) \"{fname}\".."
 	try:
 		
 		if mode != "w" and mode != "a":

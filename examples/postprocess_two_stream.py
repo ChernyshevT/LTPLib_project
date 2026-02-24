@@ -74,7 +74,10 @@ funcs = {
                      * 2.99792458e2
 }
 
-keys = ["TIME", "EMFEN", "ENxx_e", "ENyy_e", "ENzz_e", "ENxx_i", "ENyy_i", "ENzz_i"]
+# ~ keys = ["TIME", "EMFEN", "ENxx_e", "ENyy_e"]
+keys = ["TIME", "EMFEN", "ENxx_e", "ENyy_e", "ENxx_i", "ENyy_i"]
+# ~ keys = ["TIME", "EMFEN", "ENxx_e", "ENyy_e", "ENzz_e"]
+# ~ keys = ["TIME", "EMFEN", "ENxx_e", "ENyy_e", "ENzz_e", "ENxx_i", "ENyy_i", "ENzz_i"]
 
 ################################################################################
 def main(args):
@@ -90,7 +93,7 @@ def main(args):
 	while os.path.exists(fname:=f"{args.fdir}/frame{n+1:06d}.zip"):
 		print(f"\rread \"{fname}\"", end="")
 		frame = load_frame(fname).add_funcs(**funcs)
-		stats.append({k:np.mean(frame[k]) for k in keys})
+		stats.append({k: np.nanmean(frame[k]) for k in keys})
 		cfg, n = frame.cfg, n+1
 	print("\rdone")
 	stats = pd.DataFrame(stats)
