@@ -44,7 +44,7 @@ class distro_h:
 		
 		m.func = intrp.RegularGridInterpolator((xb, yb), m.hist\
 		, bounds_error=False, fill_value=None)
-		return m.func
+		return m
 	
 	def get (m, xs, ys):
 		return np.asarray\
@@ -75,9 +75,9 @@ funcs = {
 }
 
 # ~ keys = ["TIME", "EMFEN", "ENxx_e", "ENyy_e"]
-keys = ["TIME", "EMFEN", "ENxx_e", "ENyy_e", "ENxx_i", "ENyy_i"]
+# ~ keys = ["TIME", "EMFEN", "ENxx_e", "ENyy_e", "ENxx_i", "ENyy_i"]
 # ~ keys = ["TIME", "EMFEN", "ENxx_e", "ENyy_e", "ENzz_e"]
-# ~ keys = ["TIME", "EMFEN", "ENxx_e", "ENyy_e", "ENzz_e", "ENxx_i", "ENyy_i", "ENzz_i"]
+keys = ["TIME", "EMFEN", "ENxx_e", "ENyy_e", "ENzz_e", "ENxx_i", "ENyy_i", "ENzz_i"]
 
 ################################################################################
 def main(args):
