@@ -184,33 +184,35 @@ decltype(auto) inline replace
 /**********************************************************************/
 namespace logger {
 	
+	extern py::handle logger_obj;
+	
 	template<typename... ts>
 	void debug (std::format_string<ts...> arg, ts&&... args) {
-		py::module::import("logging").attr("getLogger")("_ltplib").attr("debug")
+		logger_obj.attr("debug")
 		(std::format(arg, std::forward<ts>(args)...).c_str());
 	}
 
 	template<typename... ts>
 	void info (std::format_string<ts...> arg, ts&&... args) {
-		py::module::import("logging").attr("getLogger")("_ltplib").attr("info")
+		logger_obj.attr("info")
 		(std::format(arg, std::forward<ts>(args)...).c_str());
 	}
 	
 	template<typename... ts>
 	void warning (std::format_string<ts...> arg, ts&&... args) {
-		py::module::import("logging").attr("getLogger")("_ltplib").attr("warning")
+		logger_obj.attr("warning")
 		(std::format(arg, std::forward<ts>(args)...).c_str());
 	}
 
 	template<typename... ts>
 	void error (std::format_string<ts...> arg, ts&&... args) {
-		py::module::import("logging").attr("getLogger")("_ltplib").attr("error")
+		logger_obj.attr("error")
 		(std::format(arg, std::forward<ts>(args)...).c_str());
 	}
 
 	template<typename... ts>
 	void critical (std::format_string<ts...> arg, ts&&... args) {
-		py::module::import("logging").attr("getLogger")("_ltplib").attr("critical")
+		logger_obj.attr("critical")
 		(std::format(arg, std::forward<ts>(args)...).c_str());
 	}
 

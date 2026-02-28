@@ -3,7 +3,7 @@ import os, io, json, zipfile, json
 import numpy as np
 
 from types import SimpleNamespace as namespace
-from enum import Enum
+from enum  import Enum
 
 from .loggers import *
 
@@ -63,6 +63,9 @@ class frame_cls:
 	
 	def __dir__(self):
 		return [*self.__list, *self.__funcs]
+	
+	def __repr__(self):
+		return f"<{self.__zipf.fp.name}: {', '.join(self.__list)}>"
 
 	def __getitem__(self, key: str) -> object:
 		match (self.__contains__(key)):

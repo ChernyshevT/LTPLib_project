@@ -113,8 +113,8 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 		if (CHECK_FLAGS(this->flags, AXIS_FLAG::CYLINDER) and nd != 2) {
 			throw bad_arg("{}d-grid can not be used with CYLINDER flag!", nd);
 		}
-		if (CHECK_FLAGS(this->flags, AXIS_FLAG::CYLINDER|AXIS_FLAG::LOOPX)) {
-			throw bad_arg("can use LOOPX and CYLINDER flags at the same time!", nd);
+		if (CHECK_FLAGS(this->flags, AXIS_FLAG::CYLINDER|AXIS_FLAG::LOOPY)) {
+			throw bad_arg("can not use CYLINDER and LOOPY flags at the same time!", nd);
 		}
 	}
 	

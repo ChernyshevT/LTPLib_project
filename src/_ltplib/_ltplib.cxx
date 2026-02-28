@@ -44,11 +44,18 @@ Copyright © 2025 Timofey Chernyshev aka GNU/Hurt
 #include "io_strings.hxx"
 #include "io_dylibs.hxx"
 
+namespace py = pybind11;
+
+namespace logger {
+	
+	py::handle logger_obj;
+}
+
 dylibs_t libs;
 /******************************************************************************/
 PYBIND11_MODULE (_ltplib, m) {
 	
-	namespace py = pybind11;
+	logger::logger_obj = py::module::import("logging").attr("getLogger")("_ltplib");
 	
 	m.attr("__doc__")     = _LTBLIB_DOC;
 	m.attr("__version__") = "v0.1, build: " __DATE__ " " __TIME__;

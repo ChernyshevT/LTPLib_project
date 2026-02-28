@@ -135,8 +135,11 @@ def main(args, logger):
 		
 		# obtain electric field
 		_vmap = np.pad(eq.vmap, padding, mode="wrap")
-		for i, grad in enumerate(np.gradient(_vmap, *grid.step)):
-			emfield[..., i] = -grad[*slicer2]
+		if grid.nd == 1:
+			emfield[..., 0] = -np.gradient(_vmap, *grid.step)[*slicer2]
+		else:
+			for i, grad in enumerate(np.gradient(_vmap, *grid.step)):
+				emfield[..., i] = -grad[*slicer2]
 		
 		return verr
 
@@ -240,7 +243,7 @@ def main(args, logger):
 	logger.info(f"δt ωpe   = {args.dt*WPE:f}")
 	logger.info(f"ve δt/δh = {VE0*args.dt/np.min(grid.shape):f}")
 	logger.info(f"VE0      = {VE0:e} cm/s")
-	logger.info(f"RDE/δh   = {VE0/WPE/min(*grid.step):f}")
+	logger.info(f"RDE/δh   = {VE0/WPE/np.min(grid.step):f}")
 	
 	##############################################################################
 	if args.run == False or not (args.run or input(f"run? [y] ") == "y"):
@@ -423,7 +426,7 @@ args = {
 	"--epsilon" : {
 		"type"    : float,
 		"default" : 0,
-		"help"    : "epsilon to stop implicit solver earlier (V)"
+		"help"    : "epsilon to stop semi-implicit solver earlier (V)"
 	},
 	"--preset"  : {
 		"type"    : str,
