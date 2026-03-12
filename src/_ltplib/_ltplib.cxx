@@ -89,6 +89,9 @@ void check_errc (u32 errc) {
 	if (errc & ERR_CODE::INVALID_SEQ) {
 		msg = std::format("{}{}INVALID_SEQ",      msg, !msg.empty()? "|": "");
 	}
+	if (errc & ERR_CODE::INJECT_ERR) {
+		msg = std::format("{}{}INJECT",           msg, !msg.empty()? "|": "");
+	}
 	if (errc & ERR_CODE::PPOST_ERR) {
 		msg = std::format("{}{}PPOST",            msg, !msg.empty()? "|": "");
 	}
@@ -112,6 +115,9 @@ void check_errc (u32 errc) {
 	}
 	if (errc & ERR_CODE::PTMAXPROBABILITY) {
 		msg = std::format("{}{}PTMAXPROBABILITY", msg, !msg.empty()? "|": "");
+	}
+	if (errc & ERR_CODE::PTINVALIDVALUE) {
+		msg = std::format("{}{}PTINVALIDVALUE",   msg, !msg.empty()? "|": "");
 	}
 	throw std::runtime_error(msg);
 }

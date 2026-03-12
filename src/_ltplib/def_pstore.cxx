@@ -11,27 +11,34 @@ using namespace pybind11::literals;
 #include "api_pstore.hxx"
 #include "api_grid.hxx"
 #include "def_pstore.hxx"
+#include "api_frontend.hxx"
 
 /******************************************************************************/
 template<u8 nd> inject_fn_t construct_inject_fn
 (pstore_holder& self, const grid_t<nd>& grid) {
 
-	return [&] (u8 tag, const parts_input_t& input) -> size_t {
+	return [&] (u8 tag, const parts_input_t& input) -> u32 {
 		auto pts{input.unchecked<2>()};
 		if (pts.shape(1) != nd+3) {
 			throw std::invalid_argument(std::format("pts.shape[1] != {}+3", nd));
 		}
 		
-		size_t n_overflow{0};
+		//size_t n_overflow{0};
+		u32 flags{0};
 		
 		for (int64_t j{0}, npp{pts.shape(0)}; j<npp; ++j) {
-			f32 pt[nd+3]; bool valid{true};
+			f32 pt[nd+3]; u8 flag{0};
 			for (auto i{0}; i<nd+3; ++i) {
 				pt[i] = pts(j, i);
-				valid = valid or isfinite(pt[i]);
+				flag = flag | (!isfinite(pt[i])*(1<<i) );
+				//~ valid = valid or isfinite(pt[i]);
 			}
+			//std::cout<<std::format("#{:06d} [{:6.3f}, {:6.3f}, {:8.2e}, {:8.2e}, {:8.2e}] {:06b}\n"
+			//, j, pt[0], pt[1], pt[2], pt[3], pt[4], flag);
 			
-			if (u32 k{grid.find_node(pt)}; valid and k != 0) {
+			if (flag) {
+				flags = flags | ERR_CODE::PTINVALIDVALUE;
+			} else if (u32 k{grid.find_node(pt)}; k != 0) {
 				auto pool{self[k-1]};
 
 				if (u32 j{pool.index[0]}; j < pool.index[1]) {
@@ -40,12 +47,17 @@ template<u8 nd> inject_fn_t construct_inject_fn
 					} pool.parts[j][0  ].tag[0] = tag;
 					++pool.index[0];
 				} else {
-					n_overflow++;
+					flags = flags | ERR_CODE::PTOVERFLOW;
 				}
-			} //else skip
+			}
+
 		}
 		
-		return n_overflow;
+		if (flags) {
+			flags = flags | ERR_CODE::INJECT_ERR;
+		}
+		
+		return flags;
 	};
 }
 
@@ -310,19 +322,16 @@ void def_pstores (py::module &m) {
 	.def("inject", [] (pstore_holder &self
 	, const std::string& key,  const parts_input_t& data) {
 	//~ , const std::unordered_map<std::string, parts_input_t> &input) {
-		size_t n_overflow{0};
+		//~ size_t n_overflow{0};
 		//~ for (const auto& [key, data] : input) {
 
 		auto pos{std::find(self.cfg->ptinfo.begin(), self.cfg->ptinfo.end(), key)};
 		if (pos == self.cfg->ptinfo.end()) {
 			throw std::invalid_argument(std::format("invalid key \"{}\"", key));
 		}
-			
-		n_overflow = self.inject_fn(u8(pos-self.cfg->ptinfo.begin()), data);
-		if (n_overflow) {
-			throw std::overflow_error(std::format(
-			"pstore.inject: can not inject {} samples: overflow!", n_overflow));
-		}
+		
+		check_errc(self.inject_fn(u8(pos-self.cfg->ptinfo.begin()), data));
+
 	}, "key"_a, "input"_a, INJECT_FN)
 	
 	.def("extract", [] (const pstore_holder &self) {

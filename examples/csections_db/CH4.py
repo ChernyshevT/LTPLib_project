@@ -58,11 +58,14 @@
    1e-20*(a[0]*(th/en)**a[1] * (1 - (th/en)**a[2])**a[3]).real
  },
  {"TYPE":"DISSOCIATION", "THRESHOLD":14.0,
-  "COMMENT":"C + 2H2", "REF":r"\cite{gadoum2019}\footnote{Something is wrong with analytical approximation, data-points were used instead.}",
- # "CSEC": lambda en, th=14.0, a=[0.5681,0.8807,4.0006,1.1164]: \
- #  1e-20*(a[0]*(th/en)**a[1] * (1 - (th/en)**a[2])**a[3]).real
+  "COMMENT":"C + 2H2",
+  "REF":r"\cite{gadoum2019}\footnote{"\
+  "Something is wrong with analytical approximation, "\
+  "data points were used instead.}",
   "CSEC":(f"{fpath}/CH4/INELASTIC.txt",
-   dict(search="CH4 -> C+H2+H2(14eV-dissoc)"))
+   dict(search="CH4 -> C+H2+H2(14eV-dissoc)")),
+  # "CSEC": lambda en, th=14.0, a=[0.5681,0.8807,4.0006,1.1164]: \
+  # 1e-20*(a[0]*(th/en)**a[1] * (1 - (th/en)**a[2])**a[3]).real
  },
 
  ##############################################################################

@@ -61,10 +61,10 @@ class frame_cls:
 		self.__funcs.update({**kwargs})
 		return self
 	
-	def __dir__(self):
+	def __dir__(self) -> list:
 		return [*self.__list, *self.__funcs]
 	
-	def __repr__(self):
+	def __repr__(self) -> str:
 		return f"<{self.__zipf.fp.name}: {', '.join(self.__list)}>"
 
 	def __getitem__(self, key: str) -> object:
@@ -75,9 +75,6 @@ class frame_cls:
 			
 			case ENTRYT.FUNC:
 				self.__cache[key] = self.__funcs[key](self)
-				if self.__cache[key] is None:
-					del self.__cache[key]
-					del self.__funcs[key]
 			
 			case ENTRYT.JSON:
 				self.__cache[key] = to_namspace(json.loads \
@@ -117,7 +114,7 @@ class frame_cls:
 		return ENTRYT.NONE
 		
 	@property
-	def files(self):
+	def files(self) -> list:
 		return self.__zipf.namelist()
 
 def load_frame(fname: str) -> frame_cls:

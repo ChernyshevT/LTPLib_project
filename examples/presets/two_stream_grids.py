@@ -1,4 +1,10 @@
 {
+ "precise1d": {"nd" : 1,
+  "step"  : [0.00625/8],
+  "axes"  : [[*range(0,192*8+1,96)]],
+  "flags" : "LOOPX",
+ },
+ 
  "hires1d": {"nd" : 1,
   "step"  : [0.00625],
   "axes"  : [[*range(0,192+1,12)]],

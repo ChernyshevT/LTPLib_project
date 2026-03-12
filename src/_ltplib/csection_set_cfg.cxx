@@ -16,9 +16,7 @@ auto to_string_view = [] (auto &&r) -> std::string_view {
 return std::string_view(r.begin(), std::ranges::distance(r));
 };
 
-auto not_empty = [](auto x) -> bool {
-	return not x.empty();
-};
+auto not_empty = [](auto x) -> bool {return not x.empty();};
 
 std::map<std::string, group_flags_t> parse_bg_flags(py::handle str) {
 	

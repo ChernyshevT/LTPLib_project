@@ -82,7 +82,7 @@ def main(args, logger):
 	 {"KEY":"i", "CHARGE/MASS": +ECHARGE/MHEAVY},
 	]
 	, capacity = _capacity
-	, vsize = 1 + (grid.nd+3)*2 # extra memory for implicit solver
+	, vsize = 1 + (grid.nd+3)*2 # extra memory for semi-implicit solver
 	)
 	
 	# weight coefficient
@@ -236,7 +236,7 @@ def main(args, logger):
 	logger.info(f"npunit   = {args.npunit}")
 	logger.info(f"nppin    = {nppin}")
 	logger.info(f"n_plasma = {args.n_plasma:e} cm^-3")
-	logger.info(f"tframe   = {tframe:07.3f} ns")
+	logger.info(f"tframe   = {tframe:08.5f} ns ({args.nsub} steps)")
 	logger.info(f"tfull    = {args.nrun*tframe:07.3f} ns")
 	logger.info(f"1/δt     = {1/args.dt:e} 1/s")
 	# ~ logger.info(f"ωpe      = {WPE:e} 1/s")

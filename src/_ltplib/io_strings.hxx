@@ -117,7 +117,7 @@ inline std::string& trim(std::string &s) {
 }
 
 /******************************************************************************/
-
+/*
 template<typename t, size_t n, typename = std::enable_if_t<not std::is_same<t,char>(), void>>
 decltype(auto) operator <<
 (std::ostream & lhs, const t (&rhs)[n]){
@@ -159,6 +159,48 @@ decltype(auto) operator <<
 		lhs << (i==1?"{":"") << k<<":"<<v << (i==rhs.size()?"}":", ");
 	} return lhs;
 }
+template<typename t, size_t n, typename = std::enable_if_t<not std::is_same<t,char>(), void>>
+decltype(auto) operator <<
+(std::ostream & lhs, const t (&rhs)[n]){
+	for(auto [i,val] : enumerate(rhs,1)){
+		lhs << (i==1?"[":"") << val << (i==n? "]":", ");
+	} return lhs;
+}
+template<typename... ts>
+decltype(auto) operator <<
+(std::ostream & lhs, const std::tuple<ts...>& rhs) {
+	auto func = [&lhs](auto&&... arg) {
+		size_t n=sizeof...(arg), i=1;
+		((lhs << (i==1? "(":"") << arg << (i==n? ")":", "), ++i), ...);
+	}; std::apply(func, rhs);
+	return lhs;
+}
+
+template<typename t>
+decltype(auto) operator <<
+(std::ostream & lhs, const std::vector<t>& rhs){
+	for(auto [i,x] : enumerate(rhs,size_t(1))){
+		lhs << (i==1?"[":"") << x << (i==rhs.size()? "]":", ");
+	} return lhs;
+}
+
+template<typename t, size_t n>
+decltype(auto) operator <<
+(std::ostream & lhs, const std::array<t,n>& rhs) {
+	for(auto [i,x] : enumerate(rhs,size_t(1))){
+		lhs << (i==1?"[":"") << x << (i==n? "]":", ");
+	} return lhs;
+}
+
+template<class x, typename y>
+decltype(auto) operator <<
+(std::ostream & lhs, const std::map<x,y>& rhs) {
+	for(auto [i,rh] : enumerate(rhs,size_t(1))) {
+		auto& [k,v] = rh;
+		lhs << (i==1?"{":"") << k<<":"<<v << (i==rhs.size()?"}":", ");
+	} return lhs;
+}
+*/
 
 /**********************************************************************/
 decltype(auto) inline operator * (int n, const std::string& s) {

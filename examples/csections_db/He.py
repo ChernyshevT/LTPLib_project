@@ -3,14 +3,13 @@
 [
 	{"TYPE":"BACKGROUND", "KEY":"He",
 	 "MASSRATE": 0.00013714},
-	 
-	{"TYPE": "ELASTIC",
-	 "REF":r"\cite{khrabrov2012}",
+
+	# Khrabrov, A. V., & Kaganovich, I. D. (2012).
+	# Electron scattering in helium for Monte Carlo simulations.
+	# Physics of Plasmas, 19(9). DOI: 10.1063/1.4751865
+	{"TYPE": "ELASTIC", "REF":r"\cite{khrabrov2012}",
 	 "MTCS": (f"{fpath}/He/He_LXCat.txt",
 	 dict(search="E + He -> E + He, Elastic")),
-	 # Khrabrov, A. V., & Kaganovich, I. D. (2012).
-	 # Electron scattering in helium for Monte Carlo simulations.
-	 # Physics of Plasmas, 19(9). DOI: 10.1063/1.4751865
 	 "DCSFN": lambda en, p=[2.45, 2.82, 11.98, 5.11, 64.01]: 1\
 	 + (p[0]*sqrt(en)-p[1]**2-p[2])/((sqrt(en)-p[1])**2+p[2])\
 	 - p[0]*sqrt(en)/((sqrt(en)-p[3])**2+p[4]),

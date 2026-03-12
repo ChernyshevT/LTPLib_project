@@ -15,7 +15,7 @@ py::array_t<f32, py::array::c_style> \
 parts_output_t;
 
 typedef \
-std::function<size_t(u8, const parts_input_t&)> \
+std::function<u32(u8, const parts_input_t&)> \
 inject_fn_t;
 
 typedef \

@@ -1,5 +1,5 @@
 #pragma once
-#define API_V "API2025-08-02"
+#define API_V "API2026-03-12"
 
 #if __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__
 #	error "This code requires little-endian architecture."
@@ -18,14 +18,16 @@
 enum ERR_CODE : u32 {
 	SUCCESS          = 0x0,
 	INVALID_SEQ      = 0x1,
-	PPOST_ERR        = 0x2,
-	PPUSH_ERR        = 0x4,
-	ORDER_ERR        = 0x8,
-	MCSIM_ERR        = 0x10,
-	PTOVERFLOW       = 0x20,
-	PTOUTOFRANGE     = 0x40,
-	PTMAXPROBABILITY = 0x80,
-	PTMAXENERGY      = 0x100,
+	INJECT_ERR       = 0x2,
+	PPOST_ERR        = 0x4,
+	PPUSH_ERR        = 0x8,
+	ORDER_ERR        = 0x10,
+	MCSIM_ERR        = 0x20,
+	PTOVERFLOW       = 0x40,
+	PTOUTOFRANGE     = 0x80,
+	PTMAXPROBABILITY = 0x100,
+	PTMAXENERGY      = 0x200,
+	PTINVALIDVALUE   = 0x400,
 };
 
 /******************************************************************************/

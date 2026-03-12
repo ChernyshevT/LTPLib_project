@@ -14,7 +14,7 @@ csfunc_t from_data
 	
 	// check data
 	f32 a{0.0}, b{0.0}, mx{0.0}, my{0.0}, mxx{0.0}, mxy{0.0};
-	for (auto [x, y] : xys) {
+	for (auto [x, y]: xys) {
 		
 		if (not (std::isfinite(x) or std::isfinite(y) or x >= 0)) {
 			throw bad_arg("point#{} invalid data ({}, {})!", j, x, y);
@@ -233,23 +233,6 @@ csfunc_t read_csect (py::handle obj, f32 enth, py::dict opts) {
  * Benchmark calculations for anisotropic scattering in  kinetic models for low
  * temperature plasma. doi: 10.1088/1361-6463/ad3477, cite: flynn2024]
  ******************************************************************************/
-
-f32 MTCS_from_DCS (f32 x, f32 ef) {
-	/* x{ξ}, ef{ε/εₜ or 0} -> σₘ/σ */
-	if (fabsf(x) >= 1.0f) {
-		throw bad_arg("invalid DCS value: |{}| >= 1!", fabsf(x));
-	}
-	
-	f32 f0, v0;
-	if (fabsf(x) >= FLT_EPSILON) {
-		f0 = (ef != 0) ? sqrtf(1.0-1.0/ef) : 1.0;
-		v0 = f0*(1.0 - (0.5*(1.0+x) * (log(1.0+x)-log(1.0-x)) - x) * (1.0-x)/x/x);
-	} else {
-		v0 = 0.0f;
-	};
-	return 1.0f - v0;
-}
-
 f32 DCS_from_MTCS (f32 sm, f32 s0, f32 ef) {
 	/* sm{σₘ}, s0{σ}, ef{ε/εₜ or 0} -> ξ */
 	if (s0 == 0.0f or fabsf(ef-1.0f) <= FLT_EPSILON) {
@@ -280,4 +263,23 @@ f32 DCS_from_MTCS (f32 sm, f32 s0, f32 ef) {
 	} while (fabs(vm-v0) > FLT_EPSILON);
 	
 	return copysignf(x, s0-sm);
+}
+
+/*******************************************************************************
+ * An inverse, MTCS/TCS from $\xi$
+ ******************************************************************************/
+f32 MTCS_from_DCS (f32 x, f32 ef) {
+	/* x{ξ}, ef{ε/εₜ or 0} -> σₘ/σ */
+	if (fabsf(x) >= 1.0f) {
+		throw bad_arg("invalid DCS value: |{}| >= 1!", fabsf(x));
+	}
+	
+	f32 f0, v0;
+	if (fabsf(x) >= FLT_EPSILON) {
+		f0 = (ef != 0) ? sqrtf(1.0-1.0/ef) : 1.0;
+		v0 = f0*(1.0 - (0.5*(1.0+x) * (log(1.0+x)-log(1.0-x)) - x) * (1.0-x)/x/x);
+	} else {
+		v0 = 0.0f;
+	};
+	return 1.0f - v0;
 }

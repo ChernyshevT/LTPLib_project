@@ -37,15 +37,16 @@ f32 run_SOR_iter (poisson_eq_t<nd> & eq, f32 w) {
 	
 	f32 verr{0.0f}, vold, vnew, diff;
 	
-	/* loop over red/black-units & perform SOR-step */
-	for (u32 seq{red_black_seq(nd)}; seq; seq = seq >>(nd+1)) {
+	/* loop over red/black sequence & perform SOR-step */
+	for (u32 seq{red_black_seq(nd)}; seq; seq = seq >> (nd+1)) {
 		
-		u64 _offst[nd+1]; _offst[nd] = 1;
+		u64 _offst[nd+1]{1};
 		for (u8 i{1u}; i<=nd; ++i) {
 			_offst[nd-i] = (eq.shape[nd-i] - (1&(seq>>(nd-i))) + 1)/2;
 			_offst[nd-i] = _offst[nd-i]*_offst[nd-i+1];
 		}
 		
+		/* parallel loop over cells */
 		#pragma omp parallel for reduction(max:verr) private(vold, vnew, diff)
 		for (u64 k=0; k<_offst[0]; ++k) {
 			u32 pos[nd];
@@ -58,16 +59,18 @@ f32 run_SOR_iter (poisson_eq_t<nd> & eq, f32 w) {
 
 			vold = eq.vdata[uid];
 			vnew = eq.get_vnew(pos);
-			vnew = w*vnew + (1.0f-w)*vold;
+			vnew = w*vnew + (1.0f - w)*vold;
 			diff = fabsf(vnew - vold);
 			
 			if (isfinite(vnew)) [[likely]] {
 				verr = diff > verr ? diff : verr;
 			}
 			eq.vdata[uid] = vnew;
-		} /* end parallel loop */ 
+		}
+		/* end parallel loop over cells */ 
 		
 	}
+	/* end loop over red/black sequence */
 	
 	return verr;
 }
