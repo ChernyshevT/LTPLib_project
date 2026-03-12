@@ -38,9 +38,9 @@ f32 run_SOR_iter (poisson_eq_t<nd> & eq, f32 w) {
 	f32 verr{0.0f}, vold, vnew, diff;
 	
 	/* loop over red/black sequence & perform SOR-step */
-	for (u32 seq{red_black_seq(nd)}; seq; seq = seq >> (nd+1)) {
+	for (u32 seq{red_black_seq(nd)}; seq; seq = seq >>(nd+1)) {
 		
-		u64 _offst[nd+1]{1};
+		u64 _offst[nd+1]; _offst[nd] = 1;
 		for (u8 i{1u}; i<=nd; ++i) {
 			_offst[nd-i] = (eq.shape[nd-i] - (1&(seq>>(nd-i))) + 1)/2;
 			_offst[nd-i] = _offst[nd-i]*_offst[nd-i+1];
@@ -56,10 +56,10 @@ f32 run_SOR_iter (poisson_eq_t<nd> & eq, f32 w) {
 				uid = uid + pos[i]*eq.offst[i+1];
 				rem = rem%_offst[i+1];
 			}
-
+			
 			vold = eq.vdata[uid];
 			vnew = eq.get_vnew(pos);
-			vnew = w*vnew + (1.0f - w)*vold;
+			vnew = w*vnew + (1.0f-w)*vold;
 			diff = fabsf(vnew - vold);
 			
 			if (isfinite(vnew)) [[likely]] {
@@ -67,8 +67,7 @@ f32 run_SOR_iter (poisson_eq_t<nd> & eq, f32 w) {
 			}
 			eq.vdata[uid] = vnew;
 		}
-		/* end parallel loop over cells */ 
-		
+		/* end parallel loop over cells */  
 	}
 	/* end loop over red/black sequence */
 	
