@@ -5,6 +5,7 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 #include <unordered_map>
 #include <climits>
+#include <algorithm>
 
 #include "io_memory.hxx"
 #include "io_strings.hxx"
@@ -187,11 +188,14 @@ struct pstore_ctor {
 		
 		holder.m.pindex_h
 		.req(&pstore.pindex, holder.cfg->pindex_sz)
-		.req(&pstore.queue,  holder.cfg->npools)
 		.alloc();
 
 		holder.m.pflags_h
 		.req(&pstore.pflags, holder.cfg->pflags_sz)
+		.alloc();
+		
+		holder.m.queue_h
+		.req(&pstore.queue, 1 + 2*holder.cfg->npools)
 		.alloc();
 		
 		pstore.nargs = holder.cfg->nargs;
@@ -200,6 +204,7 @@ struct pstore_ctor {
 		pstore.opts.idshift = holder.cfg->idxsh;
 		pstore.opts.ongpu   = 0;
 		pstore.opts.mode    = 0;
+		
 	}
 
 	template <u8 nd, u8 md=1 + (nd==1? 3 : nd==2? 9 : 27)>
@@ -213,10 +218,9 @@ struct pstore_ctor {
 		for (auto i{0u}; i<holder.cfg->ntype; ++i) {
 			pstore.cffts[i] = holder.cfg->cffts[i];
 		}
-		for (auto i{0u}; i<holder.cfg->npools; ++i) {
-			pstore.queue[i] = i;
-		}
 		
+		pstore.queue[0] = holder.cfg->npools;
+		pstore.update_queue(false);
 
 		holder.inject_fn  = construct_inject_fn  (holder, grid);
 		holder.extract_fn = construct_extract_fn (holder, grid);
@@ -345,6 +349,25 @@ void def_pstores (py::module &m) {
 	.def("reset", [] (pstore_holder& self) {
 		return self.reset_fn();
 	}, "makes pstore empty")
+	
+	//~ self.fill_queue();
+	
+	.def("update_queue", [] (pstore_holder& self, bool run_sort) {
+		self.update_queue(run_sort);
+	}, "sort"_a=false)
+
+	.def_property_readonly("queue", [] (const pstore_holder& self) {
+		
+		return py::array_t<u32> (py::memoryview::from_buffer (
+			/* ptr      */ &self.queue[1],
+			/* shape    */ std::vector<py::size_t>{2u, self.queue[0]},
+			/* strides  */ std::vector<py::ssize_t> {ssize_t(self.queue[0]*sizeof(u32)), sizeof(u32)},
+			/* readonly */ true
+		));
+	})
 
 	/* end class */;
 }
+
+
+/* https://stackoverflow.com/questions/33224531/what-is-the-best-algorithm-for-sorting-while-iterating */

@@ -54,7 +54,8 @@ struct pstore_holder : pstore_t {
 		mem_holder
 			pparts_h,
 			pindex_h,
-			pflags_h;
+			pflags_h,
+			queue_h;
 	} m;
 	std::unique_ptr<pstore_cfg> cfg;
 	

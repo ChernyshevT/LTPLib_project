@@ -51,17 +51,19 @@ struct pool_t {
 	}
 };
 ////////////////////////////////////////////////////////////////////////////////
+#include <algorithm>
+
 struct pstore_t {
+	/* charge-to-mass ratios */
+	f32    *cffts;
 	/* particle data [{tag[4], x,y,z,vx,vy,vz,extra}, ...] */
 	part_t *ppdata;
 	/* [num parts, {num leaving}...] */
 	u32    *pindex;
 	/* [num holes, {p-ids}...] */
 	u32    *pflags;
-	/* load balance */
-	u32    *queue;  
-	/* charge-to-mass ratios */
-	f32    *cffts;
+	/* load balance [n_pools, {id, npp}...]*/
+	u32    *queue;
 
 	size_t npmax, nargs;
 
@@ -73,10 +75,19 @@ struct pstore_t {
 		u8 mode;
 	} opts;
 	
-	//~ size_t count_samples (void) {
-		//~ size_t n;
-		//~ for 
-	//~ } 
+	inline void update_queue (bool run_sort) {
+		for (u32 k{1}, n{queue[0]}; k <= n; ++k) {
+			queue[k] = k; queue[k+n] = pindex[(k-1)*opts.idshift];
+		}
+		if (run_sort) {
+			std::sort(queue+1, queue+1+queue[0], [&] (u32 a, u32 b) {
+					return queue[queue[0]+a] > queue[queue[0]+b];
+			});
+			for (u32 k{1}, n{queue[0]}; k <= n; ++k) {
+				queue[n+k] = pindex[(queue[k]-1)*opts.idshift];
+			}
+		}
+	}
 	
 	inline
 	pool_t operator [] (size_t k) const {

@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""
+https://jpb911.wixsite.com/landmark/copie-de-test-case-3-fluid-hybrid
+"""
+
 
 from util.frames  import *
 from util.loggers import *
@@ -12,7 +16,6 @@ import _ltplib as ltp
 from test_poisson_eq import show_umap
 from util.plots import *
 
-################
 class spawner_t:
 	__slots__ = ("parts", "radii", "alpha")
 	
@@ -84,14 +87,14 @@ def main (args, logger):
 	# ~ print(f"{VTERMe*TSTEP/dx=:f}")
 	
 	##################################################
-	grid = ltp.grid(2, [dx]*2, [range(0, Nx+1, 16)]*2)
+	grid = ltp.grid(2, [dx]*2, [range(0, Nx+1, 8)]*2)
 	
 	#############################################
 	pt_cfg = [
 	 {"KEY":"e", "CHARGE/MASS": -ECHARGE/MLIGHT},
 	 {"KEY":"i", "CHARGE/MASS": +ECHARGE/MHEAVY},
 	]
-	pstore = ltp.pstore(grid, pt_cfg, capacity = 500000)
+	pstore = ltp.pstore(grid, pt_cfg, capacity = 50000)
 	
 	#########################################################
 	emfield = ltp.vcache(grid, dtype="f32", order=1, vsize=3)
@@ -101,8 +104,8 @@ def main (args, logger):
 	ptfluid  = ltp.vcache(grid, dtype="f32", order=1, vsize=2)
 	ppost_fn = ltp.bind_ppost_fn(pstore, "C", ptfluid)
 	
-	ptfluid2  = ltp.vcache(grid, dtype="f32", order=1, vsize=10)
-	ppost_fn2 = ltp.bind_ppost_fn(pstore, "FxFyPxxPyyPzz", ptfluid2)
+	ptfluid2  = ltp.vcache(grid, dtype="f32", order=1, vsize=12)
+	ppost_fn2 = ltp.bind_ppost_fn(pstore, "FxFyFzPxxPyyPzz", ptfluid2)
 	
 	#########################################
 	umap = np.zeros([Nx+1]*2, dtype=np.uint8)
@@ -144,21 +147,25 @@ def main (args, logger):
 	
 	# main cycle #################################################################
 	for irun in range (1, nrun+1):
-		
+		 
+		pstore.update_queue(1) # balance computational load
 		for isub in range(1, nsub+1):
 			
 			pstore.inject("e", spawner.generate(NINJe, VTERMe))
 			pstore.inject("i", spawner.generate(NINJi, VTERMi))
-		
+			
+			# sub-sycle
 			emfield.remap("in")
 			ppush_fn(TSTEP)
 			
 			ppost_fn()
 			ptfluid.remap("out")[...] *= WCFFT*1e2
 			
-			recalc_field(1.9, 1e-4)
+			recalc_field(1.95, 1e-4)
 			
-			logger.debug(f"{irun:06d}/{isub:04d}: {len(pstore)=:09d}, {np.max(emfield[...])=:e}")
+			# ~ vmin, vmax = np.min(
+			
+			logger.debug(f"{irun:06d}/{isub:04d}: {len(pstore)=:09d}")
 		
 		print("\n",np.sum(ptfluid[..., 0])+np.sum(ptfluid[..., 1]))
 		

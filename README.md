@@ -150,10 +150,11 @@ Method accepts no arguments and returns the pair:
 1. list of indices defining the sample range for each component
 (the components' order is the same as in `pstore.ptlist`).
 
-To **reset** (clean) the storage, use `pstore.reset()`.
+To **reset** (clean-up) the storage, `pstore.reset()` should be used.
 Also, calling `len(pstore)` will return the total number of samples.
 
-
+If number of samples is differs between the nodes, i.e computational load is not balanced,
+calling `pstore.update_queue(True)` will push heavy-loaded nodes in the beginning of the queue.
 
 ### [`_ltplib.vcache`](./src/_ltplib/def_vcache.cxx) (value cache) <a name="vcache"></a>
 This class is used as a universal node-local cache for grid-based values. For example, it can be used to store electromagnetic fields, pVDF moments, background densities, and collision frequencies.

@@ -20,7 +20,9 @@ u32 run_mcsim
 	/* loop over nodes */
 	u32 flags{0};
 	#pragma omp parallel for
-	for (u32 k=0; k<grid.size; ++k) {
+	for (u32 pid=1; pid <= pstore.queue[0]; ++pid) {
+		u32 k{pstore.queue[pid]-1};
+		
 		auto rng{rng_t(seed+k)};
 		auto node{grid[k]};
 		auto pool{pstore[k]};

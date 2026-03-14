@@ -17,7 +17,8 @@ u32 run_ppost
 
 	u32 flags{0};
 	#pragma omp parallel for
-	for (u32 k=0; k<grid.size; ++k) {
+	for (u32 pid=1; pid <= pstore.queue[0]; ++pid) {
+		u32 k{pstore.queue[pid]-1};
 		
 		auto node = grid[k];
 		//size_t shift[nd];

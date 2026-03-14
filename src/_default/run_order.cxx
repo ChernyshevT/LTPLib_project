@@ -12,7 +12,9 @@ u32 run_order
 
 	u32 flags{0};
 	#pragma omp parallel for
-	for (u32 k=0; k<grid.size; ++k) {
+	for (u32 pid=1; pid <= pstore.queue[0]; ++pid) {
+		u32 k{pstore.queue[pid]-1};
+		
 		auto dst = pstore[k];
 		u32 ih{0}, nh{dst.flags[0]}, npp{dst.index[0]}, j_src, j_dst;
 
@@ -49,18 +51,9 @@ u32 run_order
 		}
 
 		// write actual particle number
-		dst.index[0 ] = npp-nh+ih;
+		dst.index[0] = npp-nh+ih;
 	}
 	// end omp parallel for
-	
-	//~ auto &&cmp = [&] (const void *a, const void *b) -> int {
-		//~ u32 k1 = *(u32*)a;
-		//~ u32 k2 = *(u32*)b;
-		
-		//~ return (int)pstore[k1].index[0] - (int)pstore[k2].index[k2];
-	//~ };
-	//~ std::qsort(pstore.queue, grid.size, sizeof(pstore.queue[0])
-	//~ , cmp);
 	
 	return flags;
 }
