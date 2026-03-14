@@ -245,10 +245,6 @@ def main(args, logger):
 	logger.info(f"VE0      = {VE0:e} cm/s")
 	logger.info(f"RDE/δh   = {VE0/WPE/np.min(grid.step):f}")
 	
-	#pstore.update_queue(1);
-	#for k,v in zip(*pstore.queue):
-	#	print(f"{k:>3d}: {v:>6d}")
-	
 	##############################################################################
 	if args.run == False or not (args.run or input(f"run? [y] ") == "y"):
 		exit(0)
