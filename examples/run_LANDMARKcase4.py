@@ -31,14 +31,15 @@ class poisson_eq_SOR(ltp.poisson_eq):
 		eq.vmap[...] = 0
 		eq.vmap_copy = eq.vmap.copy()
 	
-	def solve(eq, w_relax, verr_max):
+	def solve(eq, w_relax, verr_max, _debug=False):
 		eq.vmap_copy[...] = eq.vmap[...]
 		
 		iter_max = 2*np.prod(eq.cmap.shape)
 		for j, w in enumerate(repeat(w_relax), 1):
 			verr = eq.iter(w)
 			if verr <= verr_max:
-				logger.debug(f"poisson_eq done {verr=:e}, {j} iters")
+				if _debug:
+					logger.debug(f"poisson_eq done {verr=:e}, {j} iters")
 				return np.max(np.abs(eq.vmap - eq.vmap_copy)) #vdiff
 			if j >= iter_max:
 				raise RuntimeError\
@@ -195,7 +196,7 @@ def main (args, logger):
 					vdiff = recalc_field(1.95, 1e-4)*STATV_V
 					
 					logger.debug\
-					(f"{' 'if irep else '>'}{irun:06d}/{isub:04d}/{irep:02d}({'E0R'[mode]}) {vdiff=:6.3e} V")
+					(f"{' 'if irep else '*'}{irun:06d}/{isub:04d}/{irep:02d}({'E0R'[mode]}) {vdiff=:6.3e} V")
 					
 					if irep and vdiff < args.epsilon:
 						break

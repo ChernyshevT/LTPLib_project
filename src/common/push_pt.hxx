@@ -168,25 +168,26 @@ inline void push_pt
 		}
 	}
 	
-	// implicit (first run)
+	/* semi-implicit (first run, t -> t+dt/2) */
 	if constexpr (pushm == PUSH_MODE::IMPL0) {
 		f32 *sh{pt+nd+3};
 		update_v_predict(pt+nd, sh+nd, fpt);
 		for (size_t i{0}; i<nd; ++i) {
 			sh[i] = pt[i] + pt[nd+i]*dt;
 		}
+		/*
 		update_v_correct(pt+nd, sh+nd, fpt);
 		for (size_t i{0}; i<nd; ++i) {
 			pt[i] = sh[i] + pt[nd+i]*dt;
 		}
-		/*
+		*/
+		/* intermediate state (half-step) */
 		for (u8 i{0u}; i<nd+3; ++i) {
 			pt[i] = sh[i];
 		}
-		*/
 	}
 	
-	// implicit (second run)
+	/* semi-implicit (second run, t+dt/2 -> t+dt) */
 	if constexpr (pushm == PUSH_MODE::IMPLR) {
 		f32 *sh{pt+nd+3};
 		update_v_correct(pt+nd, sh+nd, fpt);
