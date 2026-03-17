@@ -9,12 +9,40 @@ from util.loggers import *
 from util.args    import *
 from itertools    import repeat, count
 
+import sys, os, timeit, shutil, signal
+
 import  numpy  as np
 import _ltplib as ltp
 
 #delete this
 from test_poisson_eq import show_umap
 from util.plots import *
+
+class poisson_eq_SOR(ltp.poisson_eq):
+	__slots__ = ("vmap_copy")
+	
+	def __init__ (eq, grid):
+		umap = np.zeros([nx+1 for nx in grid.units], dtype=np.uint8)
+		umap[1:-1,1:-1] = ltp.DIFFop("XCN|YCN")
+		# ltp.poisson_eq ctor
+		super().__init__(umap, grid.step)
+		
+		# initial approx
+		eq.vmap[...] = 0
+		eq.vmap_copy = eq.vmap.copy()
+	
+	def solve(eq, w_relax, verr_max):
+		eq.vmap_copy[...] = eq.vmap[...]
+		
+		iter_max = 2*np.prod(eq.cmap.shape)
+		for j, w in enumerate(repeat(w_relax), 1):
+			verr = eq.iter(w)
+			if verr <= verr_max:
+				logger.debug(f"poisson_eq done {verr=:e}, {j} iters")
+				return np.max(np.abs(eq.vmap - eq.vmap_copy)) #vdiff
+			if j >= iter_max:
+				raise RuntimeError\
+				(f"poisson_eq didn't converge after {j} iters ({verr=:e})!")
 
 class spawner_t:
 	__slots__ = ("parts", "radii", "alpha")
@@ -52,25 +80,24 @@ def main (args, logger):
 	M_4PI_E = 6.035884e-09
 	CLIGHT  = 2.997924e+10 # cm/s
 	
-	# from table 1
 	MLIGHT = ME
-	MHEAVY = 7291.712*ME
+	MHEAVY = 7291.712*ME #helium
 	TSTEP  = 4e-11 # s
 	
 	nsub = 1250
 	nrun = 10000
 	# Nt = nsub * nrun
 
-	Nx = Ny = 256
+	nx = ny = 256
 	dx = dy = 0.01953125 # cm
 	
 	
 	# injection
-	R0  = 0.5 # cm
-	T0e = 15
-	T0i = 0.025
+	R0  = 0.5   # cm
+	T0e = 15.0  # eV
+	T0i = 0.025 # eV
 	Ie0 = 20e-3 # A/m
-	Ii0 = 8e-3
+	Ii0 = 8e-3 
 	
 	BZ = 100 # Gauss (1e-2 Teslas)
 	
@@ -81,119 +108,235 @@ def main (args, logger):
 	VTERMe = np.sqrt(T0e/STATV_V * 2*ECHARGE/MLIGHT)
 	VTERMi = np.sqrt(T0i/STATV_V * 2*ECHARGE/MHEAVY)
 	
-	
-	
-	# ~ print(f"{VTERMe=:e} {VTERMi=:e}")
-	# ~ print(f"{VTERMe*TSTEP/dx=:f}")
-	
 	##################################################
-	grid = ltp.grid(2, [dx]*2, [range(0, Nx+1, 8)]*2)
+	grid = ltp.grid(2, [dx]*2, [range(0, nx+1, 8)]*2)
+	
+	# ~ print(grid.flags)
 	
 	#############################################
 	pt_cfg = [
 	 {"KEY":"e", "CHARGE/MASS": -ECHARGE/MLIGHT},
 	 {"KEY":"i", "CHARGE/MASS": +ECHARGE/MHEAVY},
 	]
-	pstore = ltp.pstore(grid, pt_cfg, capacity = 50000)
+	pstore = ltp.pstore(grid, pt_cfg, capacity = 50000, vsize=11)
 	
 	#########################################################
 	emfield = ltp.vcache(grid, dtype="f32", order=1, vsize=3)
-	ppush_fn = ltp.bind_ppush_fn(pstore, "BzExEy:LEAPF", emfield)
-	
+	ppush_fns = [ltp.bind_ppush_fn (pstore, f"BzExEy:{mover}", emfield) \
+	 for mover in ["LEAPF", "IMPL0","IMPLR"]
+	]
+
 	##########################################################
-	ptfluid  = ltp.vcache(grid, dtype="f32", order=1, vsize=2)
-	ppost_fn = ltp.bind_ppost_fn(pstore, "C", ptfluid)
+	ptfluid1  = ltp.vcache(grid, dtype="f32", order=1, vsize=2)
+	ppost1_fn = ltp.bind_ppost_fn(pstore, "C", ptfluid1)
 	
 	ptfluid2  = ltp.vcache(grid, dtype="f32", order=1, vsize=12)
-	ppost_fn2 = ltp.bind_ppost_fn(pstore, "FxFyFzPxxPyyPzz", ptfluid2)
+	ppost2_fn = ltp.bind_ppost_fn(pstore, "FxFyFzPxxPyyPzz", ptfluid2)
 	
 	#########################################
-	umap = np.zeros([Nx+1]*2, dtype=np.uint8)
-	umap[1:-1,1:-1] = ltp.DIFFop("XCN|YCN")
-	eq = ltp.poisson_eq(umap, grid.step)
-	eq.vmap[...] = 0 #initial approx
-	
-	# ~ show_umap(umap)
-	# ~ plt.show()
-	# ~ exit(1)
+	eq = poisson_eq_SOR(grid)
 	
 	def recalc_field(w_relax, verr_max):
 		
 		# gather space charge
-		eq.cmap[...] = (ptfluid[..., 0]-ptfluid[..., 1])*M_4PI_E
-		
+		eq.cmap[...] = (ptfluid1[..., 0] - ptfluid1[..., 1])*M_4PI_E
 		
 		# solve
-		iter_max = np.prod(eq.cmap.shape)*2
-		for j, w in enumerate(repeat(w_relax), 1): 
-			verr = eq.iter(w_relax)
-			if verr <= verr_max:
-				logger.debug\
-				(f"poisson_eq done {verr=:e}, {j} iters")
-				break
-			if j >= iter_max:
-				raise RuntimeError\
-				(f"poisson_eq didn't converge after {j} iters (verr = {verr:e})!")
+		vdiff = eq.solve(w_relax, verr_max)
 		
 		# electric field
 		for k, grad in enumerate(np.gradient(eq.vmap, *grid.step), 1):
 			emfield[..., k] = -grad
 		
+		return vdiff
+	
 	#######################
 	spawner = spawner_t(50)
+	emfield[..., 0]  = BZ/CLIGHT
+	emfield[..., 1:] = 0
 	
-	emfield[...,0]  = BZ/CLIGHT
-	emfield[...,1:] = 0
+	# reserve backup
+	pdata, pindex = None, None
 	
-	# main cycle #################################################################
-	for irun in range (1, nrun+1):
+	print(args)
+	
+	############
+	# main cycle
+	for irun in range (1, args.nrun+1):
+		
+		if args.reserve_backup:
+			pdata, pindex = pstore.extract()
 		 
-		pstore.update_queue(1) # balance computational load
-		for isub in range(1, nsub+1):
-			
-			pstore.inject("e", spawner.generate(NINJe, VTERMe))
-			pstore.inject("i", spawner.generate(NINJi, VTERMi))
-			
-			# sub-sycle
-			emfield.remap("in")
-			ppush_fn(TSTEP)
-			
-			ppost_fn()
-			ptfluid.remap("out")[...] *= WCFFT*1e2
-			
-			recalc_field(1.95, 1e-4)
-			
-			# ~ vmin, vmax = np.min(
-			
-			logger.debug(f"{irun:06d}/{isub:04d}: {len(pstore)=:09d}")
+		# balance computational load
+		pstore.update_queue(1)
+		for k,v in zip(*pstore.queue):
+			if 0 == v: break
+			print(f"#{k:03d}: {v:06d} pts")
 		
-		print("\n",np.sum(ptfluid[..., 0])+np.sum(ptfluid[..., 1]))
-		
-		save_frame(f"/tmp/frame{irun:06d}.zip"
-		, grid = dict(step=grid.step, units=grid.units)
-		, cfg = dict(order=1)
-		, tindex = [(irun-1)*nsub, irun*nsub]
-		, vplasma = eq.vmap*STATV_V
-		, ne = ptfluid[..., 0]
-		, ni = ptfluid[..., 1]
-		)
-		
-		# ~ cmax = np.max(np.abs(eq.vmap))
-		# ~ plt.imshow(eq.vmap
-		# ~ , cmap = "seismic"
-		# ~ , vmin = -cmax
-		# ~ , vmax = +cmax
-		# ~ )
-		# ~ plt.show()
-		
-		
+		# start new frame [t --> t + TSTEP*args.nsub]
+		t0, t1 = (irun-1)*args.nsub*TSTEP, irun*args.nsub*TSTEP
+		logger.info(f"frame#{irun:06d} ({t0*1e9:07.3f} -> {t1*1e9:07.3f} ns)..")
+		try:
+			for isub in range(1, args.nsub+1):
 			
+				pstore.inject("e", spawner.generate(NINJe, VTERMe))
+				pstore.inject("i", spawner.generate(NINJi, VTERMi))
+				
+				# sub-cycle for semi-implicit solver
+				for irep in range(0, args.nrep+1):
+					mode = (args.nrep>0)+(irep>0)
+					
+					emfield.remap("in")
+					ppush_fns[mode](TSTEP)
+					
+					ppost1_fn()
+					ptfluid1.remap("out")[...] *= WCFFT
+				
+					vdiff = recalc_field(1.95, 1e-4)*STATV_V
+					
+					logger.debug\
+					(f"{' 'if irep else '>'}{irun:06d}/{isub:04d}/{irep:02d}({'E0R'[mode]}) {vdiff=:6.3e} V")
+					
+					if irep and vdiff < args.epsilon:
+						break
+				
+		except RuntimeError as e:
+			logger.critical(f"frame#{irun:06d}/{isub:04d}/{irep:02d}: {e}")
 			
+			if fpath := args.save and args.reserve_backup:
+				save_frame(f"{fpath}/ptdump{irun:06d}.zip", "w"
+				, data = pdata
+				, index = pindex
+				, descr = pstore.ptlist
+				)
+			
+			return 1
+		# end frame
+		
+		# gather fluxes \& pressures
+		ppost2_fn()
+		ptfluid2.remap("out")[...] *= WCFFT
+		
+		# save frame
+		if fpath := args.save:
+			save_frame(f"{fpath}/pdump{irun:06d}.zip", "w"
+			, cfg  = dict(order=1, dt=TSTEP)
+			, grid = dict(step=grid.step, units=grid.units)
+			, tindex = [irun-1, irun]
+			, Ne = ptfluid1[..., 0]
+			, Ni = ptfluid1[..., 1]
+			, Fe = ptfluid2[..., 0:3]
+			, Fi = ptfluid2[..., 6:9]
+			, Pe = ptfluid2[..., 3:6]
+			, Pi = ptfluid2[..., 9:12]
+			)
+		# save dump
+		if fpath := args.save and irun in args.dump:
+			pdata, pindex = pstore.extract()
+			save_frame(f"{fpath}/pdata{irun:06d}.zip", "w"
+			, data = pdata
+			, index = pindexs
+			, descr = pstore.ptlist
+			)
+		
+	return 0
 	
 ################################################################################
+args = {
+	"--loglevel" : {
+		"type"     : str,
+		"required" : False,
+		"default"  : "INFO",
+		"help"     : "DEBUG/INFO/WARNING/ERROR",
+	},
+	"--run"      : {
+		"action"   : argparse.BooleanOptionalAction,
+		"help"     : "run simulation without asking (task mode)",
+	},
+	"--save"     : {
+		"type"     : lambda fpath: os.path.abspath(os.path.expanduser(fpath)),
+		"required" : False,
+		"help"     : "path to save the results; default=\"\" (do not save)"
+	},
+	"--dump"     : {
+		"type"     : int,
+		"required" : False,
+		"default"  : [],
+		"nargs"    : "+",
+		"help"     : "frame list to writing pVDF dumps",
+	},
+	"--reserve-backup"  : {
+		"action"   : argparse.BooleanOptionalAction,
+		"help"     : "extract the samples befor the start of each frame, make save if error"
+	},
+	"--nrun": {
+		"type": int,
+		"default": 10000,
+		"help": "number of frames to calculate (t->t+dt*nsub)"
+	},
+	"--nsub": {
+		"type": int,
+		"default": 1250, #2
+		"help": "number of sub-steps per frame (t->t+dt)"
+	},
+	"--nrep"    : {
+		"type"    : int,
+		"default" : 0,
+		"help"    : "number of corrector runs (0 for explicit, >=1 for semi-implicit)"
+	},
+	"--epsilon" : {
+		"type"    : float,
+		"default" : 0,
+		"help"    : "epsilon to stop semi-implicit solver earlier (V)"
+	},
+}
+################################################################################
+def handle_sigterm(n, frame):
+	raise SystemExit(signal.strsignal(n))
+
 if __name__ == "__main__":
-	pass
-	setup_logging(level="DEBUG", root=True)
+	signal.signal(signal.SIGTERM, handle_sigterm)
+	
+	args = parse_args(sys.argv, args)
+	
+	setup_logging(level=args.loglevel.upper(), root=True)
 	logger = get_logger("problem")
 	
-	main({}, logger)
+	try:
+		# check directory
+		if args.save and os.path.isdir(args.save) and args.nstart==1:
+			if not args.run:
+				if input\
+				(f"dir \"{args.save}\" already exists, delete contents? [y|yes] or.. ")\
+				in ["y", "yes"]:
+					shutil.rmtree(args.save)
+				else:
+					exit(0)
+			else:
+				raise RuntimeError(f"dir \"{args.save}\" already exists!")
+		
+		if args.reserve_backup and not args.save:
+			raise ValueError("can not make backup without save dir")
+			
+		if args.dump and not args.save:
+			raise ValueError("can not save samples without save dir")
+		
+		# create log-file
+		if fpath := args.save:
+			os.makedirs(args.save, exist_ok=True)
+			fname = f"{fpath}/runat-{datetime.now().strftime('%Y-%m-%d-%H-%M')}.log"
+			
+			logger.info(f"will log into \"{fname}\"")
+			setup_logging(level=args.loglevel.upper(), root=True\
+			, handler = logging.FileHandler(fname, "a", delay=False))
+		
+		# run program
+		sys.exit(main(args, logger))
+		
+	except (KeyboardInterrupt, SystemExit):
+		logger.info("manual exit")
+		sys.exit(0)
+	
+	except Exception as err:
+		logger.exception(err)
+		sys.exit(1)

@@ -144,25 +144,6 @@ def main(args, logger):
 		return verr
 
 	##############################################################################
-	
-	# ~ stats = {
-		# ~ "v_max*dt/dx": max(V0, VE)*args.dt/dx,
-		# ~ "dt*wce": args.dt * WPE,
-		# ~ "dx/rde": dx*WPE/max(V0, VE),
-		# ~ "vte/v0" : VE/V0,
-	# ~ }
-	# ~ for k,v in stats.items():
-		# ~ msg = f"{k} = {v:06.3f}"
-		# ~ if v<0.5:
-			# ~ logger.info(msg)
-		# ~ else:
-			# ~ logger.warning(msg)
-	# ~ tframe = args.dt*args.nsub*1e9
-	# ~ logger.info(f"tframe = {tframe:07.3f} ns")
-	# ~ logger.info(f"order  = {args.order}")
-	# ~ logger.info(f"npunit = {args.npunit}")
-
-	##############################################################################
 	# now, let's generate samples to inject
 	if not (fpath := args.load):
 		nppin = np.prod(grid.units)*args.npunit
@@ -277,8 +258,8 @@ def main(args, logger):
 		# run frame-cycle
 		dtimes[...], dcalls[...], _tstart = 0, 0, time()
 		for isub in range(1, args.nsub+1):
-			#####################################################
-			# run streaming-phase (sub-cycle for implicit solver)
+			##########################################################
+			# run streaming-phase (sub-cycle for semi-implicit solver)
 			for irep in range(0, args.nrep+1):
 				mode = (args.nrep>0)+(irep>0)
 				# push parts
@@ -421,7 +402,7 @@ args = {
 	"--nrep"    : {
 		"type"    : int,
 		"default" : 0,
-		"help"    : "number of corrector runs (0 for explicit, >=1 for implicit)"
+		"help"    : "number of corrector runs (0 for explicit, >=1 for semi-implicit)"
 	},
 	"--epsilon" : {
 		"type"    : float,

@@ -116,6 +116,8 @@ grid_cfg::grid_cfg (u8 nd, py::dict cfg) {
 		if (CHECK_FLAGS(this->flags, AXIS_FLAG::CYLINDER|AXIS_FLAG::LOOPY)) {
 			throw bad_arg("can not use CYLINDER and LOOPY flags at the same time!", nd);
 		}
+	} else {
+		this->flags = 0;
 	}
 	
 	// setup nodes
