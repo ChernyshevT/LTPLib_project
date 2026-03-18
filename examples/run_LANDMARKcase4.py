@@ -109,6 +109,9 @@ def main (args, logger):
 	NINJi = 19.973
 	NMP = 1e5 * 1e-2 # 1/m -> 1/cm
 	WCFFT = NMP/dx/dy # weight coefficient 1/cm3
+	
+	print(WCFFT)
+	exit(1)
 
 	VTERMe = np.sqrt(T0e/STATV_V * 2*ECHARGE/MLIGHT)
 	VTERMi = np.sqrt(T0i/STATV_V * 2*ECHARGE/MHEAVY)
@@ -206,7 +209,7 @@ def main (args, logger):
 					dtime += time()-t0
 					dnpts += len(pstore)
 				
-					vdiff = recalc_field(1.95, verr_max=1e-3/STATV_V, _debug=_debug)*STATV_V
+					vdiff = recalc_field(1.95, verr_max=1e-2/STATV_V, _debug=_debug)*STATV_V
 					
 					if _debug:
 						logger.debug\
