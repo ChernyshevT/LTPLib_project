@@ -9,6 +9,7 @@ from util.frames  import *
 from util.loggers import *
 from util.args    import *
 from datetime     import datetime
+from time         import time
 
 import  numpy  as np
 import _ltplib as ltp
@@ -112,7 +113,7 @@ def main (args, logger):
 	VTERMi = np.sqrt(T0i/STATV_V * 2*ECHARGE/MHEAVY)
 	
 	##################################################
-	grid = ltp.grid(2, [dx]*2, [range(0, nx+1, 4)]*2)
+	grid = ltp.grid(2, [dx]*2, [range(0, nx+1, 8)]*2)
 	
 	# ~ print(grid.flags)
 	
@@ -121,12 +122,12 @@ def main (args, logger):
 	 {"KEY":"e", "CHARGE/MASS": -ECHARGE/MLIGHT},
 	 {"KEY":"i", "CHARGE/MASS": +ECHARGE/MHEAVY},
 	]
-	pstore = ltp.pstore(grid, pt_cfg, capacity = 50000, vsize=11)
+	pstore = ltp.pstore(grid, pt_cfg, capacity = 500000, vsize=6)
 	
 	#########################################################
 	emfield = ltp.vcache(grid, dtype="f32", order=1, vsize=3)
 	ppush_fns = [ltp.bind_ppush_fn (pstore, f"BzExEy:{mover}", emfield) \
-	 for mover in ["LEAPF", "IMPL0","IMPLR"]
+	 for mover in ["LEAPF"]
 	]
 
 	##########################################################
@@ -152,7 +153,13 @@ def main (args, logger):
 			emfield[..., k] = -grad
 		
 		return vdiff
-	
+
+	if fpath := args.load:
+		ptframe = load_frame(fpath)
+		for key,a,b in zip(ptframe.descr, ptframe.index, ptframe.index[1:]):
+			pstore.inject(key, ptframe.data[a:b])
+		logger.info(f"loaded \"{fpath}\" ({len(pstore)} samples injected)")
+
 	#######################
 	spawner = spawner_t(50)
 	emfield[..., 0]  = BZ/CLIGHT
@@ -162,23 +169,23 @@ def main (args, logger):
 	pdata, pindex = None, None
 	
 	_debug = ("DEBUG" == args.loglevel)
-	
+
+	##############################################################################
+	if args.run == False or not (args.run or input(f"run? [y] ") == "y"):
+		exit(0)
+
 	############
 	# main cycle
-	for irun in range (1, args.nrun+1):
+	for irun in range (args.nstart, args.nrun+1):
+		
+		dtime, dnpts = 0, 0
 		
 		if args.reserve_backup:
 			pdata, pindex = pstore.extract()
-		 
-		# balance computational load
-		pstore.update_queue(1)
-		for k,v in zip(*pstore.queue):
-			if 0 == v: break
-			print(f"#{k:03d}: {v:06d} pts")
-		
+
 		# start new frame [t --> t + TSTEP*args.nsub]
 		t0, t1 = (irun-1)*args.nsub*TSTEP, irun*args.nsub*TSTEP
-		logger.info(f"frame#{irun:06d} ({t0*1e9:07.3f} -> {t1*1e9:07.3f} ns)..")
+		logger.info(f"frame#{irun:06d} ({t0*1e6:07.3f} -> {t1*1e6:07.3f} us)..")
 		try:
 			for isub in range(1, args.nsub+1):
 			
@@ -189,13 +196,16 @@ def main (args, logger):
 				for irep in range(0, args.nrep+1):
 					mode = (args.nrep>0)+(irep>0)
 					
+					t0 = time()
 					emfield.remap("in")
 					ppush_fns[mode](TSTEP)
 					
 					ppost1_fn()
 					ptfluid1.remap("out")[...] *= WCFFT
+					dtime += time()-t0
+					dnpts += len(pstore)
 				
-					vdiff = recalc_field(1.95, verr_max=1e-2/STATV_V, _debug=1)*STATV_V
+					vdiff = recalc_field(1.95, verr_max=1e-2/STATV_V, _debug=_debug)*STATV_V
 					
 					if _debug:
 						logger.debug\
@@ -204,14 +214,11 @@ def main (args, logger):
 					if irep and vdiff < args.epsilon:
 						break
 			
-			if not _debug:
-				print(f"\rframe#{irun:06d}: {isub/args.nsub*100:7.2f}%", end="")
-			
 		except Exception as e:
-			logger.critical(f"frame#{irun:06d}/{isub:04d}/{irep:02d}: {e}")
+			logger.critical(f"#{irun:06d}/{isub:04d}/{irep:02d}: {e}")
 			
-			if fpath := args.save and args.reserve_backup:
-				save_frame(f"{fpath}/ptdump{irun:06d}.zip", "w"
+			if (fpath := args.save) and args.reserve_backup:
+				save_frame(f"{fpath}/pdata-backup{irun:06d}.zip", "w"
 				, data = pdata
 				, index = pindex
 				, descr = pstore.ptlist
@@ -219,17 +226,26 @@ def main (args, logger):
 			
 			return 1
 		# end frame
-		if not _debug: print("")
 		
-		logger.info(f"\rframe#{irun:06d} done, {len(pstore)=} pts");
-		
+		logger.info(f"frame#{irun:06d} done, {len(pstore)=} pts ({dtime/dnpts*1e9:f} ns/pt)");
+
+		# balance computational load
+		pstore.update_queue(1)
+		n = 0
+		for k,v in zip(*pstore.queue):
+			if 0 == v:
+				break
+			else:
+				n+=1
+		logger.info(f"pstore.queue {n} nonempty pools")
+
 		# gather fluxes \& pressures
 		ppost2_fn()
 		ptfluid2.remap("out")[...] *= WCFFT
 		
 		# save frame
 		if fpath := args.save:
-			save_frame(f"{fpath}/pdump{irun:06d}.zip", "w"
+			save_frame(f"{fpath}/frame{irun:06d}.zip", "w"
 			, cfg  = dict(order=1, dt=TSTEP)
 			, grid = dict(step=grid.step, units=grid.units)
 			, tindex = [irun-1, irun]
@@ -242,11 +258,11 @@ def main (args, logger):
 			, Pi = ptfluid2[..., 9:12]
 			)
 		# save dump
-		if fpath := args.save and irun in args.dump:
+		if (fpath := args.save) and irun in args.dump:
 			pdata, pindex = pstore.extract()
 			save_frame(f"{fpath}/pdata{irun:06d}.zip", "w"
 			, data = pdata
-			, index = pindexs
+			, index = pindex
 			, descr = pstore.ptlist
 			)
 		
@@ -268,6 +284,15 @@ args = {
 		"type"     : lambda fpath: os.path.abspath(os.path.expanduser(fpath)),
 		"required" : False,
 		"help"     : "path to save the results; default=\"\" (do not save)"
+	},
+	"--load"     : {
+		"type"     : str,
+		"required" : False,
+		"help"     : "path to load pVDF dump",
+	},
+	"--nstart" : {
+		"type"     : int,
+		"default"  : 1,
 	},
 	"--dump"     : {
 		"type"     : int,
@@ -313,9 +338,11 @@ if __name__ == "__main__":
 	setup_logging(level=args.loglevel.upper(), root=True)
 	logger = get_logger("problem")
 	
+	logger.info(f"{args=}")
+	
 	try:
 		# check directory
-		if args.save and os.path.isdir(args.save):
+		if args.save and os.path.isdir(args.save) and args.nstart==1:
 			if not args.run:
 				if input\
 				(f"dir \"{args.save}\" already exists, delete contents? [y|yes] or.. ")\

@@ -16,7 +16,7 @@ u32 run_ppost
 (const grid_t<nd> &grid, const pstore_t &pstore, vcache_t<f32> &latt, u64 fcode) {
 
 	u32 flags{0};
-	#pragma omp parallel for
+	#pragma omp parallel for schedule(dynamic)
 	for (u32 pid=1; pid <= pstore.queue[0]; ++pid) {
 		u32 k{pstore.queue[pid]-1};
 		

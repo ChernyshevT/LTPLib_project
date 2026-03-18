@@ -32,7 +32,7 @@ u32 run_ppush
 
 	//////////////////////////////////////////////////////////////////////////////
 	u32 flags{0};
-	#pragma omp parallel for
+	#pragma omp parallel for schedule(dynamic)
 	for (u32 pid=1; pid <= pstore.queue[0]; ++pid) {
 		u32 k{pstore.queue[pid]-1};
 
