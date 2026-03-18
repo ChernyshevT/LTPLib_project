@@ -3,13 +3,12 @@
 https://jpb911.wixsite.com/landmark/copie-de-test-case-3-fluid-hybrid
 """
 
+import sys, os, timeit, shutil, signal
 
 from util.frames  import *
 from util.loggers import *
 from util.args    import *
-from itertools    import repeat, count
-
-import sys, os, timeit, shutil, signal
+from datetime     import datetime
 
 import  numpy  as np
 import _ltplib as ltp
@@ -31,19 +30,22 @@ class poisson_eq_SOR(ltp.poisson_eq):
 		eq.vmap[...] = 0
 		eq.vmap_copy = eq.vmap.copy()
 	
-	def solve(eq, w_relax, verr_max, _debug=False):
+	def solve(eq, w_relax, verr_max=None, _debug=False):
+		
 		eq.vmap_copy[...] = eq.vmap[...]
 		
-		iter_max = 2*np.prod(eq.cmap.shape)
-		for j, w in enumerate(repeat(w_relax), 1):
-			verr = eq.iter(w)
-			if verr <= verr_max:
-				if _debug:
-					logger.debug(f"poisson_eq done {verr=:e}, {j} iters")
-				return np.max(np.abs(eq.vmap - eq.vmap_copy)) #vdiff
-			if j >= iter_max:
-				raise RuntimeError\
-				(f"poisson_eq didn't converge after {j} iters ({verr=:e})!")
+		if verr_max is None:
+			vmin = np.min(eq.vmap)
+			vmax = np.max(eq.vmap)
+			vres = np.finfo(np.float32).resolution
+			verr_max = (vmax - vmin)*vres
+			if verr_max < vres:
+				verr_max = vres
+		
+		verr, n = super().solve(w_relax, verr_max)
+		if _debug:
+			logger.debug(f" poisson_eq done {verr=:e}, {n} iters")
+		return verr
 
 class spawner_t:
 	__slots__ = ("parts", "radii", "alpha")
@@ -104,13 +106,13 @@ def main (args, logger):
 	
 	NINJe = 49.932
 	NINJi = 19.973
-	WCFFT = 1e5 # CHECK!!
+	WCFFT = 1e5 *1e2 # CHECK!!
 	
 	VTERMe = np.sqrt(T0e/STATV_V * 2*ECHARGE/MLIGHT)
 	VTERMi = np.sqrt(T0i/STATV_V * 2*ECHARGE/MHEAVY)
 	
 	##################################################
-	grid = ltp.grid(2, [dx]*2, [range(0, nx+1, 8)]*2)
+	grid = ltp.grid(2, [dx]*2, [range(0, nx+1, 4)]*2)
 	
 	# ~ print(grid.flags)
 	
@@ -137,13 +139,13 @@ def main (args, logger):
 	#########################################
 	eq = poisson_eq_SOR(grid)
 	
-	def recalc_field(w_relax, verr_max):
+	def recalc_field(w_relax, verr_max=None, _debug=False):
 		
 		# gather space charge
 		eq.cmap[...] = (ptfluid1[..., 0] - ptfluid1[..., 1])*M_4PI_E
 		
 		# solve
-		vdiff = eq.solve(w_relax, verr_max)
+		vdiff = eq.solve(w_relax, verr_max, _debug)
 		
 		# electric field
 		for k, grad in enumerate(np.gradient(eq.vmap, *grid.step), 1):
@@ -159,7 +161,7 @@ def main (args, logger):
 	# reserve backup
 	pdata, pindex = None, None
 	
-	print(args)
+	_debug = ("DEBUG" == args.loglevel)
 	
 	############
 	# main cycle
@@ -193,15 +195,19 @@ def main (args, logger):
 					ppost1_fn()
 					ptfluid1.remap("out")[...] *= WCFFT
 				
-					vdiff = recalc_field(1.95, 1e-4)*STATV_V
+					vdiff = recalc_field(1.95, verr_max=1e-2/STATV_V, _debug=1)*STATV_V
 					
-					logger.debug\
-					(f"{' 'if irep else '*'}{irun:06d}/{isub:04d}/{irep:02d}({'E0R'[mode]}) {vdiff=:6.3e} V")
+					if _debug:
+						logger.debug\
+						(f"{' 'if irep else '*'}{irun:06d}/{isub:04d}/{irep:02d}({'E0R'[mode]}) {vdiff=:6.3e} V")
 					
 					if irep and vdiff < args.epsilon:
 						break
-				
-		except RuntimeError as e:
+			
+			if not _debug:
+				print(f"\rframe#{irun:06d}: {isub/args.nsub*100:7.2f}%", end="")
+			
+		except Exception as e:
 			logger.critical(f"frame#{irun:06d}/{isub:04d}/{irep:02d}: {e}")
 			
 			if fpath := args.save and args.reserve_backup:
@@ -213,6 +219,9 @@ def main (args, logger):
 			
 			return 1
 		# end frame
+		if not _debug: print("")
+		
+		logger.info(f"\rframe#{irun:06d} done, {len(pstore)=} pts");
 		
 		# gather fluxes \& pressures
 		ppost2_fn()
@@ -224,6 +233,7 @@ def main (args, logger):
 			, cfg  = dict(order=1, dt=TSTEP)
 			, grid = dict(step=grid.step, units=grid.units)
 			, tindex = [irun-1, irun]
+			, VP = eq.vmap*STATV_V
 			, Ne = ptfluid1[..., 0]
 			, Ni = ptfluid1[..., 1]
 			, Fe = ptfluid2[..., 0:3]
@@ -305,7 +315,7 @@ if __name__ == "__main__":
 	
 	try:
 		# check directory
-		if args.save and os.path.isdir(args.save) and args.nstart==1:
+		if args.save and os.path.isdir(args.save):
 			if not args.run:
 				if input\
 				(f"dir \"{args.save}\" already exists, delete contents? [y|yes] or.. ")\

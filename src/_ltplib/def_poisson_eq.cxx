@@ -174,6 +174,22 @@ void def_poisson_eq(py::module &m) {
 	}, "wrelax"_a=1.0f
 	, "performs SOR-iteration, updates poisson_eq.vmap")
 	
+	.def("solve", []
+	(poisson_eq_holder& self, f32 w, f32 err_max) -> std::tuple<f32, u32> {
+		if (w<=0.0f or w>=2.0f) {
+			throw bad_arg("invalid wrelax parameter ({})!", w);
+		}
+		if (err_max<=0.0f) {
+			throw bad_arg("invalid err_max parameter ({})!", err_max);
+		}
+		f32 err;
+		f32 j{0}; do {
+			err = self.iter_fn(w); ++j;
+		} while (err > err_max);
+		return {err, j};
+	}, "wrelax"_a=1.0f, "err_max"_a=0.0f
+	, "perform SOR-iteratios till err <= err_max")
+	
 	; /* end class */
 
 
