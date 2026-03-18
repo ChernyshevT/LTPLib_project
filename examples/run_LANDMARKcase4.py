@@ -107,8 +107,9 @@ def main (args, logger):
 	
 	NINJe = 49.932
 	NINJi = 19.973
-	WCFFT = 1e5 *1e2 # CHECK!!
-	
+	NMP = 1e5 * 1e-2 # 1/m -> 1/cm
+	WCFFT = NMP/dx/dy # weight coefficient 1/cm3
+
 	VTERMe = np.sqrt(T0e/STATV_V * 2*ECHARGE/MLIGHT)
 	VTERMi = np.sqrt(T0i/STATV_V * 2*ECHARGE/MHEAVY)
 	
@@ -122,7 +123,7 @@ def main (args, logger):
 	 {"KEY":"e", "CHARGE/MASS": -ECHARGE/MLIGHT},
 	 {"KEY":"i", "CHARGE/MASS": +ECHARGE/MHEAVY},
 	]
-	pstore = ltp.pstore(grid, pt_cfg, capacity = 500000, vsize=6)
+	pstore = ltp.pstore(grid, pt_cfg, capacity = 500_000, vsize=6)
 	
 	#########################################################
 	emfield = ltp.vcache(grid, dtype="f32", order=1, vsize=3)
@@ -205,7 +206,7 @@ def main (args, logger):
 					dtime += time()-t0
 					dnpts += len(pstore)
 				
-					vdiff = recalc_field(1.95, verr_max=1e-2/STATV_V, _debug=_debug)*STATV_V
+					vdiff = recalc_field(1.95, verr_max=1e-3/STATV_V, _debug=_debug)*STATV_V
 					
 					if _debug:
 						logger.debug\
@@ -227,26 +228,16 @@ def main (args, logger):
 			return 1
 		# end frame
 		
-		logger.info(f"frame#{irun:06d} done, {len(pstore)=} pts ({dtime/dnpts*1e9:f} ns/pt)");
-
-		# balance computational load
-		pstore.update_queue(1)
-		n = 0
-		for k,v in zip(*pstore.queue):
-			if 0 == v:
-				break
-			else:
-				n+=1
-		logger.info(f"pstore.queue {n} nonempty pools")
-
 		# gather fluxes \& pressures
 		ppost2_fn()
 		ptfluid2.remap("out")[...] *= WCFFT
 		
+		logger.info(f"frame#{irun:06d} done, {len(pstore)=} pts ({dtime/dnpts*1e9:f} ns/pt)");
+		
 		# save frame
 		if fpath := args.save:
 			save_frame(f"{fpath}/frame{irun:06d}.zip", "w"
-			, cfg  = dict(order=1, dt=TSTEP)
+			, cfg  = dict(order=1, dt=TSTEP, wcfft=WCFFT)
 			, grid = dict(step=grid.step, units=grid.units)
 			, tindex = [irun-1, irun]
 			, VP = eq.vmap*STATV_V
