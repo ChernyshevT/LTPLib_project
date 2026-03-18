@@ -110,8 +110,8 @@ def main (args, logger):
 	NMP = 1e5 * 1e-2 # 1/m -> 1/cm
 	WCFFT = NMP/dx/dy # weight coefficient 1/cm3
 	
-	print(WCFFT)
-	exit(1)
+	#print(WCFFT)
+	#exit(1)
 
 	VTERMe = np.sqrt(T0e/STATV_V * 2*ECHARGE/MLIGHT)
 	VTERMi = np.sqrt(T0i/STATV_V * 2*ECHARGE/MHEAVY)
