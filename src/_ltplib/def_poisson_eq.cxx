@@ -64,19 +64,19 @@ struct poisson_eq_holder {
 		std::visit([&] <u8 nd> (poisson_eq_t<nd> &eq) {
 			logger::debug("construct poisson_eq{} ({})", nd, (void*)(&eq));
 			
-			eq.offst[nd] = 1;
-			//~ u64 nnodes{1};
-			for (u8 i{0u}; i<nd; ++i) {
-				eq.shape[nd-i-1] = _umap.request().shape[nd-i-1];
-				eq.offst[nd-i-1] = eq.offst[nd-i]*eq.shape[nd-i-1];
-				eq.dstep[nd-i-1] = 1.0f/_step[nd-i-1]/_step[nd-i-1];
+			u64 usize{1};
+			
+			for (u8 i{1u}; i<=nd; ++i) {
+				eq.shape[nd-i] = _umap.request().shape[nd-i];
+				eq.dstep[nd-i] = 1.0f/_step[nd-i]/_step[nd-i];
+				usize = usize * eq.shape[nd-i];
 			}
 			
-			mholder["umap"]  = {malloc(eq.offst[0]*sizeof(u8)),  &free};
-			mholder["cdata"] = {malloc(eq.offst[0]*sizeof(f32)), &free};
-			mholder["vdata"] = {malloc(eq.offst[0]*sizeof(f32)), &free};
+			mholder["umap"]  = {malloc(usize*sizeof(u8)),  &free};
+			mholder["cdata"] = {malloc(usize*sizeof(f32)), &free};
+			mholder["vdata"] = {malloc(usize*sizeof(f32)), &free};
 			
-			memcpy((void*)mholder.at("umap").get(), _umap.request().ptr, eq.offst[0]*sizeof(u8));
+			memcpy((void*)mholder.at("umap").get(), _umap.request().ptr, usize*sizeof(u8));
 			
 			eq.umap  = (u8*)mholder.at("umap").get();
 			eq.cdata = (f32*)mholder.at("cdata").get();

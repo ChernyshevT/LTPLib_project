@@ -1,7 +1,7 @@
 #pragma once
 #include "typedefs.hxx"
 
-/***************** node zz xx yy **********************************************/
+/***************** node zz yy xx **********************************************/
 #define SETVALUE   0b01'00'00'00 // boundary condition (Dirichlet)
 #define SETAXIS    0b10'00'00'00 // mark finite differences
 #define LFDIFF     0b00'00'00'01 // left finite difference
@@ -14,9 +14,9 @@
 /******************************************************************************/
 template<u8 nd>
 struct poisson_eq_t {
-	u64  offst[nd+1]; // nx*ny*nz*1
 	u32  shape[nd];
 	f32  dstep[nd];   // 1/dx/dx
+	u32  xaxis;
 	u8  *umap;        // u[nit] map
 	f32 *cdata;       // c[charge] data
 	f32 *vdata;       // v[oltage] data

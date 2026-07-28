@@ -99,9 +99,9 @@ def main(args):
 	ltp.load_backend("default")
 	
 	lx,ly = 2,2
-	nx,ny = 47,47
+	nx,ny = 99,99
 	
-	noise_lvl = 0.1
+	noise_lvl = 0.2
 	
 	shape = (nx+1,ny+1)
 	step  = [l/(k-1) for k,l in zip(shape,[lx,ly])]
@@ -120,7 +120,7 @@ def main(args):
 	_umap[:, :ny] |= ltp.DIFFop("YRT")
 	_umap[:,1:  ] |= ltp.DIFFop("YLF")
 	# set up central body
-	r = 0.25
+	r = 1/3
 	_umap[xs**2 + ys**2 < r**2] = 0
 	_vmap[_umap == 0] = 0
 	
@@ -150,7 +150,7 @@ def main(args):
 		
 		#https://crunchingnumbers.live/2017/07/09/iterative-methods-part-2/
 		
-		for j, w in enumerate(repeat(1.975), 1): 
+		for j, w in enumerate(repeat(1.95), 1): 
 			verr = eq.iter(w)
 			if verr <= 1e-5 or verr != verr:
 				print(f"#{j:06d}: {verr:e}")

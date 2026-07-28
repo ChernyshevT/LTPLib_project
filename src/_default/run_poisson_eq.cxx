@@ -38,23 +38,26 @@ f32 run_SOR_iter (poisson_eq_t<nd> & eq, f32 w) {
 	f32 verr{0.0f}, vold, vnew, diff;
 	
 	/* loop over red/black sequence & perform SOR-step */
-	for (u32 seq{red_black_seq(nd)}; seq; seq = seq >>(nd+1)) {
+	for (u32 seq{red_black_seq(nd)}; seq; seq = seq >> (nd+1)) {
 		
-		u64 _offst[nd+1]; _offst[nd] = 1;
+		u64 rb_offset[nd+1]; rb_offset[nd] = 1;
+		u64 eq_offset[nd+1]; eq_offset[nd] = 1;
 		for (u8 i{1u}; i<=nd; ++i) {
-			_offst[nd-i] = (eq.shape[nd-i] - (1&(seq>>(nd-i))) + 1)/2;
-			_offst[nd-i] = _offst[nd-i]*_offst[nd-i+1];
+			rb_offset[nd-i] = (eq.shape[nd-i] - (1 & (seq>>(nd-i))) + 1)/2;
+			rb_offset[nd-i] = rb_offset[nd-i] * rb_offset[nd-i+1];
+			eq_offset[nd-i] = eq.shape[nd-i];
+			eq_offset[nd-i] = eq_offset[nd-i] * eq_offset[nd-i+1];
 		}
 		
 		/* parallel loop over cells */
 		#pragma omp parallel for reduction(max:verr) private(vold, vnew, diff)
-		for (u64 k=0; k<_offst[0]; ++k) {
+		for (u64 k=0; k<rb_offset[0]; ++k) {
 			u32 pos[nd];
 			u64 rem{k}, uid{0};
 			for (u8 i{0u}; i<nd; ++i) {
-				pos[i] = 2*(rem/_offst[i+1]) + (1&(seq>>i));
-				uid = uid + pos[i]*eq.offst[i+1];
-				rem = rem%_offst[i+1];
+				pos[i] = 2*(rem/rb_offset[i+1]) + (1&(seq>>i));
+				uid = uid + pos[i]*eq_offset[i+1];
+				rem = rem % rb_offset[i+1];
 			}
 			
 			vold = eq.vdata[uid];
