@@ -80,21 +80,8 @@ def laplace(vmap, step):
 		cmap[...] += diff
 	
 	return cmap
-	
-def w_chebyshev(umap, w=1.0):
-	"""
-	Generator for Chebyshev-acceleration w_relax
-	"""
-	U = ltp.poisson_eq.uTYPE
-	N = np.sum((umap.flat != 0) & (umap.flat != U.VALUE), dtype=int)
-	p = (1.0 - 0.5*np.pi**2/N**2)**2
-	
-	while 1:
-		yield w
-		w = 1.0/(1.0 - 0.25*p*w)
 
 def main(args):
-	pass
 	
 	ltp.load_backend("default")
 	
@@ -127,7 +114,7 @@ def main(args):
 	fig = show_umap(_umap)
 	plt.show()
 	fig.name = "../docs/imgs/umap_example"
-	save_fig(fig, dpi=200, fmt="png")
+	save_fig(fig, dpi=150, fmt="png")
 
 	# create and fill array with charge-densities
 	_cmap = laplace(_vmap, step)
@@ -161,7 +148,7 @@ def main(args):
 	
 	##############################################################################
 	fig,axs = mk_subplots([0.125,6,0.125,0.125],[0.25,6,0.5,0.75]
-	, ncols=3, nrows=2, dpi=200, sharex="all", sharey="all")
+	, ncols=3, nrows=2, dpi=150, sharex="all", sharey="all")
 	for ax in axs.flat:
 		ax.set_xticks([])
 		ax.set_yticks([])
@@ -195,6 +182,6 @@ def main(args):
 if __name__ == '__main__':
 	setup_logging(level="INFO", root=True)
 	
-	# ~ logging.getLogger("matplotlib.font_manager").setLevel(logging.WARNING)
+	logging.getLogger("matplotlib.font_manager").setLevel(logging.WARNING)
 	
 	sys.exit(main(sys.argv[1:]))

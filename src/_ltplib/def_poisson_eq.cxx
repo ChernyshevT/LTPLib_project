@@ -200,16 +200,15 @@ void def_poisson_eq(py::module &m) {
 			u8          val;
 		} table[] = {
 			{"NIL", 0},
-			{"VAL", SETVALUE},
-			{"XLF", SETAXIS | (LFDIFF<<0)},
-			{"XRT", SETAXIS | (RTDIFF<<0)},
-			{"XCN", SETAXIS | (CNDIFF<<0)},
-			{"YLF", SETAXIS | (LFDIFF<<2)},
-			{"YRT", SETAXIS | (RTDIFF<<2)},
-			{"YCN", SETAXIS | (CNDIFF<<2)},
-			{"ZLF", SETAXIS | (LFDIFF<<4)},
-			{"ZRT", SETAXIS | (RTDIFF<<4)},
-			{"ZCN", SETAXIS | (CNDIFF<<4)},
+			{"XLF", LFDIFF<<0},
+			{"XRT", RTDIFF<<0},
+			{"XCN", CNDIFF<<0},
+			{"YLF", LFDIFF<<2},
+			{"YRT", RTDIFF<<2},
+			{"YCN", CNDIFF<<2},
+			{"ZLF", LFDIFF<<4},
+			{"ZRT", RTDIFF<<4},
+			{"ZCN", CNDIFF<<4},
 		};
 		constexpr u8 n{sizeof(table)/sizeof(*table)};
 
@@ -242,20 +241,6 @@ void def_poisson_eq(py::module &m) {
 
 		return flags;
 	});
-	
-	//~ py::enum_<> (cls, "DIFFopENUM", py::arithmetic())
-	//~ .value("NIL", 0)
-	//~ .value("VAL", SETVALUE)
-	//~ .value("XLF", SETAXIS | (LFDIFF<<0))
-	//~ .value("XRT", SETAXIS | (RTDIFF<<0))
-	//~ .value("XCN", SETAXIS | (CNDIFF<<0))
-	//~ .value("YLF", SETAXIS | (LFDIFF<<2))
-	//~ .value("YRT", SETAXIS | (RTDIFF<<2))
-	//~ .value("YCN", SETAXIS | (CNDIFF<<2))
-	//~ .value("ZLF", SETAXIS | (LFDIFF<<4))
-	//~ .value("ZRT", SETAXIS | (RTDIFF<<4))
-	//~ .value("ZCN", SETAXIS | (CNDIFF<<4))
-	//~ .export_values()
-	//~ ;
+
 }
 
