@@ -85,7 +85,7 @@ def main(args):
 	
 	ltp.load_backend("default")
 	
-	n = 127
+	n = 47
 	
 	lx,ly = 2,2
 	nx,ny = n,n

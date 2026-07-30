@@ -53,8 +53,9 @@ struct poisson_eq_t {
 			
 			dfrac = 1.0f/(dstep[k]*dstep[k]);
 			/* hack for axial symmetry if k-axis == 'y' */
-			if (dstep[nd] != NAN and k == 1 and nd == 2) {
+			if (dstep[nd] >= 0.0f and k == 1 and nd == 2) {
 				f32 r0 = dstep[nd] + pos[k]*dstep[k];
+				//printf("p#[%03u,%03u]: CYLINDER, r0 = %f\n", pos[0], pos[1], r0);
 				if (r0 > 0.0f) {
 					wl = 1.0 - 0.5*dstep[k]/r0; 
 					wr = 1.0 + 0.5*dstep[k]/r0;
