@@ -388,12 +388,13 @@ with red-black decomposition for parallel calculation[^CS267][^mittal2014]:
 ```
 where $w\in\left(0,\ 2\right)$ is a relaxation factor,
 $\phi_{\rm iter}$ is a result of Gauss-Siedel (GS) iteration.
-The class constructor accepts two arguments:
+The class constructor accepts:
 - *umap*: `numpy.ndarray[numpy.uint8]` — <ins>u</ins>nit <ins>map</ins> is an array to encode type of each unit (see below);
 - *step*: `list[float]` — grid step along the each axis.
+- *radius* (optional): `float` — to use in case of 2d axisymmetric problem. Sets-up the distance between an axis of symmetry (x-axis) and lower edge of the domain.
 
 The following properties are accessible:
-- `poisson_eq.umap` — just a read-only copy of *umap*-argument;
+- `poisson_eq.umap` — an internal copy of *umap*-argument (my be changed);
 - `poisson_eq.cmap` — <ins>c</ins>harge <ins>map</ins>, $q$ (used as an input);
 - `poisson_eq.vmap` — <ins>v</ins>oltage <ins>map</ins>, $\phi$ (will be updated).
 

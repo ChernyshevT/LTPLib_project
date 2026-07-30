@@ -13,14 +13,14 @@ from test_poisson_eq import show_umap
 def main(args):
 	
 	n, m = 64-1, 32-1
-	lx, ly, y0 = 1, 0.5, 0
+	lx, ly= 1, 0.5
 
-	shape  = [n+1, m+1]
-	step   = [l/(k-1) for k,l in zip(shape,[lx,ly])]
-	print(y0)
+	shape = [n+1, m+1]
+	step  = [l/(k-1) for k,l in zip(shape,[lx,ly])]
+	yrad  = 0
 	
 	xs = np.linspace(-lx,+lx, shape[0])
-	ys = np.linspace(y0, y0+ly, shape[1])
+	ys = np.linspace(yrad, yrad+ly, shape[1])
 	im_ext = (xs[0],xs[n],ys[0],ys[m])
 	
 	xs,ys = np.meshgrid(xs,ys, indexing='ij')
@@ -39,14 +39,14 @@ def main(args):
 	plt.show()
 	
 	
-	_cmap =  np.cos(xs/lx*np.pi*2) * np.cos((ys-y0)/ly*np.pi*2) * 100
+	_cmap =  np.cos(xs/lx*np.pi*2) * np.cos((ys-yrad)/ly*np.pi*2) * 100
 	
 	# ~ ax.imshow(_vmap)
 	# ~ plt.show()
 	# ~ show_field(ax, (_vmap, ext), **vopts)
 	
 	# solver ctor:
-	eq = ltp.poisson_eq(_umap, step, radius=y0)
+	eq = ltp.poisson_eq(_umap, step, radius=yrad)
 	eq.vmap[...] = _vmap
 	eq.cmap[...] = _cmap
 	

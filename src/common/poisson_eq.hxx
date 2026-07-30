@@ -52,8 +52,7 @@ struct poisson_eq_t {
 			rt = flat_index(prt);
 			
 			dfrac = 1.0f/(dstep[k]*dstep[k]);
-			
-			/* axial symmetry if k-axis == 'y' */
+			/* hack for axial symmetry if k-axis == 'y' */
 			if (dstep[nd] != NAN and k == 1 and nd == 2) {
 				f32 r0 = dstep[nd] + pos[k]*dstep[k];
 				if (r0 > 0.0f) {
@@ -64,13 +63,10 @@ struct poisson_eq_t {
 					wr = 1.0;
 					lf = rt;
 				}
-				//if (pos[0] == 1)
-				//printf("pos#[%02u,%02u]: %f %f\n", pos[0], pos[1], wl, wr);
 			} else {
 				wl = 1.0;
 				wr = 1.0;
 			}
-			
 			switch CHECK_AXIS(umap[cn], k) {
 				default:
 					return NAN;

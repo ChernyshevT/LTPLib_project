@@ -106,7 +106,7 @@ struct poisson_eq_holder {
 				/* ptr    */ eq.umap,
 				/*shape   */ std::move(shape),
 				/*strides */ std::move(strides),
-				/*readonly*/ true
+				/*readonly*/ false
 			);
 		}, this->eq);
 		
