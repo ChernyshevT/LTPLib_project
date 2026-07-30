@@ -85,8 +85,10 @@ def main(args):
 	
 	ltp.load_backend("default")
 	
+	n = 127
+	
 	lx,ly = 2,2
-	nx,ny = 47,47
+	nx,ny = n,n
 	
 	noise_lvl = 0.2
 	

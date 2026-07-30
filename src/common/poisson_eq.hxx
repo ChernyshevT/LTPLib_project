@@ -6,7 +6,6 @@
 #define RTDIFF     0b00'00'00'10 // right finite difference
 #define CNDIFF     0b00'00'00'11 // central finite difference (left+right)
 
-#define CHECK_UNIT(arg)     (0b11'00'00'00 &  (arg))
 #define CHECK_AXIS(arg, ax) (0b00'00'00'11 & ((arg) >> ((ax) * 2)))
 
 /******************************************************************************/
@@ -34,38 +33,58 @@ struct poisson_eq_t {
 			return vdata[cn];
 		}
 		
-		f32 vnew{0.0f}, cfft{0.0f};
+		f32 vnew{0.0f}, cfft{0.0f}, dfrac, wl, wr;
 		/* loop over stencil */
-		for (u8 ax{0}; ax<nd; ++ax) {
+		for (u8 k{0}; k < nd; ++k) {
 			u32 plf[nd]; u64 lf;
 			u32 prt[nd]; u64 rt;
-			for (u8 i{0}; i<nd; ++i) {
+			for (u8 i{0}; i < nd; ++i) {
 				plf[i] = pos[i];
 				prt[i] = pos[i];
 			}
 			
-			/* left neigbour */
-			plf[ax] = (pos[ax]+shape[ax]-1) % shape[ax];
+			/* left neigbour (wrap in case of periodic boundary) */
+			plf[k] = (pos[k]+shape[k]-1) % shape[k];
 			lf = flat_index(plf);
 			
-			/* right neigbour */
-			prt[ax] = (pos[ax]+shape[ax]+1) % shape[ax];
+			/* right neigbour (wrap in case of periodic boundary) */
+			prt[k] = (pos[k]+shape[k]+1) % shape[k];
 			rt = flat_index(prt);
 			
-			switch CHECK_AXIS(umap[cn], ax) {
+			dfrac = 1.0f/(dstep[k]*dstep[k]);
+			
+			/* axial symmetry if k-axis == 'y' */
+			if (dstep[nd] != NAN and k == 1 and nd == 2) {
+				f32 r0 = dstep[nd] + pos[k]*dstep[k];
+				if (r0 > 0.0f) {
+					wl = 1.0 - 0.5*dstep[k]/r0; 
+					wr = 1.0 + 0.5*dstep[k]/r0;
+				} else {
+					wl = 1.0;
+					wr = 1.0;
+					lf = rt;
+				}
+				//if (pos[0] == 1)
+				//printf("pos#[%02u,%02u]: %f %f\n", pos[0], pos[1], wl, wr);
+			} else {
+				wl = 1.0;
+				wr = 1.0;
+			}
+			
+			switch CHECK_AXIS(umap[cn], k) {
 				default:
 					return NAN;
-				case LFDIFF: /* right open-boundary (E_{ax} == 0) */
-					rt = cn;
+				case LFDIFF: /* right open-boundary (E_{k} == 0) */
+					vnew += (vdata[lf]*wl + vdata[cn]*wr)*dfrac;
 					break;
 				case RTDIFF: /* left open-boundary (E_ax] == 0) */
-					lf = cn;
+					vnew += (vdata[cn]*wl + vdata[rt]*wr)*dfrac;
 					break;
 				case CNDIFF: /* mid-point */
+					vnew += (vdata[lf]*wl + vdata[rt]*wr)*dfrac;
 					break;
 			}
-			vnew += (vdata[lf] + vdata[rt])*dstep[ax];
-			cfft += 2*dstep[ax];
+			cfft += 2*dfrac;
 		}
 		return (vnew-cdata[cn])/cfft;
 

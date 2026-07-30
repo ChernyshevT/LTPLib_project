@@ -93,9 +93,9 @@ enum PPOST_ENUM : u64 {
 	Pzz = 0x7,
 	Pxy = 0x8,
 	Pxz = 0x9,
-	Pyz = 0xa,
+	Pyz = 0xA,
 	/* total kinetic energy */
-	KEn = 0xb,
+	KEn = 0xB,
 };
 
 template<u8 nd>

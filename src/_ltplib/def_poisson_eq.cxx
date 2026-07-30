@@ -45,7 +45,7 @@ struct poisson_eq_holder {
 	iter_fn_t iter_fn;
 	
 	/* ctor */
-	 poisson_eq_holder (umap_a _umap, step_a _step) {
+	 poisson_eq_holder (umap_a _umap, step_a _step, py::kwargs kw) {
 		
 		switch (_umap.request().ndim) {
 			case 1:
@@ -68,8 +68,18 @@ struct poisson_eq_holder {
 			
 			for (u8 i{1u}; i<=nd; ++i) {
 				eq.shape[nd-i] = _umap.request().shape[nd-i];
-				eq.dstep[nd-i] = 1.0f/_step[nd-i]/_step[nd-i];
+				eq.dstep[nd-i] = _step[nd-i];
 				usize = usize * eq.shape[nd-i];
+			}
+			
+			if (kw.contains("radius")) {
+				if (nd != 2) {
+					throw bad_arg("radius is valid for 2d problems only!");
+				}
+				eq.dstep[nd] = py::cast<f32>(kw["radius"]);
+				//py::print(kw, eq.dstep[nd]);
+			} else {
+				eq.dstep[nd] = NAN;
 			}
 			
 			mholder["umap"]  = {malloc(usize*sizeof(u8)),  &free};
@@ -154,7 +164,7 @@ void def_poisson_eq(py::module &m) {
 
 	py::class_<poisson_eq_holder> cls (m, "poisson_eq"); cls
 	
-	.def(py::init<umap_a, step_a>()
+	.def(py::init<umap_a, step_a, py::kwargs>()
 	, "universal poisson eq. solver")
 
 	.def_readonly("umap", &poisson_eq_holder::umap,
