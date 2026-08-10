@@ -27,7 +27,7 @@ R"pbdoc(_ltplib: Low Temperature Plasma LIBrary (former Θ-Hall).
 A middle-layer tool to construct PiC+MCC (Particles in Cells + Monte Carlo Collisions) codes. [https://github.com/ChernyshevT/LTPSim_project]
 
 Copyright © 2025 Timofey Chernyshev aka GNU/Hurt
-<thunarux@hmail.com, or thunarux@protonmail.com>
+<thunarux@gmail.com, or thunarux@protonmail.com>
 [https://www.researchgate.net/profile/Timofey-Chernyshev]
 
 «Получаю данные, 18/38.»
