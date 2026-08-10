@@ -56,7 +56,7 @@ def get_cmp(frame, key: str):
 
 funcs = {
   "TIME":  lambda f: 0.5*np.sum(f.cfg.tindex)*f.cfg.dt
-, "EMFEN": lambda f: f.emenrgy*2.99792458e2/8/np.pi
+, "EMFEN": lambda f: f.emenrgy*2.99792458e2
 
 , "C_e":    lambda f: get_cmp(f, "C_e")
 , "ENxx_e": lambda f: get_cmp(f, "Pxx_e")/f.C_e * 2.842815e-16 # e^-

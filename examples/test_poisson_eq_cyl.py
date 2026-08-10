@@ -56,7 +56,7 @@ def main(args):
 			print(f"#{j:06d}: {verr:e}")
 			break
 	
-	fig, ax = mk_subplots([1,12,0.5],[1,6,0.5,0.5], nrows=2, dpi=150)
+	fig, ax = mk_subplots([1,12,0.5],[1,6,0.5,0.5], nrows=2, dpi=150, sharex="all", sharey="all")
 	show_field(ax[0], (eq.cmap, im_ext), cmap="seismic")
 	show_field(ax[1], (eq.vmap, im_ext), cmap="jet")
 	plt.show()

@@ -194,7 +194,8 @@ void def_vcache(py::module &m) {
 	.def(py::init<const grid_holder&, std::string, u8, u8, py::kwargs>
 	(), "grid"_a, "dtype"_a, "vsize"_a=1, "order"_a=0
 	, VCACHE_CTOR
-	, py::keep_alive<1, 2>())
+	, py::keep_alive<1, 2>() /* implicit self#1 keeps grid#2 alive */
+	)
 
 	.def("__getitem__", [] (vcache_holder &self, py::handle index) {
 		return self.buffer_h[index];
