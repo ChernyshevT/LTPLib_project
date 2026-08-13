@@ -92,7 +92,7 @@ def main(args, logger):
 	npmax = int(node_size*args.npunit*(1+args.extra))
 	
 	pstore = ltp.pstore(grid
-	, cfg = [
+	, ptinfo = [
 	 {"KEY":"e", "CHARGE/MASS": -ECHARGE/ME},
 	 ]
 	, capacity = npmax

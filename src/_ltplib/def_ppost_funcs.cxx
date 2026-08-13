@@ -25,7 +25,7 @@ using namespace pybind11::literals;
 extern dylibs_t libs;
 
 /******************************************************************************/
-u64 parse_mode_string(const char* mode_str) {
+u64 parse_mode_string (const char* mode_str) {
 	constexpr struct {
 		const char* key;
 		u64 val;

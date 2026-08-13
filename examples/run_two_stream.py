@@ -77,7 +77,7 @@ def main(args, logger):
 	_capacity = int(_nsamples*((2 if args.ions else 1) + args.extra))
 	
 	pstore = ltp.pstore(grid
-	, cfg = [
+	, ptinfo = [
 	 {"KEY":"e", "CHARGE/MASS": -ECHARGE/MLIGHT},
 	 {"KEY":"i", "CHARGE/MASS": +ECHARGE/MHEAVY},
 	]

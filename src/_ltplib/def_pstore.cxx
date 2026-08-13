@@ -315,7 +315,7 @@ void def_pstores (py::module &m) {
 	
 	.def(py::init\
 	<const grid_holder&, std::vector<py::dict>, u32, u8, py::kwargs> ()
-	, "grid"_a, "cfg"_a, "capacity"_a, "vsize"_a=0, PSTORE_INIT
+	, "grid"_a, "ptinfo"_a, "capacity"_a, "vsize"_a=0, PSTORE_INIT
 	, py::keep_alive<1, 2>() /* implicit self#1 keeps grid#2 alive */
 	)
 
