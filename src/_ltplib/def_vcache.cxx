@@ -197,6 +197,10 @@ void def_vcache(py::module &m) {
 	, py::keep_alive<1, 2>() /* implicit self#1 keeps grid#2 alive */
 	)
 
+	.def("view", [] (vcache_holder &self) {
+		return self.buffer_h;
+	})
+
 	.def("__getitem__", [] (vcache_holder &self, py::handle index) {
 		return self.buffer_h[index];
 	})
