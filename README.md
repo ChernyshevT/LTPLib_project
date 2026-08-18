@@ -164,7 +164,7 @@ Class constructor accepts the following arguments:
 1. *vsize* (optional) — number of components per grid unit, default `1`.
 1. *order* (optional) — form-factor's order, default is `0`.
 
-Use `vcache[...]` to read/write values into numpy buffer.
+Use `vcache[...]` or `vcache.view[...]` to read/write values into numpy buffer.
 Method `vcache.remap(str: mode)` should be used to transfer data between
 node-local cache and numpy buffer:
 `mode="in"`, to copy data *from* the buffer into the cache;
