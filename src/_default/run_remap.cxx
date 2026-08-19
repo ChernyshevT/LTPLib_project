@@ -12,7 +12,7 @@ namespace {
 		size_t g_shape[nd];
 		size_t g_offst[nd+1]; g_offst[nd]=latt.vsize;
 		for (int i=nd-1; i>=0; --i) {
-			g_shape[i] = grid.axes[i][grid.shape[i]]+latt.order;
+			g_shape[i] = grid.axes[i][grid.shape[i]] - grid.axes[i][0] + latt.order;
 			g_offst[i] = g_shape[i]*g_offst[i+1];
 		}
 
@@ -54,7 +54,7 @@ namespace {
 		size_t g_shape[nd];
 		size_t g_offst[nd+1]; g_offst[nd]=latt.vsize;
 		for (int i=nd-1; i>=0; --i) {
-			g_shape[i] = grid.axes[i][grid.shape[i]] + latt.order;
+			g_shape[i] = grid.axes[i][grid.shape[i]] - grid.axes[i][0] + latt.order;
 			g_offst[i] = g_shape[i]*g_offst[i+1];
 		}
 
