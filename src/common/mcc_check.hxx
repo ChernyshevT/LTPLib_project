@@ -41,7 +41,7 @@ collision_t inline mcrun
 		
 		case opcode::SEARCH:
 			n = cmd->arg;
-			k = cset.search(R0/N0dt, j, n);
+			k = cset.search(R0, N0dt, j, n);
 			if (k < n) {
 				auto entry = cset[j+k];
 				f32 enel = cl.do_energy(v1, cset.cffts[tag]);
@@ -54,7 +54,9 @@ collision_t inline mcrun
 					cl.chnl  = j+k+1;
 					cl.enth  = enth;
 					cl.ensys = enel-enth;
-				} else goto end; /* null-collision IS happen */
+				} else {
+					goto end; /* null-collision IS happen */
+				}
 			}
 			R0 -= cset.tabs[j+n-1]*N0dt; /*  */
 			

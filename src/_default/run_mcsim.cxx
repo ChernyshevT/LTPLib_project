@@ -31,8 +31,8 @@ u32 run_mcsim
 		u32 *event_seq{events[k]};
 		
 		/* loop over particles */
-		u32 j1{pool.index[0]}, nh{0};
-		for (u32 j{0}; j<j1; ++j) {
+		u32 npp{pool.index[0]}, j1{pool.index[0]}, nh{0};
+		for (u32 j{0}; j<npp; ++j) {
 			struct {
 				part_t data[1 + (nd+3)];
 				u8  *tag =  data[0].tag;
@@ -107,7 +107,7 @@ u32 run_mcsim
 				goto end;
 				
 				case cltype::ATTACHMENT:
-					pool.flags[(nh++)*2+1]=1;
+					pool.flags[(nh++)*2+1] = j;
 				goto end;
 				
 				// cltype::NONE 

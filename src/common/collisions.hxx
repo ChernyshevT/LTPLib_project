@@ -68,20 +68,18 @@ struct collision_t {
 	/* set background stuff *****************************************************/
 
 	inline f32 do_energy (f32 v[], f32 ecff) {
-		/*
-		switch (bgflag) {
-			case : // velocity
-			case : // temperature
-			default:
-		}
-		*/
-		
 		vabs = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
 		enel = vabs*ecff;
 		vabs = sqrtf(vabs);
-		vdir[0] = v[0]/vabs;
-		vdir[1] = v[1]/vabs;
-		vdir[2] = v[2]/vabs;
+		if (vabs > FLT_EPSILON) {
+			vdir[0] = v[0]/vabs;
+			vdir[1] = v[1]/vabs;
+			vdir[2] = v[2]/vabs;
+		} else { /* fallback */
+			vdir[0] = 1.0f;
+			vdir[1] = 0.0f;
+			vdir[1] = 0.0f;
+		}
 		return enel;
 	}
 	

@@ -22,10 +22,10 @@ inline void scatter \
 		w1[1] = w0[1]*cosa + (w0[1]*w0[2]*cosb + w0[0]*sinb)*sina/s;
 		w1[2] = w0[2]*cosa - sina*cosb*s;
 	} else {
-		s = 0.0f;
-		w1[0] = sina*cosb;
-		w1[1] = sina*sinb;
-		w1[2] = cosa;
+		s = copysignf(1.0f, w0[2]);
+		w1[0] = s*sina*cosb;
+		w1[1] = s*sina*sinb;
+		w1[2] = s*cosa;
 	}
 	#if defined(BACKEND_DEBUG) || defined(FUNC_DEBUG)
 	bool _debug_check{false};

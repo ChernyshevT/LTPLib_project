@@ -91,7 +91,14 @@ struct csection_set_t {
 		return csection_t(tabs + ncsect + tsize*k);
 	};
 	
-	inline u16 search (f32 r0, u16 j, u16 n) const {
+	inline u16 search (f32 r0, f32 bgf, u16 j, u16 n) const {
+		
+		if (not (bgf > 0.0f)) {
+			return n;
+		} else {
+			r0 = r0 / bgf;
+		}
+		
 		u16  lf{0}, rt{n}, mid;
 		while (lf < rt) {
 			mid = (lf+rt)/2;

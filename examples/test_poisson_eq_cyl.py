@@ -17,7 +17,7 @@ def main(args):
 
 	shape = [n+1, m+1]
 	step  = [l/(k-1) for k,l in zip(shape,[lx,ly])]
-	yrad  = 0
+	yrad  = 0.125
 	
 	xs = np.linspace(-lx,+lx, shape[0])
 	ys = np.linspace(yrad, yrad+ly, shape[1])
@@ -26,8 +26,8 @@ def main(args):
 	xs,ys = np.meshgrid(xs,ys, indexing='ij')
 	
 	_umap = np.zeros(shape, dtype=np.uint8)
-	_umap[:n, 0:m] |= ltp.DIFFop("XRT|YCN")
-	_umap[1:, 0:m] |= ltp.DIFFop("XLF|YCN")
+	_umap[:n, 1:m] |= ltp.DIFFop("XRT|YCN")
+	_umap[1:, 1:m] |= ltp.DIFFop("XLF|YCN")
 	
 	_vmap = np.zeros(shape, dtype=np.float32)
 	
@@ -52,7 +52,7 @@ def main(args):
 	
 	for j, w in enumerate(repeat(1.95), 1): 
 		verr = eq.iter(w)
-		if verr <= 1e-5 or verr != verr:
+		if verr <= 1e-6 or verr != verr:
 			print(f"#{j:06d}: {verr:e}")
 			break
 	
