@@ -78,7 +78,7 @@ struct collision_t {
 		} else { /* fallback */
 			vdir[0] = 1.0f;
 			vdir[1] = 0.0f;
-			vdir[1] = 0.0f;
+			vdir[2] = 0.0f;
 		}
 		return enel;
 	}
