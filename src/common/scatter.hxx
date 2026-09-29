@@ -7,15 +7,14 @@
 #include <tgmath.h>
 #include <math.h>
 
+#define SCATTER_EPSILON 1e-6
+
 /******************************************************************************/
 //@LISTING{start:scatter}
 // Scatters particle relative to it's original direction.
 // w1[] : new direction
 // w0[] : initial direction
 // deflection angles: $\sin\alpha$, $\cos\alpha$, $\sin\beta$, $\sin\beta$
-
-#define SCATTER_EPSILON 1e-6 
-
 inline void scatter \
 (f32 w1[], const f32 w0[], f32 sina, f32 cosa, f32 sinb, f32 cosb) {
 	f32 s;
