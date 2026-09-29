@@ -13,10 +13,13 @@
 // w1[] : new direction
 // w0[] : initial direction
 // deflection angles: $\sin\alpha$, $\cos\alpha$, $\sin\beta$, $\sin\beta$
+
+#define SCATTER_EPSILON 1e-6 
+
 inline void scatter \
 (f32 w1[], const f32 w0[], f32 sina, f32 cosa, f32 sinb, f32 cosb) {
 	f32 s;
-	if (fabs(w0[2]) < 1.0f) {
+	if (fabs(w0[2]) < 1.0f - SCATTER_EPSILON) {
 		s = sqrtf(1.0f - w0[2]*w0[2]);
 		w1[0] = w0[0]*cosa + (w0[0]*w0[2]*cosb - w0[1]*sinb)*sina/s;
 		w1[1] = w0[1]*cosa + (w0[1]*w0[2]*cosb + w0[0]*sinb)*sina/s;
@@ -27,6 +30,12 @@ inline void scatter \
 		w1[1] = s*sina*sinb;
 		w1[2] = s*cosa;
 	}
+	/* normalize for better stability */
+	s = sqrtf(w1[0]*w1[0] + w1[1]*w1[1] + w1[2]*w1[2]);
+	w1[0] = w1[0]/s;
+	w1[1] = w1[1]/s;
+	w1[2] = w1[2]/s;
+	
 	#if defined(BACKEND_DEBUG) || defined(FUNC_DEBUG)
 	bool _debug_check{false};
 	for (u8 i{0u}; i<3; ++i) {
