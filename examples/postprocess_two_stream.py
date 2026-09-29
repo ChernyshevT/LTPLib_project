@@ -74,11 +74,6 @@ funcs = {
                      * 2.99792458e2
 }
 
-# ~ keys = ["TIME", "EMFEN", "ENxx_e", "ENyy_e"]
-# ~ keys = ["TIME", "EMFEN", "ENxx_e", "ENyy_e", "ENxx_i", "ENyy_i"]
-# ~ keys = ["TIME", "EMFEN", "ENxx_e", "ENyy_e", "ENzz_e"]
-# ~ keys = ["TIME", "EMFEN", "ENxx_e", "ENyy_e", "ENzz_e", "ENxx_i", "ENyy_i", "ENzz_i"]
-
 ################################################################################
 def main(args):
 	
@@ -112,42 +107,15 @@ def main(args):
 				dset[f"data/{key}"] = np.empty([n, *frame[key].shape], dtype=np.float32)
 			dset[f"data/{key}"][i, ...] = frame[key]
 		
-		if 1 == i:
+		if 0 == i:
 			dset["cfg"] = frame.cfg
 		
 		del frame
 	print("\rdone")
 	print(dset.keys())
 	
-	# ~ stats, cfg, n = [], None, 0
-	# ~ while os.path.exists(fname:=f"{args.fdir}/frame{n+1:06d}.zip"):
-		# ~ print(f"\rread \"{fname}\"", end="")
-		# ~ frame = load_frame(fname).add_funcs(**funcs)
-		# ~ stats.append({k: np.nanmean(frame[k]) for k in args.keys})
-		# ~ cfg, n = frame.cfg, n+1
-	# ~ print("\rdone")
-	# ~ stats = pd.DataFrame(stats)
-	# ~ print(stats)
-	# ~ dset = {key: stats[key].to_numpy() for key in args.keys} \
-	     # ~ | {"cfg" : cfg}
-	# ~ print(dset.keys())
 	save_frame(f"{os.path.abspath(args.fdir)}.dset.zip", **dset)
-	
-	
-	
-	# ~ for i in range(1, n+1):
-		# ~ print(f"{100*i/n:6.2f} %", end="\r")
-		# ~ frame = load_frame(f"{args.fdir}/frame{i:06d}.zip").add_funcs(**funcs)
-		# ~ if i == 1:
-			# ~ for key in args.orig:
-				# ~ dset[f"orig/{key}"] = np.empty([n, *frame[key].shape], dtype=np.float32)
-		
-		# ~ for key in args.orig:
-			# ~ dset[f"orig/{key}"][i-1,...] = frame[key]
-	
-	# ~ print(dset.keys())
-	# ~ save_frame(f"{os.path.abspath(args.fdir)}.dset.zip", "a", **dset)
-	
+
 ################################################################################
 
 args = {
@@ -181,4 +149,3 @@ if __name__ == '__main__':
 	except KeyboardInterrupt:
 		print("manual exit")
 		sys.exit(0)
-

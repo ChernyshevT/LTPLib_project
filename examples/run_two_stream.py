@@ -6,12 +6,10 @@ import numpy   as np
 from functools    import reduce
 from datetime     import datetime
 from time         import time
-#from importlib    import import_module
 from itertools    import repeat, count
 from util.frames  import *
 from util.loggers import *
 from util.args    import *
-#from util.plots   import *
 
 import _ltplib as ltp
 
@@ -370,7 +368,7 @@ args = {
 	},
 	"--stream_en"  : {
 		"type"     : float,
-		"default"  : 1000,
+		"default"  : 1e3,
 		"help"     : "initial kinetic energy",
 	},
 	"--extra": {

@@ -22,7 +22,7 @@ u32 run_order
 		for (u8 idir=1; idir<md; ++idir) if (grid.nodes[k].lnk[idir-1]) {
 			auto src = pstore[grid.nodes[k].lnk[idir-1]-1];
 
-			for (j_src=src.index[idir]; j_src<src.index[idir+1]; ++j_src) {
+			for (j_src = src.index[idir]; j_src < src.index[idir+1]; ++j_src) {
 				if (ih < nh) {
 					j_dst = dst.flags[ih*2+1];
 					++ih;
@@ -57,5 +57,3 @@ u32 run_order
 	
 	return flags;
 }
-
-
