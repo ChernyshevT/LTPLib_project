@@ -83,8 +83,6 @@ def main(args):
 		else:
 			exit(0)
 	
-	print(vars(args))
-	
 	##############################################################################
 	n, dset = 0, {}
 	while os.path.exists(fname:=f"{args.fdir}/frame{n+1:06d}.zip"):
